@@ -1,6 +1,6 @@
 # Credits
 
-Islewright: Roll is free software under the GNU GPL version 3 or later (see `COPYING`).
+Islewright: Roll is free software under the GNU GPL version 3 or later (see `LICENSE.md`).
 
 ## Code
 
@@ -36,7 +36,7 @@ Creative Commons BY-SA 4.0, and since 30 July 2017 takes new art under CC BY-SA 
 in its `copyrights.csv` until August 2024, and since then in the `Copyright` tag of the
 image itself. All 112 files used here (the 111 terrain images and the ship) are recorded as
 GNU GPL v2+. None is CC BY-SA 4.0, and the newest was added in December 2016. They are used
-under the GNU GPL version 3, which is the licence of this app (see `COPYING`).
+under the GNU GPL version 3, which is the licence of this app (see `LICENSE.md`).
 
 Authors, as recorded by Wesnoth for these files: J.W. Bjerk (Eleazar), Lari Nieminen
 (zookeeper), Richard Kettering (Jetrel), Hogne Håskjold (freim) and Philippe Plantier
@@ -53,8 +53,9 @@ The King's ship on the board (`piece_kingship.png`) is
 `data/core/images/units/transport/transport-galleon.png` from the same 1.16.11 data. Wesnoth
 records its author as the FreeCol project and its licence as GNU GPL v2+. Wesnoth has since
 replaced this sprite (current Wesnoth has a different sprite under the same name, licensed
-CC BY-SA 4.0); the one used here is the 1.16.11 file. Its team colour flag is recoloured to
-royal purple and gold.
+CC BY-SA 4.0); the one used here is the 1.16.11 file. It is unchanged except for its flag
+(100 of its pixels): the team colour is redrawn in magenta shades with a gold fly, keeping each
+pixel's alpha, and the game recolours the magenta to the player's colour as it draws.
 
 Changes. The terrain tiles are composited at native resolution with the blending rules of
 Wesnoth's terrain graphics, ported to `tools/bake_board.py` (differences from a live Wesnoth
