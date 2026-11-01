@@ -1,5 +1,11 @@
 # Islewright
 
+> **Very early work in progress.** This port has not run on a device and has not been published
+> anywhere, so wording here and in this folder that describes it as published is a draft of the
+> plan. The game that ships today is the Java app at the repository root. The plan and current
+> state are in the [App Fair epic](https://github.com/islewright-roll/islewright/issues/8). To
+> help, branch from `feature/day-port` and open your pull request against it.
+
 A solitaire dice game: roll, then build roads, villages, castles and traders across a small
 island. Islewright runs on iPhone, Android and the web from one Rust codebase, built with
 [Day](https://daybrite.dev), and is published through the [App Fair](https://appfair.org).
