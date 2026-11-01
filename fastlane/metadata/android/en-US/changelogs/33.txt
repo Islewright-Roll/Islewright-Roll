@@ -1,0 +1,1 @@
+First public release of Islewright: Roll: two islands, an in-game tutorial, seven languages, sound effects, light and dark themes, undo and multi-touch dice.

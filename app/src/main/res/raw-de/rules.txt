@@ -1,0 +1,61 @@
+# Ziel
+
+Auf Tarnholm: Wie viele Punkte schaffst du in 15 Zügen?
+
+Auf Dunholm: Erreiche 10 Punkte in möglichst wenigen Zügen.
+
+# Dein Zug
+
+Du hast drei Würfe pro Zug. Tippe auf Würfel, um sie zu behalten, und würfle den Rest neu.
+
+Tippe ein hervorgehobenes Feld an, um dort zu bauen. Sobald du baust, ist das Würfeln für diesen Zug vorbei, aber mit allen übrigen Würfeln kannst du weiterbauen.
+
+Falsch gebaut? Der Pfeil neben dem Würfelknopf nimmt deinen letzten Bau zurück, bis zum nächsten Wurf.
+
+# Bauen
+
+Neue Straßen verlängern die Straßen, die du schon hast.
+
+Plätze für Dörfer und Burgen bleiben gesperrt, bis eine Straße sie erreicht.
+
+Auf Tarnholm werden Dörfer, Burgen und Händler jeweils in der Reihenfolge ihrer Nummern gebaut.
+
+# Gold
+
+[icon_gold_12] Gold wird paarweise getauscht: Zwei Gold werden zu einem beliebigen Rohstoff, der dir fehlt. Ein einzelnes Gold lässt sich allein nicht verwenden.
+
+# Händler
+
+[glyph_trader_12] Heuere einen Händler an, und er lagert einen Rohstoff für dich ein. Du kannst ihn jederzeit verwenden, aber nur einmal.
+
+Solange du einen Händler nicht angeheuert hast, liegt sein Rohstoff auf seinem Karren. Sobald er angeheuert ist, wandert der Rohstoff nach links unten auf dem Bildschirm und bleibt dort, bis du ihn verwendest.
+
+[icon_any_12] Das ? steht für einen beliebigen Rohstoff. Auf Dunholm haben die zwei Händler jeder Wüste ein ? gemeinsam. Heuere beide an, um es zu verdienen.
+
+# Eingelagert oder klassisch
+
+Normalerweise wird ein eingelagerter Rohstoff von selbst verbraucht, sobald ein Bau ihn braucht. Er wirkt also wie ein siebter Würfel.
+
+Mit dem klassischen Modus für Händlerrohstoffe in den Einstellungen ist er kein zusätzlicher Würfel. Ziehe ihn vom unteren Bildschirmrand auf einen deiner gewürfelten Würfel. Dieser Würfel zeigt dann den Rohstoff und bleibt für den Rest des Zuges liegen. Ziehst du ein ?, wählst du, welcher Rohstoff es wird.
+
+# Hervorhebungen
+
+![rules_highlight_now]
+
+Grün: Das kannst du jetzt bauen.
+
+![rules_highlight_chain]
+
+Blassgrün: in diesem Zug ebenfalls erreichbar. Tippe es an, und alles auf dem Weg dorthin wird für dich gebaut.
+
+![rules_highlight_bank]
+
+Blau: Hier zu bauen verbraucht einen Rohstoff, den einer deiner Händler eingelagert hat.
+
+Blassblau: dasselbe, sobald zuerst etwas anderes gebaut ist. Tippe es an, und alles auf dem Weg dorthin wird für dich gebaut.
+
+# Wertung
+
+Auf Tarnholm ist die Zahl auf jedem Feld seine Punktzahl. Ein Zug ohne Bau kostet dich 2 Punkte.
+
+Auf Dunholm zählt ein Dorf 1 Punkt und eine Burg 2. Die markierte Straße und dein dritter Händler bringen je 2 weitere.

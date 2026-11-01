@@ -1,9 +1,29 @@
 *.iml
-.gradle
+.gradle/
 /local.properties
-/.idea/
-.DS_Store
+/.idea
 /build
+/app/build
 /captures
 .externalNativeBuild
-app/build
+.cxx
+.DS_Store
+
+# Build artifacts belong on GitHub releases, not in the tree.
+*.apk
+*.aab
+
+# Signing keys never belong in the repo.
+*.jks
+*.keystore
+keystore.properties
+
+# nano emergency saves, which can capture pasted secrets.
+nano.*.save
+*.save
+
+# Art script previews are for review only.
+tools/preview_*.png
+
+# Private agent notes never belong in this repository.
+CLAUDE.md

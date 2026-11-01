@@ -1,0 +1,193 @@
+# Sound effects: which source plays which moment (read by tools/process_sfx.sh).
+#
+# To swap a sound: change the key in the [moments] table (chosen or alt), then run
+#   tools/process_sfx.sh <originals directory> [<audition directory>]
+# The script does not download anything. Sources are found two ways:
+#   wesnoth:<path>  under the installed Wesnoth data ($WESNOTH_DIR, default /usr/share/games/wesnoth/1.16)
+#   orig:<path>     under the originals directory given on the command line
+# Each source's sha256 is checked before use. See the end of this file for where each came from.
+#
+# Sections: [moments], [sources], then comment-only provenance and the measured loudness.
+# Fields are separated by "|". Blank lines and lines starting "#" are ignored.
+
+[moments]
+# NN | id (file is app/src/main/res/raw/sfx_<id>.ogg or .wav) | chosen source | alternate source | offset dB | intent
+# The offset is added to the reference loudness: it is the per-moment intent. 0 = same loudness as the Wesnoth median.
+01|click|wes_button|wes_checkbox|-10|Wesnoth's button click; a sharp transient, so the peak ceiling keeps it about as loud as the old tick
+02|die|wes_slider|wes_receive|-8|a soft low tock; quieter than the click, and far lower in pitch
+03|roll|k_shake3|k_dicethrow3|0|a dice rattle (one of two roll sounds, see 17)
+04|road|k_concrete1|wes_fist|-5|light: a scuff of stone
+05|village|k_wood2x|k_door2|0|medium: two knocks of a mallet on wood
+06|castle|wes_club|wes_warhammer|-4|heavy: a club's solid thump
+07|trader|k_coins|wes_arrive|-4|a purse of coins
+08|banked|k_metal0|k_pluck2|-5|a metallic clunk with a distinct first 100 ms; retriggered, so a little quieter
+09|gold|wes_gold_one|wes_gold|-2|a single chunky coin clink (one clink cut from gold.ogg)
+10|turn_end|k_flip1|wes_timer|-4|a light page turn
+11|empty_turn|k_back2|wes_leave|-3|a soft falling blip
+12|ship_appears|wes_horn1|wes_horn6|-4|a distant horn, low-passed and quiet
+13|ship_docks|k_bell1|wes_horn5|0|a full bell
+14|game_over|wes_fanfare|oga_fanfare3|0|a short fanfare
+15|top_score|oga_fanfare3|wes_victory|0|a brass fanfare lick, played in place of 14 for a new best score
+16|bonus|wes_join|k_conf2|-1|a bright rising chime
+17|roll_b|k_dicethrow3|k_shake3|0|the other dice sound: a throw. The game picks this or 03 at random for each roll
+
+[sources]
+# key | spec | start s | length s ("-" = to the end) | fade out ms | extra ffmpeg filter ("-" = none) | sha256 of the original
+wes_button|wesnoth:sounds/button.wav|0|-|8|-|991144144b934e98824f97d25823e331e3842fd97b3da817b0945aa93e5c6b1b
+wes_checkbox|wesnoth:sounds/checkbox.wav|0|-|3|-|b5f8b0a2a0893a54b19e99e84798c2d5cca2494850ee3130717e7022e8b354b4
+k_click5|orig:x/ui-audio/Audio/click5.ogg|0|-|5|-|52d41e0bb012731bf2a391d53ffb52265ef21589c7701e66b391d5e36a65b293
+wes_slider|wesnoth:sounds/slider.wav|0|-|8|-|137d6fa3cf070970fe198a2a1f32a86d9f576fd072b1f1aafb8fbbd04a526d13
+wes_receive|wesnoth:sounds/receive.wav|0|-|20|-|22340374240a4629396d2b56e00d80a9ba7815aabcd57704a7c4d71205739dbd
+k_shake3|orig:x/casino-audio/Audio/dice-shake-3.ogg|0.38|0.9|140|-|aecd1dd0de6e42ebb510d1f9bfe91a580a8af238dd73bdfda368b90b894b5c09
+k_dicethrow3|orig:x/casino-audio/Audio/dice-throw-3.ogg|0|-|40|-|09c13d35a9a30bfce31a5e9bca94adc5be189ddecd0b4500237d54c7fd05227c
+k_concrete1|orig:x/impact-sounds/Audio/footstep_concrete_001.ogg|0|-|15|-|507a75eb19b897087855a3be3cf11a12d7fa37d143ad535eeebe0b8031c7325d
+wes_fist|wesnoth:data/core/sounds/fist.ogg|0|-|30|-|e7a0e81e9fd01b4067703a3f84555cb91f830e0252d6e1747314f5bf4e50439e
+wes_hatchet|wesnoth:data/core/sounds/hatchet.wav|0|-|40|-|464ab20885dd37f1bda291d4a84ba1f19f350bf4191b6f825083c63ddfa26a21
+k_plank1|orig:x/impact-sounds/Audio/impactPlank_medium_001.ogg|0|0.5|100|-|d7c304319f8beac616231b62041fa8da74045b62d7155965516efb9b19303df4
+k_door2|orig:x/rpg-audio/Audio/doorClose_2.ogg|0|-|60|-|4aa4fe79836c53cd6d0cb0b22ddc33b9901429463ae1bb75131f072683f63f21
+k_wood2|orig:x/impact-sounds/Audio/impactWood_medium_002.ogg|0|-|40|-|3f3f1917428b828f733a963167833c707bf88296ff158e1559c57c5cb813d799
+k_wood2x|orig:x/impact-sounds/Audio/impactWood_medium_002.ogg|0|-|40|asplit[a][b];[b]adelay=delays=300:all=1[c];[a][c]amix=inputs=2:duration=longest:normalize=0|3f3f1917428b828f733a963167833c707bf88296ff158e1559c57c5cb813d799
+wes_warhammer|orig:wesnoth-master/warhammer.ogg|0|-|150|-|a551b5a9c2a80e2011e419f69ba63cb21f361ce067844c36df5d687a25072bd8
+wes_club|wesnoth:data/core/sounds/club.ogg|0|-|120|-|9607bc70597e9d5910b10461ca82e144dc9df6e5471588e0964cb97d5aa71c22
+k_back2|orig:x/interface-sounds/Audio/back_002.ogg|0|-|30|-|61581c58194e3f19f531072edabbc344204c7e0a2887b8ededce4357bcf09195
+wes_mace|wesnoth:data/core/sounds/mace.wav|0|-|60|-|c126cb8433a3bf063b8c9ee5b212684715657e7b905588b59bc2d7083173893b
+k_coins|orig:x/rpg-audio/Audio/handleCoins.ogg|0.04|0.65|120|-|8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab
+wes_arrive|wesnoth:sounds/arrive.wav|0|-|150|-|6da3e6df80bbf0ae1aeaabbf78f21b841f13404ff2518ba39805b7a82e3c4db0
+k_metal0|orig:x/impact-sounds/Audio/impactMetal_light_000.ogg|0|0.33|80|-|33b5e6e37c6e9d54e07bf5a89b12c76e879f40c1ea83cdd82714df1d6f9fec6d
+k_pluck2|orig:x/interface-sounds/Audio/pluck_002.ogg|0|-|40|-|c977fe249ff42d1c93a552b33abc13a8399df3879fa510475426e5c4bbac1da9
+wes_gold|wesnoth:data/core/sounds/gold.ogg|0|0.8|250|-|7259504d0a51fae1a45fa68f7db777dab2b00dd337aaecc0d475e60871c6b593
+wes_gold_one|wesnoth:data/core/sounds/gold.ogg|1.113|0.25|120|-|7259504d0a51fae1a45fa68f7db777dab2b00dd337aaecc0d475e60871c6b593
+k_coins2|orig:x/rpg-audio/Audio/handleCoins2.ogg|0|-|40|-|4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32
+k_flip1|orig:x/rpg-audio/Audio/bookFlip1.ogg|0.3|0.5|60|-|fa81ac2fedc8c641661b87e349630a36c9800e795e0c800e029214efdbe26a7d
+wes_timer|wesnoth:sounds/timer.wav|0|0.45|150|-|bdaf531c6638ac5ed521722543189a10f8919f8b0fd7a3cbf30e9025a27657cd
+wes_leave|wesnoth:sounds/leave.wav|0|-|120|-|4fbe76f495d0cb177f2e8b660b9878028f18966f9642aaeb14b0f4281750b282
+oga_lose|orig:dl/oga-game-over-trumpet/losetrumpet_0.ogg|0|-|100|-|a27f84e53293c322c53a6251ba2ef6b82fc2380a22787600b04595d1d67d16f8
+wes_horn1|wesnoth:data/core/sounds/horn-signals/horn-1.ogg|0|1.5|400|lowpass=f=1800|e53b05f3270a55a015209369ec69ebcc9e114b014ad33124f15044761f9bebdd
+wes_horn6|wesnoth:data/core/sounds/horn-signals/horn-6.ogg|0|1.5|400|lowpass=f=1800|6a4b7601fc8d94ce7e06cab0ba8499504b32a77fbef77a867dcc7e2c731ec31e
+k_bell1|orig:x/impact-sounds/Audio/impactBell_heavy_001.ogg|0|1.6|400|-|9df61e3ae9a83dc65e5a1fd3ed19d480876f3b22b963a1b9ef6fa293592dcec4
+wes_horn5|wesnoth:data/core/sounds/horn-signals/horn-5.ogg|0|3.0|500|-|9a38406ff887543b0bbc92b6156a852770230953412c03e14bd4ee6fbd1e526b
+oga_fanfare3|orig:dl/oga-classic-fanfare-lick/fanfare_3.ogg|0.15|2.6|300|-|160682a8f5a50380fa875809cd628c1f892e419a194803de4ae11f7babcbc8e0
+wes_fanfare|wesnoth:data/core/sounds/fanfare-short.wav|0|-|150|-|3b8d5575a7dbd0bf7456defcee85769d174e9c3960537cb2dc40fcf061a6cd11
+wes_victory|wesnoth:data/core/music/victory.ogg|0|4.0|450|-|800010256b9010d6783d6b85e25cb40b9751a2252a0691d469a77cf944a1cf1d
+k_nes00|orig:x/music-jingles/Audio/8-Bit jingles/jingles_NES00.ogg|0|-|200|-|1010c9b566d6c090ff03a4aaaf7439e26eb4cc4f20373800d0b7e6a9057b795d
+wes_join|wesnoth:sounds/join.wav|0|-|250|-|83af7faa3c6cc0ea4fca8988a55052fb4355490321569a6538cf8986fbd9c1ff
+k_conf2|orig:x/interface-sounds/Audio/confirmation_002.ogg|0|-|80|-|33b17a9a9a2397c62b285c52c33a907fdffb476909c99e42dde603f6a7a8b12c
+
+# ---------------------------------------------------------------------------------------------
+# Provenance (comments; not read by the script)
+# ---------------------------------------------------------------------------------------------
+#
+# WESNOTH (keys wes_*): The Battle for Wesnoth, installed package wesnoth-1.16-data 1:1.16.11-1build3
+# (/usr/share/games/wesnoth/1.16), https://www.wesnoth.org, source https://github.com/wesnoth/wesnoth .
+# Every file below except wes_button (see its note) is licensed "GNU GPL v2+" in Wesnoth's copyrights.csv (the row quoted is the
+# file's own, matched by path; each file is byte-identical to the checkout at commit a0227632987).
+#   wes_checkbox   sounds/checkbox.wav                      Lari Nieminen(zookeeper)   (alternate click)
+#   wes_slider     sounds/slider.wav                        Lari Nieminen(zookeeper)
+#   wes_receive    sounds/receive.wav                       unknown;Lari Nieminen(zookeeper)
+#   wes_club       data/core/sounds/club.ogg                (see copyrights.csv)
+#   wes_fist       data/core/sounds/fist.ogg                Lari Nieminen(zookeeper)
+#   wes_hatchet    data/core/sounds/hatchet.wav             Lari Nieminen(zookeeper)
+#   wes_mace       data/core/sounds/mace.wav                Leonardo Magno Sampaio(leorock116)
+#   wes_arrive     sounds/arrive.wav                        unknown;Lari Nieminen(zookeeper)
+#   wes_gold       data/core/sounds/gold.ogg                Lari Nieminen(zookeeper)
+#   wes_timer      sounds/timer.wav                         Lari Nieminen(zookeeper)
+#   wes_leave      sounds/leave.wav                         unknown;Lari Nieminen(zookeeper)
+#   wes_horn1/5/6  data/core/sounds/horn-signals/horn-N.ogg Lari Nieminen(zookeeper)
+#   wes_fanfare    data/core/sounds/fanfare-short.wav       J.W. Bjerk(Eleazar)
+#   wes_victory    data/core/music/victory.ogg              Timothy Pinkham(TimothyP)
+#   wes_join       sounds/join.wav                          Lari Nieminen(zookeeper)
+# wes_warhammer is NOT in the 1.16 package: it is from Wesnoth master (commit a0227632987),
+#   data/campaigns/Eastern_Invasion/sounds/warhammer.ogg, GNU GPL v2+, "unknown;Nemaara Lang(nemaara)"
+#   (copyrights.csv row dated 2023/09/15). Copy it into <originals>/wesnoth-master/ before running.
+# wes_button is sounds/button.wav, which is NOT GPL: Wesnoth's copyrights.csv records it as
+#   CC BY-SA 4.0, author "Argentum Age" (row dated 2018/03/04). It is used under CC BY-SA 4.0
+#   (https://creativecommons.org/licenses/by-sa/4.0/), credited in CREDITS.md and in the app,
+#   and changed here by trimming, mixing to mono and a change of level.
+# NOT USED: sounds/bell.wav (also CC BY-SA 4.0 "Argentum Age"); a Kenney bell is the dock bell.
+# wes_gold_one is one clink cut from wes_gold's file (data/core/sounds/gold.ogg, same sha256, same author) by start
+#   and length only: the last clink of the pile, at 1.123 s, found by its envelope (no second peak within 12 dB after it).
+#
+# KENNEY (keys k_*): Kenney Vleugels, https://kenney.nl . Every page states
+#   "License  Creative Commons CC0" (https://creativecommons.org/publicdomain/zero/1.0/) and each pack's
+#   License.txt says "License (Creative Commons Zero, CC0) ... You may use these assets in personal and
+#   commercial projects. Credit (Kenney or www.kenney.nl) would be nice but is not mandatory."
+#   Fetched 2026-10-09; the pack zip is unpacked to <originals>/x/<pack>/ (zip sha256 given).
+#   Casino Audio 1.1    https://kenney.nl/assets/casino-audio
+#     zip https://kenney.nl/media/pages/assets/casino-audio/2472606a04-1721639069/kenney_casino-audio.zip
+#     sha256 f36250766ac5bc378c13708ddf12a23a8e54a3251f8d482c7536e51b5dbafa18   (k_shake3, k_dicethrow3)
+#   RPG Audio           https://kenney.nl/assets/rpg-audio
+#     zip https://kenney.nl/media/pages/assets/rpg-audio/8e99002d76-1677590336/kenney_rpg-audio.zip
+#     sha256 6dbeaf8544da958d8f2adcb4a4a4b76c1ade34a05f8ab9edccd327da7375f38b   (k_coins, k_coins2, k_flip1, k_door2)
+#   Impact Sounds       https://kenney.nl/assets/impact-sounds
+#     zip https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip
+#     sha256 029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8   (k_concrete1, k_plank1, k_wood2, k_metal0, k_bell1)
+#   Interface Sounds    https://kenney.nl/assets/interface-sounds
+#     zip https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip
+#     sha256 f2193d072726d6758a5f7871b2dcc54dcce0d5c35c6f0a62f92549b327c81232   (k_pluck2, k_conf2, k_back2)
+#   UI Audio            https://kenney.nl/assets/ui-audio
+#     zip https://kenney.nl/media/pages/assets/ui-audio/490d233f68-1677590494/kenney_ui-audio.zip
+#     sha256 946fc23a63d535d693eb31b2eabb80c8c28d6351e2186b344ceb71b2cb1d5eb6   (k_click5)
+#   Music Jingles       https://kenney.nl/assets/music-jingles
+#     zip https://kenney.nl/media/pages/assets/music-jingles/f37e530b9e-1677590399/kenney_music-jingles.zip
+#     sha256 b729ba57959bd58793d2c5cafa348aaf2655d354f3da35ec4729e03ec77197b8   (k_nes00)
+#
+# OPENGAMEART (keys oga_*), fetched 2026-10-09, both pages show "License(s): CC0":
+#   oga_fanfare3  "Classic fanfare lick" by MedicineStorm ("Made in Garage Band")
+#     page https://opengameart.org/content/classic-fanfare-lick
+#     file https://opengameart.org/sites/default/files/fanfare_3.ogg  (sha256 above)
+#   oga_lose      "Game Over Trumpet SFX" by Mehmet Adil ("No attribution required", offers the credit "0new4y")
+#     page https://opengameart.org/content/game-over-trumpet-sfx
+#     file https://opengameart.org/sites/default/files/losetrumpet_0.ogg  (sha256 above)
+#
+# MEASURED LOUDNESS: see the end of this file (pasted from the script's report; not read).
+
+# ---------------------------------------------------------------------------------------------
+# Measured loudness (comments; pasted from the report tools/process_sfx.sh prints; not read by it)
+# ---------------------------------------------------------------------------------------------
+# Method. Every source first goes through a gentle first order low pass (lowpass=f=5000:p=1 in process_sfx.py:
+# minus 3 dB at 5 kHz, 6 dB per octave above, so a phone speaker has no crackly top end), then is shaped (leading silence to 2 ms, trailing silence cut, 5 ms fade in,
+# the fade out in [sources]), measured, then given ONE plain gain: no compressor, no limiter. The measure for all of
+# them is L100, the K-weighted (BS.1770) mean square of the loudest 100 ms window, in dB. Integrated LUFS is shown
+# only where valid (it cannot read anything much under a second; ffmpeg ebur128 says -70 for a click). The
+# reference is the median L100 of the nine Wesnoth sounds chosen. Each moment is brought to reference + its offset
+# in [moments], plus MASTER_DB (-4). Where that gain would put the sample peak above -1.5 dBFS + MASTER_DB (that ceiling is lowered by a negative
+# offset, so a tick meant to be quiet is quiet in peak too) the gain is reduced instead and the row says
+# "peak-limited": sparse, spiky sounds (clicks, the dice, coins, the bell) end up quieter than their intent.
+# Formats: up to 0.35 s a 16 bit mono 44.1 kHz WAV (exact, tiny), longer an Ogg Vorbis q6 mono 44.1 kHz.
+#
+# reference (median L100 of the 9 Wesnoth sounds chosen, after the low pass) = -12.95 dB; every moment is brought to reference + MASTER_DB (-4) + its offset
+# L100 = K-weighted loudest 100 ms, dB. peak = sample peak dBFS. lufs = ffmpeg integrated, '-' where its gate cannot read the sound.
+# n   moment        role    source         orig_s final_s  L100_in   pk_in    gain  L100_out  pk_out   lufs note
+# 01  click         chosen  wes_button       0.42   0.07    -24.2    -3.2   -12.3    -36.4   -15.5      - peak-limited (wanted -26.9); wav 6144 B
+# 01  click         alt     wes_checkbox     0.02   0.02    -27.6   -10.4    -5.1    -32.7   -15.5      - peak-limited (wanted -26.9)
+# 02  die           chosen  wes_slider       0.06   0.06    -24.6    -9.0    -4.5    -29.1   -13.5      - peak-limited (wanted -24.9); wav 5356 B
+# 02  die           alt     wes_receive      0.11   0.11    -19.2    -8.7    -5.7    -24.9   -14.5      - 
+# 03  roll          chosen  k_shake3         1.52   0.88    -20.2     0.5    -6.0    -26.3    -5.5  -30.0 peak-limited (wanted -16.9); ogg 17919 B
+# 03  roll          alt     k_dicethrow3     0.57   0.52    -18.6    -1.1    -4.4    -23.0    -5.5      - peak-limited (wanted -16.9)
+# 04  road          chosen  k_concrete1      0.11   0.10    -29.1   -12.7    +2.2    -26.9   -10.5      - peak-limited (wanted -21.9); wav 9282 B
+# 04  road          alt     wes_fist         0.21   0.21    -12.2    -1.9    -9.7    -21.9   -11.6      - 
+# 05  village       chosen  wes_hatchet      0.52   0.51    -12.1    -0.7    -8.9    -21.1    -9.8  -23.9 ogg 9884 B
+# 05  village       alt     k_plank1         0.78   0.42    -10.6     2.0   -11.5    -22.1    -9.5      - peak-limited (wanted -20.9)
+# 06  castle        chosen  wes_warhammer    1.02   1.01     -5.9     3.6   -15.1    -21.0   -11.4  -24.2 ogg 12969 B
+# 06  castle        alt     wes_mace         0.44   0.44     -5.9    -0.0   -15.0    -20.9   -15.0      - 
+# 07  trader        chosen  k_coins          0.85   0.64    -18.5    -0.3    -9.2    -27.8    -9.6  -35.0 peak-limited (wanted -20.9); ogg 12971 B
+# 07  trader        alt     wes_arrive       0.83   0.83    -16.6    -8.0    -4.4    -20.9   -12.4      - 
+# 08  banked        chosen  k_metal0         0.35   0.26    -12.0    -0.1   -10.4    -22.4   -10.5      - peak-limited (wanted -21.9); wav 23370 B
+# 08  banked        alt     k_pluck2         0.16   0.14    -18.3    -4.8    -5.7    -24.0   -10.5      - peak-limited (wanted -21.9)
+# 09  gold          chosen  wes_gold_one     1.70   0.25    -34.0   -17.1    +9.6    -24.3    -7.5      - peak-limited (wanted -18.9); wav 22094 B
+# 09  gold          alt     wes_gold         1.70   0.80    -15.6    -5.0    -3.3    -18.9    -8.3      - 
+# 10  turn_end      chosen  k_flip1          0.77   0.42    -18.0     1.1   -10.6    -28.7    -9.8  -34.5 peak-limited (wanted -20.9); ogg 8956 B
+# 10  turn_end      alt     wes_timer        0.80   0.26    -13.3    -1.3    -8.2    -21.5    -9.5      - peak-limited (wanted -20.9)
+# 11  empty_turn    chosen  wes_leave        0.81   0.81    -12.9    -5.1    -7.0    -19.9   -12.0  -24.6 ogg 10390 B
+# 11  empty_turn    alt     oga_lose         1.11   1.11    -14.9    -8.3    -5.0    -19.9   -13.3      - 
+# 12  ship_appears  chosen  wes_horn1        3.21   1.50     -7.2     2.4   -13.7    -20.9   -11.3  -22.6 ogg 14170 B
+# 12  ship_appears  alt     wes_horn6        4.00   1.50     -7.7     1.7   -13.2    -20.9   -11.5      - 
+# 13  ship_docks    chosen  k_bell1          1.74   1.57    -13.7    -2.3    -3.3    -16.9    -5.6  -26.3 ogg 15814 B
+# 13  ship_docks    alt     wes_horn5        4.42   3.00     -3.0     2.5   -13.9    -16.9   -11.4      - 
+# 14  game_over     chosen  oga_fanfare3     2.93   2.48    -12.9    -2.8    -4.0    -16.9    -6.8  -20.4 ogg 30213 B
+# 14  game_over     alt     wes_fanfare      2.00   1.81    -10.8    -1.8    -6.2    -16.9    -8.0      - 
+# 15  top_score     chosen  wes_victory      5.46   3.98     -8.2     1.5    -8.7    -17.0    -7.3  -21.8 ogg 41003 B
+# 15  top_score     alt     k_nes00          1.76   1.72     -9.8    -2.4    -7.1    -16.9    -9.5      - 
+# 16  bonus         chosen  wes_join         1.02   1.02    -13.7    -4.1    -4.2    -17.9    -8.2  -22.7 ogg 16542 B
+# 16  bonus         alt     k_conf2          0.54   0.53    -10.1    -1.7    -7.9    -17.9    -9.6      - 
+# total shipped: 257077 bytes

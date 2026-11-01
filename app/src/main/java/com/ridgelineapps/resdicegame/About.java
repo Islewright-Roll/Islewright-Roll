@@ -41,14 +41,28 @@ import java.io.InputStreamReader;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.Spanned;
+import android.text.TextPaint;
+import android.text.style.URLSpan;
+import android.text.util.Linkify;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
-import android.webkit.WebView;
 import android.widget.Button;
+import android.widget.TextView;
 
 public class About extends Activity {
+
+    private View root;
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        PixelUi.themeChanged(this, root);
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);        
@@ -56,7 +70,10 @@ public class About extends Activity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         
         super.onCreate(savedInstanceState);
+        PixelUi.refreshTheme(this);
         setContentView(R.layout.about);
+        PixelUi.skinScreen(this);
+        root = ((android.view.ViewGroup) findViewById(android.R.id.content)).getChildAt(0);
         
         ((Button)findViewById(R.id.about_ok)).setOnClickListener(new OnClickListener() {
             @Override
@@ -65,10 +82,56 @@ public class About extends Activity {
             }
         });
         
-        String html = readFile(this, R.raw.about).toString();
-        WebView w = (WebView) findViewById(R.id.webView);
-        w.setBackgroundColor(0);
-        w.loadData(html, "text/html", "UTF-8");
+        String text = readFile(this, R.raw.about).toString().replace("{{version}}", version());
+        TextView t = (TextView) findViewById(R.id.about_text);
+        t.setText(text);
+        Linkify.addLinks(t, Linkify.WEB_URLS);
+        stripLinkUnderlines(t);
+    }
+
+    /**
+     * Linkify underlines links with a hairline that is not on the art grid. The link is
+     * still tappable and is coloured differently from the body; only the line goes.
+     */
+    private static void stripLinkUnderlines(TextView t) {
+        Spannable spannable = (Spannable) t.getText();
+        for (URLSpan span : spannable.getSpans(0, spannable.length(), URLSpan.class)) {
+            int start = spannable.getSpanStart(span);
+            int end = spannable.getSpanEnd(span);
+            spannable.removeSpan(span);
+            spannable.setSpan(new URLSpan(span.getURL()) {
+                @Override
+                public void updateDrawState(TextPaint ds) {
+                    super.updateDrawState(ds);
+                    ds.setUnderlineText(false);
+                }
+            }, start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    /**
+     * The version the user is actually running.
+     *
+     * A release shows its name alone, because the name is already unique. A pre-release
+     * build shows the build number too: several of those share one name (1.19-rc might be
+     * built a dozen times) and the number is the only thing telling them apart, which is
+     * exactly what a bug report needs. The suffix is what distinguishes the two, so
+     * "1.19-rc" gets the number and "1.19" does not.
+     */
+    private String version() {
+        try {
+            android.content.pm.PackageInfo info =
+                    getPackageManager().getPackageInfo(getPackageName(), 0);
+            String name = info.versionName;
+            if (name != null && name.indexOf('-') >= 0) {
+                return "v" + name + " (" + info.versionCode + ")";
+            }
+            return "v" + name;
+        }
+        catch (Exception e) {
+            // Cannot happen for our own package, but a blank line beats a crash on About.
+            return "";
+        }
     }
 
     static CharSequence readFile(Activity activity, int id) {

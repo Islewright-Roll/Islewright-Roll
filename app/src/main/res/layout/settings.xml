@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Settings dialog content. Every dimension is in ART pixels written as px: PixelUi.skin
+  multiplies them by the integer scale. See PixelUi.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical" >
+
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:text="@string/settings_early_build_prompt_label" />
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1px"
+        android:layout_marginBottom="4px"
+        android:tag="secondary"
+        android:text="@string/settings_early_build_prompt_description" />
+
+    <RadioGroup
+        android:id="@+id/settings_early_build_prompt_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_early_build_prompt_off"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_off" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_early_build_prompt_smart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_early_build_prompt_smart" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_early_build_prompt_conservative"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_early_build_prompt_conservative" />
+    </RadioGroup>
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="4px"
+        android:text="@string/settings_end_turn_prompt_label" />
+
+    <RadioGroup
+        android:id="@+id/settings_end_turn_prompt_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_end_turn_prompt_off"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_off" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_end_turn_prompt_on"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_on" />
+    </RadioGroup>
+
+    <!-- Trader resource classic mode: a check box, off by default, and a line on what it does. -->
+    <com.ridgelineapps.resdicegame.PixelCheckBox
+        android:id="@+id/settings_trader_classic"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:paddingTop="2px"
+        android:paddingBottom="2px"
+        android:text="@string/settings_trader_classic_label" />
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1px"
+        android:tag="secondary"
+        android:text="@string/settings_trader_classic_description" />
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="4px"
+        android:text="@string/settings_haptic_feedback_label" />
+
+    <RadioGroup
+        android:id="@+id/settings_haptic_feedback_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_haptic_feedback_off"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_haptic_feedback_off" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_haptic_feedback_on"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_haptic_feedback_on" />
+    </RadioGroup>
+
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:text="@string/settings_music_volume_label" />
+
+    <!-- The same pixel slider as the colour picker's brightness, with its value beside it. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2px"
+        android:layout_marginBottom="4px"
+        android:layout_marginRight="6px"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" >
+
+        <SeekBar
+            android:id="@+id/settings_music_volume"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:max="100" />
+
+        <com.ridgelineapps.resdicegame.PixelTextView
+            android:id="@+id/settings_music_volume_value"
+            android:layout_width="22px"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2px"
+            android:gravity="right"
+            android:text="60" />
+    </LinearLayout>
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="4px"
+        android:text="@string/settings_sound_effects_label" />
+
+    <RadioGroup
+        android:id="@+id/settings_sound_effects_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_sound_effects_off"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_off" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_sound_effects_on"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_on" />
+    </RadioGroup>
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="4px"
+        android:text="@string/settings_theme_label" />
+
+    <RadioGroup
+        android:id="@+id/settings_theme_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_theme_system"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_theme_system" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_theme_light"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_theme_light" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_theme_dark"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_theme_dark" />
+    </RadioGroup>
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:layout_marginBottom="4px"
+        android:text="@string/settings_welcome_label" />
+
+    <RadioGroup
+        android:id="@+id/settings_welcome_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_welcome_off"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_off" />
+
+        <com.ridgelineapps.resdicegame.PixelRadioButton
+            android:id="@+id/settings_welcome_on"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingTop="2px"
+            android:paddingBottom="2px"
+            android:text="@string/settings_on" />
+    </RadioGroup>
+
+    <!-- Opens the colour picker over this dialog; the picker saves the colour itself. -->
+    <!-- The Dunholm target. The label and the description carry the island's name and its
+         own target, so SettingsDialog fills them in. -->
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:id="@+id/settings_race_target_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px" />
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:id="@+id/settings_race_target_description"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="1px"
+        android:tag="secondary" />
+
+    <!-- The same pixel slider as Music volume, with its value beside it. -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2px"
+        android:layout_marginBottom="4px"
+        android:layout_marginRight="6px"
+        android:gravity="center_vertical"
+        android:orientation="horizontal" >
+
+        <SeekBar
+            android:id="@+id/settings_race_target"
+            android:layout_width="0px"
+            android:layout_height="wrap_content"
+            android:layout_weight="1" />
+
+        <com.ridgelineapps.resdicegame.PixelTextView
+            android:id="@+id/settings_race_target_value"
+            android:layout_width="22px"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2px"
+            android:gravity="right"
+            android:text="10" />
+    </LinearLayout>
+
+    <com.ridgelineapps.resdicegame.PixelButton
+        android:id="@+id/settings_player_color"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10px"
+        android:text="@string/player_color_menu" />
+
+    <com.ridgelineapps.resdicegame.PixelButton
+        android:id="@+id/settings_show_tutorial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4px"
+        android:layout_marginBottom="2px"
+        android:text="@string/settings_tutorial" />
+
+</LinearLayout>

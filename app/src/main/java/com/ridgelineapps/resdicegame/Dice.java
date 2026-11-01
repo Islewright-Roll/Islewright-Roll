@@ -31,6 +31,11 @@ public class Dice {
    Value value;
    boolean held;
    boolean used;
+   /**
+    * Overwritten by a banked resource in trader resource classic mode (Game.overwriteDie):
+    * held, and a tap does not let it go, until the turn ends.
+    */
+   boolean locked;
    
    public Dice() {
       reset();
@@ -93,6 +98,16 @@ public class Dice {
    public void reset() {
       held = false;
       used = false;
+      locked = false;
       value = Value.None;
+   }
+
+   public Dice copy() {
+      Dice copy = new Dice();
+      copy.value = value;
+      copy.held = held;
+      copy.used = used;
+      copy.locked = locked;
+      return copy;
    }
 }

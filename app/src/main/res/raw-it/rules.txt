@@ -1,0 +1,61 @@
+# Obiettivo
+
+A Tarnholm, scopri quanti punti riesci a fare in 15 turni.
+
+A Dunholm, arriva a 10 punti nel minor numero di turni.
+
+# Il tuo turno
+
+Hai tre lanci per turno. Tocca i dadi che vuoi tenere, poi rilancia gli altri.
+
+Tocca una casella evidenziata per costruire lì. Appena costruisci, i lanci di quel turno sono finiti, ma puoi continuare a costruire con i dadi che ti restano.
+
+Hai costruito la cosa sbagliata? La freccia accanto al pulsante di lancio annulla la tua ultima costruzione, fino al prossimo lancio.
+
+# Costruire
+
+Le nuove strade si costruiscono come prolungamento di quelle che hai già.
+
+Le caselle di villaggi e castelli restano bloccate finché una strada non le raggiunge.
+
+A Tarnholm, villaggi, castelli e mercanti si costruiscono ciascuno in ordine di numero.
+
+# Oro
+
+[icon_gold_12] L'oro si scambia a coppie: due ori diventano una risorsa qualsiasi che ti manca. Un oro da solo non si può usare.
+
+# Mercanti
+
+[glyph_trader_12] Ingaggia un mercante e metterà da parte una risorsa per te. Puoi usarla quando vuoi, ma una volta sola.
+
+Finché non ingaggi un mercante, la sua risorsa resta sul suo carro. Una volta ingaggiato, la risorsa si sposta in basso a sinistra sullo schermo e ci resta finché non la usi.
+
+[icon_any_12] Il ? può essere una risorsa qualsiasi. A Dunholm, ogni deserto ha due mercanti che condividono un ?. Ingaggiali entrambi per ottenerlo.
+
+# Da parte o classica
+
+Di solito una risorsa messa da parte si spende da sola quando serve a una costruzione, quindi funziona come un settimo dado.
+
+Con la modalità classica risorse mercante attiva nelle Impostazioni, non è un dado in più. Trascinala dal fondo dello schermo su uno dei tuoi dadi lanciati. Quel dado mostra la risorsa e resta così per il resto del turno. Se trascini un ?, scegli quale risorsa diventa.
+
+# Evidenziazioni
+
+![rules_highlight_now]
+
+Verde: puoi costruirlo ora.
+
+![rules_highlight_chain]
+
+Verde chiaro: anche questo è alla tua portata in questo turno. Toccalo e tutto ciò che serve per arrivarci viene costruito per te.
+
+![rules_highlight_bank]
+
+Blu: costruire qui spende una risorsa messa da parte da uno dei tuoi mercanti.
+
+Azzurro: lo stesso, dopo aver costruito prima qualcos'altro. Toccalo e tutto ciò che serve per arrivarci viene costruito per te.
+
+# Punteggio
+
+A Tarnholm, il numero su ogni casella è quanto vale. Un turno senza costruire nulla ti costa 2 punti.
+
+A Dunholm, un villaggio vale 1 punto e un castello 2. La strada contrassegnata e il tuo terzo mercante ne aggiungono altri 2 ciascuno.

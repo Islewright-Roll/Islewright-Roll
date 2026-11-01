@@ -18,77 +18,54 @@ package com.ridgelineapps.resdicegame;
 
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Paint.Style;
-import android.graphics.Path;
-import android.graphics.Rect;
-import android.graphics.RectF;
 
 public class UIDice extends UIEntity {
-   public static final int size = 65;
+   /** A die is a square of this many art pixels. */
+   public static final int size = 28;
+   static final int ICON = 16;
+
    Dice dice;
    int x;
    int y;
+   static Bitmap face;
+   static Bitmap faceHeld;
+   static Bitmap slotEmpty;
    static Bitmap wool;
    static Bitmap grain;
    static Bitmap brick;
    static Bitmap ore;
    static Bitmap lumber;
    static Bitmap gold;
-   Paint paint;
-   Paint holdPaint;
-   Paint holdBorderPaint;
-   Paint backPaint;
-   
-   public UIDice(Game game, int index, int x, int y) {
-      super(game, Type.dice, index, x, y, x + size, y + size);
+   static Bitmap any;
+
+   public UIDice(Game game, int index) {
+      super(game, Type.dice, index);
       dice = game.dice[index];
+   }
+
+   public void setPosition(int x, int y) {
       this.x = x;
       this.y = y;
-      
-      paint = new Paint();
-      paint.setDither(true);
-      paint.setFilterBitmap(true);
-      paint.setAntiAlias(true);
-      
-      holdPaint = new Paint();
-      holdPaint.setARGB(140, 80, 65, 0);
-      holdPaint.setStyle(Style.FILL);
-      
-      holdBorderPaint = new Paint();
-      holdBorderPaint.setARGB(255, 135, 125, 55);
-      holdBorderPaint.setAntiAlias(true);
-      holdBorderPaint.setStyle(Style.FILL_AND_STROKE);
-      holdBorderPaint.setStrokeWidth(4);
-      
-      backPaint = new Paint();
-      backPaint.setARGB(255, 225, 215, 140);
-      backPaint.setAntiAlias(true);
-      backPaint.setStyle(Style.FILL);
-      
-      path = new Path();
-      path.moveTo(x, y);
-      path.lineTo(x + size, y);
-      path.lineTo(x + size, y + size);
-      path.lineTo(x, y + size);
-      path.close();
+      setBounds(x, y, size, size);
    }
-   
+
    public static void loadBitmaps(Resources resources) {
-      wool = BitmapFactory.decodeResource(resources, R.drawable.wool);
-      grain= BitmapFactory.decodeResource(resources, R.drawable.grain);
-      brick = BitmapFactory.decodeResource(resources, R.drawable.brick);
-      ore = BitmapFactory.decodeResource(resources, R.drawable.ore);
-      lumber = BitmapFactory.decodeResource(resources, R.drawable.lumber);
-      gold = BitmapFactory.decodeResource(resources, R.drawable.gold);
+      face = ArtCanvas.load(resources, R.drawable.die_face);
+      faceHeld = ArtCanvas.load(resources, R.drawable.die_face_held);
+      slotEmpty = ArtCanvas.load(resources, R.drawable.die_slot_empty);
+      wool = ArtCanvas.load(resources, R.drawable.icon_wool_16);
+      grain = ArtCanvas.load(resources, R.drawable.icon_grain_16);
+      brick = ArtCanvas.load(resources, R.drawable.icon_brick_16);
+      ore = ArtCanvas.load(resources, R.drawable.icon_ore_16);
+      lumber = ArtCanvas.load(resources, R.drawable.icon_lumber_16);
+      gold = ArtCanvas.load(resources, R.drawable.icon_gold_16);
+      any = ArtCanvas.load(resources, Art.ICON_ANY_16);
    }
-   
+
    @Override
-   public void draw(Canvas canvas) {
-      if(dice.isUsable() && dice.getValue() != Dice.Value.None) {
-         Bitmap bitmap = null;
+   public void draw(ArtCanvas art) {
+      Bitmap bitmap = null;
+      if(dice.isUsable()) {
          switch(dice.getValue()) {
             case Wool:
                bitmap = wool;
@@ -108,19 +85,22 @@ public class UIDice extends UIEntity {
             case Gold:
                bitmap = gold;
                break;
-         }
-         if(bitmap != null) {
-            if(dice.isHeld() || !game.canRoll()) {
-                RectF rect = new RectF(x - 1, y - 1, x + size + 1, y + size + 1);
-                canvas.drawRoundRect(rect, 7, 7, holdBorderPaint);
-            }
-            RectF rect = new RectF(x + 3, y + 3, x + size - 3, y + size - 3);
-            canvas.drawRoundRect(rect, 7, 7, backPaint);
-            Rect src = new Rect(0, 0, bitmap.getWidth(), bitmap.getHeight());
-            Rect dest = new Rect(x, y, x + size, y + size);
-            canvas.drawBitmap(bitmap, src, dest, paint);
+            case Any:
+               bitmap = any;
+               break;
+            default:
+               break;
          }
       }
-      super.draw(canvas);
+      if(bitmap == null) {
+         // Spent on a build, or not rolled yet
+         art.sprite(slotEmpty, x, y);
+         return;
+      }
+      // The frame in the player's colour means "this die is staying": held by the player,
+      // or locked in because the rolls are over.
+      boolean staying = dice.isHeld() || !game.canRoll();
+      art.sprite(staying ? TeamColor.recolor(faceHeld, TeamColor.MAGENTA, game.playerColor) : face, x, y);
+      art.sprite(bitmap, x + (size - ICON) / 2, y + (size - ICON) / 2);
    }
 }

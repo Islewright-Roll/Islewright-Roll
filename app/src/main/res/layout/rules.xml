@@ -1,63 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every dimension is in ART pixels written as px: PixelUi.skin multiplies them by the
+  integer scale. The root gets the panel frame from skin().
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="14px" >
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:id="@+id/rules_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:tag="title"
+        android:text="@string/rules_title" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_marginTop="2px"
+        android:layout_marginBottom="6px"
+        android:tag="rule" />
 
     <ScrollView
-        android:layout_width="fill_parent"
-        android:layout_height="0dp"
+        android:id="@+id/rules_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0px"
         android:layout_weight="1"
-         >
+        android:overScrollMode="never"
+        android:scrollbars="vertical" >
 
+        <!-- Filled in code from rules.txt (see Rules.java for the format) -->
         <LinearLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="fill_parent"
+            android:id="@+id/rules_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TextView
-                android:id="@+id/rules_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_margin="5dp"
-                android:layout_marginBottom="20dp"
-                android:text="@string/rules_title"
-                android:textAppearance="?android:attr/textAppearanceLarge" />
-
-            <TextView
-                android:id="@+id/rulesp1_text"
-                android:layout_marginBottom="10dp"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content" />
-            
-            <ImageView
-                android:id="@+id/rules_image"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:src="@drawable/rules_graphic" />
-
-            <TextView
-                android:id="@+id/rulesp2_text"
-                android:layout_marginTop="20dp"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content" />
-        </LinearLayout>
+            android:orientation="vertical"
+            android:paddingRight="4px" />
     </ScrollView>
-    <LinearLayout
-        android:layout_width="fill_parent"
+
+    <com.ridgelineapps.resdicegame.PixelButton
+        android:id="@+id/about_ok"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" 
-        >
-        <Button
-            android:id="@+id/about_ok"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="25dp"
-            android:layout_marginRight="25dp"
-            android:layout_marginTop="10dp"
-            android:text="@string/ok_button" />
-    </LinearLayout>
+        android:layout_marginTop="8px"
+        android:text="@string/ok_button" />
 </LinearLayout>

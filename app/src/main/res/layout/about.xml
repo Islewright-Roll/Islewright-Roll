@@ -1,19 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every dimension is in ART pixels written as px: PixelUi.skin multiplies them by the
+  integer scale. The root gets the panel frame from skin().
+-->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:gravity="center_vertical">
-    <ImageView android:src="@drawable/about_graphic" android:layout_marginBottom="5dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" />
-    <WebView android:id="@+id/webView" android:layout_marginRight="15dp" android:layout_marginLeft="15dp" android:layout_width="fill_parent" android:layout_height="wrap_content"/>
-    <Button 
-    	android:text="@string/ok_button" 
-    	android:id="@+id/about_ok" 
-    	android:layout_marginTop="25dp" 
-    	android:layout_width="fill_parent"
-    	android:layout_marginRight="25dp"
-    	android:layout_marginLeft="25dp"  
-    	android:layout_height="wrap_content"
-    	android:layout_gravity="center_horizontal"
-    />
+    android:padding="14px" >
+
+    <com.ridgelineapps.resdicegame.PixelTextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:tag="title"
+        android:text="@string/about_menu" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_marginTop="2px"
+        android:layout_marginBottom="6px"
+        android:tag="rule" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0px"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:overScrollMode="never"
+        android:scrollbars="none" >
+
+        <com.ridgelineapps.resdicegame.PixelTextView
+            android:id="@+id/about_text"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical" />
+    </ScrollView>
+
+    <com.ridgelineapps.resdicegame.PixelButton
+        android:id="@+id/about_ok"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8px"
+        android:text="@string/ok_button" />
 </LinearLayout>

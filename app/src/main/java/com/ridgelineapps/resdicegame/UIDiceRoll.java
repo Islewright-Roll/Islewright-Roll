@@ -16,80 +16,84 @@
  */
 package com.ridgelineapps.resdicegame;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.graphics.Paint.Style;
-import android.graphics.Path;
+import android.graphics.Bitmap;
+import android.os.SystemClock;
 import android.view.MotionEvent;
 
 public class UIDiceRoll extends UIEntity {
+   /** Art pixels. The button grows sideways if a translated label needs the room. */
+   static final int WIDTH = 96;
+   static final int HEIGHT = 20;
+   static final int CORNER = 6;
+   static final int LABEL = 0xFF1E140A;
+   static final int LABEL_DISABLED = 0xFF4A463E;
+
    int x;
    int y;
    int width;
    int height;
-   Paint paint;
-   Paint touchPaint;
-   Paint textPaint;
+   Bitmap normal;
+   Bitmap pressed;
+   Bitmap disabled;
+   BitmapFont font;
    boolean down = false;
-   
-   public UIDiceRoll(Game game, int x, int y, int width, int height) {
-      super(game, Type.roll, 0, x, y, x + width, y + height);
+   static final long LOCKOUT_MS = 500;
+
+   public UIDiceRoll(Game game, Bitmap normal, Bitmap pressed, Bitmap disabled, BitmapFont font) {
+      super(game, Type.roll, 0);
+      this.normal = normal;
+      this.pressed = pressed;
+      this.disabled = disabled;
+      this.font = font;
+   }
+
+   @Override
+   public void setBounds(int x, int y, int width, int height) {
+      super.setBounds(x, y, width, height);
       this.x = x;
       this.y = y;
       this.width = width;
       this.height = height;
-      
-      paint = new Paint();
-//      paint.setDither(true);
-//      paint.setFilterBitmap(true);
-//      paint.setAntiAlias(true);
-      paint.setStyle(Style.FILL);
-      paint.setARGB(255, 50, 80, 120);         
-      
-      touchPaint = new Paint();
-//      touchPaint.setDither(true);
-//      touchPaint.setFilterBitmap(true);
-//      touchPaint.setAntiAlias(true);
-      touchPaint.setStyle(Style.FILL);
-      touchPaint.setARGB(255, 120, 150, 190);
-      
-      textPaint = new Paint();
-      textPaint.setFakeBoldText(true);
-      textPaint.setAntiAlias(true);
-      textPaint.setARGB(255, 200, 230, 230);
-      textPaint.setTextSize(25);
-      
-      path = new Path();
-      path.moveTo(x, y);
-      path.lineTo(x + width, y);
-      path.lineTo(x + width, y + height);
-      path.lineTo(x, y + height);
-      path.close();      
    }
-   
+
    @Override
    public void touch(int action) {
+       if(isLocked()) {
+           // Swallow the tap, but let a press that began before the game ended clear.
+           down = false;
+           return;
+       }
        if(action == MotionEvent.ACTION_DOWN) {
            down = true;
+           Haptics.tap(game.gameView);
+           Sounds.play(Sfx.CLICK);
            game.gameView.postInvalidate();
        }
        else if(down && action == MotionEvent.ACTION_UP) {
            down = false;
            if (game.isGameDone()) {
+               // Locked taps never reach here, so this is a deliberate tap after the
+               // lockout. No dialog: the board is finished, so nothing is lost.
+               game.roll();
+           }
+           else if (game.shouldConfirmEndTurn()) {
                game.gameView.postInvalidate();
-               new AlertDialog.Builder(game.gameView.activity).setIcon(android.R.drawable.ic_dialog_alert).setTitle(game.getString(R.string.play_again))
-                   .setMessage(game.getString(R.string.restart_text)).setPositiveButton(game.getString(R.string.yes), new DialogInterface.OnClickListener() {
-                       @Override
-                       public void onClick(DialogInterface dialog, int which) {
-                           game.roll();
-                       }
-
-                   }).setNegativeButton(game.getString(R.string.no), null).show();
+               PixelDialog.confirm(game.gameView.activity, R.string.end_turn_title, R.string.end_turn_text, new Runnable() {
+                   @Override
+                   public void run() {
+                       game.roll();
+                   }
+               });
+           }
+           else if (!game.canRoll()) {
+               // The button reads "1st Roll" here, so do that rather than ending the
+               // turn and making the player tap the same button a second time.
+               game.endTurnAndRoll();
+               confirmIfRolled();
            }
            else {
                game.roll();
+               confirmIfRolled();
            }
        }
        else if(action == MotionEvent.ACTION_CANCEL) {
@@ -98,42 +102,84 @@ public class UIDiceRoll extends UIEntity {
        }
    }
    
-   @Override
-   public void draw(Canvas canvas) {
+   /**
+    * The firmer haptic, when dice were really thrown. Both callers start from a state
+    * where the tap is meant to roll, so "a roll has been taken this turn" is the test;
+    * it stays quiet when the turn that would have started is the end of the game.
+    */
+   private void confirmIfRolled() {
+      if(game.rolls > 0 && !game.isGameDone()) {
+         Haptics.confirm(game.gameView);
+      }
+   }
+
+   /**
+    * True for LOCKOUT_MS after the game ends, so a bump on the button cannot wipe the
+    * finished board by starting a new game.
+    */
+   private boolean isLocked() {
+      return game.isGameDone() && SystemClock.uptimeMillis() - game.gameOverAt < LOCKOUT_MS;
+   }
+   
+   /** What the button reads now, which is also what it does next. */
+   private String label() {
       String text;
+      boolean last = game.turnsTaken + 1 == game.map.turnCap;
       if(game.canRoll()) {
-         text = "";
-        if (game.rolls == 0) {
-            text = game.getString(R.string.first_roll);
-        }
-        if (game.rolls == 1) {
-            text = game.getString(R.string.second_roll);
-        }
-        if (game.rolls == 2) {
-            text = game.getString(R.string.third_roll);
-        }
+         // turnsTaken counts completed turns, so the one being played is the next.
+         String roll = game.getString(R.string.first_roll);
+         if (game.rolls == 1) {
+             roll = game.getString(R.string.second_roll);
+         }
+         if (game.rolls == 2) {
+             roll = game.getString(R.string.third_roll);
+         }
+         // The turn is not named here: the King's ship in the top bar shows it
+         text = roll;
       }
       else if(game.isGameDone()) {
           text = game.getString(R.string.play_again);
       }
+      else if(game.shouldConfirmEndTurn()) {
+          // Rolls are spent but something is still affordable, so ending the turn is a
+          // real choice and "Done" is the honest label.
+          text = last ? game.getString(R.string.finish) : game.getString(R.string.done);
+      }
+      else if(last) {
+         // Ending this turn ends the game: it is the map's last turn.
+         text = game.getString(R.string.finish);
+      }
       else {
-         text = game.getString(R.string.done);
+         // Nothing left to build and nothing left to roll, so "Done" described a
+         // decision the player does not actually have. This button ends the turn and
+         // rolls, so it says what comes next.
+         text = game.getString(R.string.next_turn);
       }
-      int textWidth = (int) textPaint.measureText(text);
-//      if(!game.isGameDone()) {
-      if(down) {
-          canvas.drawPath(path, touchPaint);
+      return text;
+   }
+
+   /** The button as drawn: widened for a long label, centred where the layout put it. */
+   int[] drawnBounds() {
+      int w = Math.max(width, font.inkWidth(label()) + 2 * CORNER + 4);
+      return new int[] { x - (w - width) / 2, y, w, height };
+   }
+
+   @Override
+   public void draw(ArtCanvas art) {
+      boolean locked = isLocked();
+      if(locked) {
+         // Redraw when the lockout ends so the button visibly re-enables.
+         game.gameView.postInvalidateDelayed(LOCKOUT_MS - (SystemClock.uptimeMillis() - game.gameOverAt));
       }
-      else {
-          canvas.drawPath(path, paint);          
-      }
-          canvas.drawText(text, x + width / 2 - textWidth / 2, y + height - 15, textPaint);
-//      }
-//      else {
-//          int offset = 80;
-//          canvas.drawRect(x, y - offset, x + width, y + height - offset, paint);
-//          canvas.drawText(text, x + width / 2 - textWidth / 2, y + height - 15 - offset, textPaint);
-//      }
-      super.draw(canvas);      
+      String text = label();
+      // Widen for a long label, keeping the button centred where the layout put it
+      int textWidth = font.inkWidth(text);
+      int w = Math.max(width, textWidth + 2 * CORNER + 4);
+      int left = x - (w - width) / 2;
+      Bitmap skin = locked ? disabled : (down ? pressed : normal);
+      art.nineSlice(skin, left, y, w, height, CORNER);
+      int textX = left + (w - textWidth) / 2;
+      int textY = y + (height - font.height()) / 2 + (down && !locked ? 1 : 0);
+      font.draw(art.canvas, text, textX, textY, locked ? LABEL_DISABLED : LABEL);
    }
 }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <application>
+        <!-- Debug builds only: audition the sound effects. See DebugSoundReceiver. -->
+        <receiver
+            android:name="com.ridgelineapps.resdicegame.DebugSoundReceiver"
+            android:exported="true" />
+        <!-- Debug builds only: two fingers at once. See DebugTouchReceiver. -->
+        <receiver
+            android:name="com.ridgelineapps.resdicegame.DebugTouchReceiver"
+            android:exported="true" />
+    </application>
+
+</manifest>

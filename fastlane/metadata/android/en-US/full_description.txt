@@ -1,0 +1,22 @@
+Islewright: Roll is a solitaire dice game about building a small island.
+
+Each turn you roll six resource dice up to three times, keeping the ones you want between rolls. Spend what you rolled on roads, villages, castles and traders. Roads open up places to build; traders bank a resource for a later turn; gold pairs stand in for anything you are missing.
+
+Two islands, two ways to play:
+
+* Tarnholm: score as much as you can in 15 turns.
+* Dunholm: race to a target score in as few turns as you can.
+
+Features:
+
+* Pixel art terrain from The Battle for Wesnoth, scaled sharply to your screen
+* An in-game tutorial that explains each part as it first matters, and a full rules page
+* Undo for your last build, multi-touch dice, and haptics you can turn off
+* Sound effects, with a setting to turn them off
+* Light and dark themes
+* English, German, Spanish, Portuguese, Italian, French and Indonesian
+* No ads, no tracking, no network access
+
+Islewright: Roll is free software under the GNU GPL v3 or later, based on Resource Dice Game by Ridgeline Apps and Marcus Hoffmann's 1.15 release. Art, fonts and sounds are credited in the app's About screen.
+
+Islewright is not affiliated with or endorsed by Catan GmbH. CATAN is a registered trademark of Catan GmbH.
