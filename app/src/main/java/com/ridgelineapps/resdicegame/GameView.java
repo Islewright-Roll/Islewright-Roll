@@ -39,7 +39,7 @@ import android.view.WindowInsets;
  * top: a header (score, on a race map its two bonus badges, menu button), the turn track
  * (a strip of sea with the King's ship, and a flag per finished turn on the island that
  * scores every turn), the cost legend, the island filling
- * whatever height is left with its centre in the middle of that space, the six dice, and
+ * whatever height is left, centred in that space (see Voyage.boardOrigin), the six dice, and
  * the roll button. Which island, and which of the two tracks, comes from game.map.
  */
 public class GameView extends View {
@@ -481,8 +481,7 @@ public class GameView extends View {
       hudX = (art.width - ArtCanvas.DESIGN_W) / 2;
       menuX = hudX + ArtCanvas.DESIGN_W - HUD_INSET - MENU_W;
 
-      // The island's centre goes in the middle of the space between the two bars, or a little
-      // lower on a short screen, to keep the harbour's water in sight
+      // The map, moored ship included, goes in the middle of the space between the two bars
       Pt boardAt = Voyage.boardOrigin(art.width, padTop + TOP_H, art.height - BOTTOM_H - padBottom);
       boardX = boardAt.x;
       boardY = boardAt.y;

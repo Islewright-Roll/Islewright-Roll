@@ -563,7 +563,7 @@ public class VoyageTest {
    @Test
    public void theFarStopOnEachScreenIsLevelWithTheDockAndShowsItsBow() throws IOException {
       boolean[][] ship = mask(read("piece_kingship"));
-      Pt[] boards = { new Pt(-144, -8), new Pt(-132, -28) };
+      Pt[] boards = { new Pt(-144, 1), new Pt(-132, -27) };
       for(int i = 0; i < SCREENS.length; i++) {
          int[] shown = shown(MapDef.TARNHOLM, SCREENS[i]);
          Pt origin = Voyage.boardOrigin(SCREENS[i][0], GameView.TOP_H, SCREENS[i][1] - GameView.BOTTOM_H - SCREENS[i][3]);
@@ -637,28 +637,21 @@ public class VoyageTest {
    }
 
    /**
-    * The island is centred between the bars where the harbour then shows, and sits lower
-    * where it would not, but never with its foot under the bottom bar.
+    * As much water shows above the moored ship as below the island, whatever the screen,
+    * but never with the island's foot under the bottom bar.
     */
    @Test
-   public void theBoardSitsLowerOnAShortScreenToKeepTheHarbourInSight() {
-      // The tall screen: centred would show the harbour with room to spare, but it sits lower
-      // still, for SEA_ABOVE_HARBOUR rows of sea over the harbour row
-      Pt tall = Voyage.boardOrigin(216, 64, 480 - 66 - 13);
-      assertEquals(new Pt(-144, 64 + Voyage.SEA_ABOVE_HARBOUR - Voyage.HARBOUR_TOP), tall);
-      assertTrue(tall.y > (64 + 401) / 2 - Board.CENTRE_Y);
-      assertEquals(Voyage.SEA_ABOVE_HARBOUR, Voyage.HARBOUR_TOP + tall.y - 64);
-      assertTrue(tall.y + Voyage.ISLAND_FOOT <= 401 - 6);
-      // The short screen: centred would hide board rows down to 112, so it sits lower to show
-      // the harbour row, and lower still (two more rows) up to the island's foot 6 rows above the tray
-      Pt small = Voyage.boardOrigin(240, 64, 426 - 66 - 16);
-      assertEquals(new Pt(-132, 344 - 6 - Voyage.ISLAND_FOOT), small);
-      assertEquals(20, small.y - ((64 + 344) / 2 - Board.CENTRE_Y));
-      assertTrue(64 - small.y <= Voyage.HARBOUR_TOP);
-      assertTrue(small.y + Voyage.ISLAND_FOOT <= 344);
-      // A screen too short for both: the island's foot wins, and stays above the bottom bar
-      Pt tiny = Voyage.boardOrigin(216, 64, 300);
-      assertEquals(300 - Voyage.ISLAND_FOOT, tiny.y);
+   public void theMapWithTheShipInHarbourIsCentredBetweenTheBars() {
+      int[][] bars = { { 62, 401 }, { 76, 375 }, { 62, 500 }, { 80, 640 } };
+      for(int[] bar : bars) {
+         Pt at = Voyage.boardOrigin(216, bar[0], bar[1]);
+         int above = at.y + Voyage.HARBOUR_TOP - bar[0];
+         int below = bar[1] - (at.y + Voyage.ISLAND_FOOT);
+         assertTrue(bar[0] + ": " + above + " above, " + below + " below", Math.abs(above - below) <= 1);
+         assertTrue(above >= 0);
+      }
+      // A screen too short to show it all: the island's foot wins, and stays above the bottom bar
+      assertEquals(300 - Voyage.ISLAND_FOOT, Voyage.boardOrigin(216, 62, 300).y);
    }
 
    /** No pixel of the ship on a hex, on the board's dry land, or on a road or piece of the map (the dock's own pixels aside). */

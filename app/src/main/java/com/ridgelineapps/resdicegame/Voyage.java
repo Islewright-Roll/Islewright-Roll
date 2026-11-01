@@ -77,8 +77,6 @@ final class Voyage {
     */
    static final int HARBOUR_TOP = 94;
    static final int ISLAND_FOOT = 366;
-   /** Rows of sea wanted between the top bar and the harbour row on a screen that has room. */
-   static final int SEA_ABOVE_HARBOUR = 24;
 
    private Voyage() {
    }
@@ -208,26 +206,14 @@ final class Voyage {
 
    /**
     * Where the board's top left goes on the art canvas. Across, the board is centred. Down,
-    * the island's centre goes in the middle of the space between the top bar (ending at
-    * barBottom) and the bottom bar (starting at trayTop), unless that would put the moored
-    * ship's masthead under the top bar: then the board sits lower, as far as it needs to
-    * and no further than keeps the island's foot above the bottom bar. Where the screen is
-    * tall enough, it also sits low enough to show SEA_ABOVE_HARBOUR rows of sea over the
-    * harbour row, so that the ship's far stop is well in view, while the island's foot stays
-    * a little above the bottom bar.
+    * what the map shows at its fullest, from the moored ship's masthead to the island's foot,
+    * is centred between the top bar (ending at barBottom) and the bottom bar (starting at
+    * trayTop), so as much water shows above the ship as below the island on any screen. A
+    * screen too short to show all of it keeps the island's foot above the bottom bar.
     */
    static Pt boardOrigin(int artWidth, int barBottom, int trayTop) {
-      int y = (barBottom + trayTop) / 2 - Board.CENTRE_Y;
-      int forSea = Math.min(trayTop - 6 - ISLAND_FOOT, barBottom - (HARBOUR_TOP - SEA_ABOVE_HARBOUR));
-      if(forSea > y) {
-         y = forSea;
-      }
-      int forHarbour = barBottom - HARBOUR_TOP;
-      int forFoot = trayTop - ISLAND_FOOT;
-      if(y < forHarbour) {
-         y = Math.max(y, Math.min(forHarbour, forFoot));
-      }
-      return new Pt(artWidth / 2 - Board.CENTRE_X, y);
+      int y = (barBottom + trayTop - HARBOUR_TOP - ISLAND_FOOT) / 2;
+      return new Pt(artWidth / 2 - Board.CENTRE_X, Math.min(y, trayTop - ISLAND_FOOT));
    }
 
    // ---------------------------------------------------------------- the dock
