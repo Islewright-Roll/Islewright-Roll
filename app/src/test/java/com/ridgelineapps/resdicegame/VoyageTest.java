@@ -563,7 +563,7 @@ public class VoyageTest {
    @Test
    public void theFarStopOnEachScreenIsLevelWithTheDockAndShowsItsBow() throws IOException {
       boolean[][] ship = mask(read("piece_kingship"));
-      Pt[] boards = { new Pt(-144, 16), new Pt(-132, -22) };
+      Pt[] boards = { new Pt(-144, -14), new Pt(-132, -32) };
       for(int i = 0; i < SCREENS.length; i++) {
          int[] shown = shown(MapDef.TARNHOLM, SCREENS[i]);
          Pt origin = Voyage.boardOrigin(SCREENS[i][0], GameView.TOP_H, SCREENS[i][1] - GameView.BOTTOM_H - SCREENS[i][3]);
@@ -637,8 +637,8 @@ public class VoyageTest {
    }
 
    /**
-    * The map sits MAP_DROP below the middle of the water between the bars, whatever the screen,
-    * but never with the island's foot under the bottom bar.
+    * The map sits MAP_RAISE above the middle of the water between the bars, but never with the
+    * masthead under the top bar, and never with the island's foot under the bottom bar.
     */
    @Test
    public void theMapWithTheShipInHarbourIsCentredBetweenTheBars() {
@@ -647,12 +647,14 @@ public class VoyageTest {
          Pt at = Voyage.boardOrigin(216, bar[0], bar[1]);
          int above = at.y + Voyage.HARBOUR_TOP - bar[0];
          int below = bar[1] - (at.y + Voyage.ISLAND_FOOT);
-         assertTrue(bar[0] + ": " + above + " above, " + below + " below", Math.abs(above - below - 2 * Voyage.MAP_DROP) <= 1);
+         assertTrue(bar[0] + ": " + above + " above, " + below + " below", Math.abs(below - above - 2 * Voyage.MAP_RAISE) <= 1);
          assertTrue(above >= 0);
          assertTrue(below >= 0);
       }
-      // The island's foot wins where the drop would push it under the bottom bar
-      assertEquals(375 - Voyage.ISLAND_FOOT, Voyage.boardOrigin(216, 76, 375).y);
+      // Too little water to raise it all the way: the masthead stops at the top bar
+      assertEquals(76 - Voyage.HARBOUR_TOP, Voyage.boardOrigin(216, 76, 375).y);
+      // A screen too short to show it all: the island's foot wins, and stays above the bottom bar
+      assertEquals(300 - Voyage.ISLAND_FOOT, Voyage.boardOrigin(216, 62, 300).y);
       assertEquals(300 - Voyage.ISLAND_FOOT, Voyage.boardOrigin(216, 62, 300).y);
    }
 

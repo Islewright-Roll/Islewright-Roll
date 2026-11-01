@@ -77,8 +77,8 @@ final class Voyage {
     */
    static final int HARBOUR_TOP = 94;
    static final int ISLAND_FOOT = 366;
-   /** How far below the exact middle the map sits: the eye weighs the island, not the masthead. */
-   static final int MAP_DROP = 15;
+   /** How far above the exact middle the map sits: the eye weighs the island, not the masthead. */
+   static final int MAP_RAISE = 15;
 
    private Voyage() {
    }
@@ -210,11 +210,12 @@ final class Voyage {
     * Where the board's top left goes on the art canvas. Across, the board is centred. Down,
     * what the map shows at its fullest, from the moored ship's masthead to the island's foot,
     * is centred between the top bar (ending at barBottom) and the bottom bar (starting at
-    * trayTop), then dropped by MAP_DROP, on any screen. The island's foot always stays above
-    * the bottom bar, which on a short screen takes up some or all of the drop.
+    * trayTop), then raised by MAP_RAISE, as far as the masthead stays under the top bar. A
+    * screen too short to show all of it keeps the island's foot above the bottom bar.
     */
    static Pt boardOrigin(int artWidth, int barBottom, int trayTop) {
-      int y = (barBottom + trayTop - HARBOUR_TOP - ISLAND_FOOT) / 2 + MAP_DROP;
+      int y = (barBottom + trayTop - HARBOUR_TOP - ISLAND_FOOT) / 2 - MAP_RAISE;
+      y = Math.max(y, barBottom - HARBOUR_TOP);
       return new Pt(artWidth / 2 - Board.CENTRE_X, Math.min(y, trayTop - ISLAND_FOOT));
    }
 
