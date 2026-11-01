@@ -54,8 +54,9 @@ The King's ship on the board (`piece_kingship.png`) is
 records its author as the FreeCol project and its licence as GNU GPL v2+. Wesnoth has since
 replaced this sprite (current Wesnoth has a different sprite under the same name, licensed
 CC BY-SA 4.0); the one used here is the 1.16.11 file. It is unchanged except for its flag
-(100 of its pixels): the team colour is redrawn in magenta shades with a gold fly, keeping each
-pixel's alpha, and the game recolours the magenta to the player's colour as it draws.
+(100 of its pixels). Wesnoth's flag is already team colour magenta; here its shades are remapped
+to the five this game recolours, with a gold fly added and each pixel's alpha kept, and the game
+turns the magenta into the player's colour as it draws.
 
 Changes. The terrain tiles are composited at native resolution with the blending rules of
 Wesnoth's terrain graphics, ported to `tools/bake_board.py` (differences from a live Wesnoth

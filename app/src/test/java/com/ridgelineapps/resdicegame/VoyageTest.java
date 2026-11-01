@@ -563,7 +563,7 @@ public class VoyageTest {
    @Test
    public void theFarStopOnEachScreenIsLevelWithTheDockAndShowsItsBow() throws IOException {
       boolean[][] ship = mask(read("piece_kingship"));
-      Pt[] boards = { new Pt(-144, 1), new Pt(-132, -27) };
+      Pt[] boards = { new Pt(-144, 16), new Pt(-132, -22) };
       for(int i = 0; i < SCREENS.length; i++) {
          int[] shown = shown(MapDef.TARNHOLM, SCREENS[i]);
          Pt origin = Voyage.boardOrigin(SCREENS[i][0], GameView.TOP_H, SCREENS[i][1] - GameView.BOTTOM_H - SCREENS[i][3]);
@@ -637,20 +637,22 @@ public class VoyageTest {
    }
 
    /**
-    * As much water shows above the moored ship as below the island, whatever the screen,
+    * The map sits MAP_DROP below the middle of the water between the bars, whatever the screen,
     * but never with the island's foot under the bottom bar.
     */
    @Test
    public void theMapWithTheShipInHarbourIsCentredBetweenTheBars() {
-      int[][] bars = { { 62, 401 }, { 76, 375 }, { 62, 500 }, { 80, 640 } };
+      int[][] bars = { { 62, 401 }, { 62, 500 }, { 80, 640 } };
       for(int[] bar : bars) {
          Pt at = Voyage.boardOrigin(216, bar[0], bar[1]);
          int above = at.y + Voyage.HARBOUR_TOP - bar[0];
          int below = bar[1] - (at.y + Voyage.ISLAND_FOOT);
-         assertTrue(bar[0] + ": " + above + " above, " + below + " below", Math.abs(above - below) <= 1);
+         assertTrue(bar[0] + ": " + above + " above, " + below + " below", Math.abs(above - below - 2 * Voyage.MAP_DROP) <= 1);
          assertTrue(above >= 0);
+         assertTrue(below >= 0);
       }
-      // A screen too short to show it all: the island's foot wins, and stays above the bottom bar
+      // The island's foot wins where the drop would push it under the bottom bar
+      assertEquals(375 - Voyage.ISLAND_FOOT, Voyage.boardOrigin(216, 76, 375).y);
       assertEquals(300 - Voyage.ISLAND_FOOT, Voyage.boardOrigin(216, 62, 300).y);
    }
 
