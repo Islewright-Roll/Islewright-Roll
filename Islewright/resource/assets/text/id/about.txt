@@ -1,0 +1,14 @@
+Islewright {{version}}
+
+Permainan dadu untuk satu pemain: lempar dadu, lalu bangun jalan, desa, kastil, dan pedagang di sebuah pulau kecil.
+
+Sumber terbuka di bawah GNU GPL v3:
+https://github.com/islewright-roll/islewright
+
+Medan dan kapal Raja berasal dari The Battle for Wesnoth (https://www.wesnoth.org), digunakan di bawah GNU GPL v2 atau yang lebih baru, karya J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier, dan seniman Wesnoth lainnya; kapalnya berasal dari proyek FreeCol. Fon: Press Start 2P, Ark Pixel, dan Micro 5 (hanya angka), SIL Open Font License 1.1. Lihat ART_CREDITS.md di repositori.
+
+Efek suara: dari The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 atau yang lebih baru, karya Lari Nieminen, J.W. Bjerk, dan Leonardo Magno Sampaio, serta bunyi klik tombolnya karya Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); dari Kenney (https://kenney.nl), CC0; dan sebuah fanfare karya MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Sebagian dipotong, disaring, atau diubah volumenya.
+
+Awalnya dibuat oleh Ridgeline Apps, diarsipkan dari Google Code dan dirapikan oleh Hellmark, dengan perbaikan oleh Islewright Team.
+
+Islewright tidak berafiliasi dengan atau didukung oleh Catan GmbH. CATAN® adalah merek dagang terdaftar milik Catan GmbH. Cara bermain Islewright didasarkan pada aturan dan mekanisme permainan, yang menurut undang-undang hak cipta Amerika Serikat merupakan metode bermain yang tidak dapat dilindungi (17 U.S.C. § 102(b)).

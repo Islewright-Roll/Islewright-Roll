@@ -1,0 +1,14 @@
+# Islewright's website, built by the daybrite/actions workflow from this file, the store listing,
+# and the dayscript screenshots: https://daybrite.dev/docs/how-to/websites
+
+# The site's address. For GitHub Pages: https://<owner>.github.io/<repository>, with the
+# repository's name spelled exactly as GitHub spells it.
+host = "https://islewright-roll.github.io/islewright"
+locales = ["en", "fr", "de", "es", "id", "it", "pt-BR"]
+
+# The game's own amber, the color of an earned bonus.
+accent-color = "#E6A817"
+default-theme = "dark"
+show-store-badges = true
+show-permissions = true
+footer = "Islewright is free software under the GNU GPL v3 or later. Island art from The Battle for Wesnoth. Not affiliated with Catan GmbH."

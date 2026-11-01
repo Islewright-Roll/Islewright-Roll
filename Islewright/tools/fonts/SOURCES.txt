@@ -1,0 +1,7 @@
+Downloaded 2026-10-09 and 2026-10-10 with curl -L. Third-party, SIL OFL 1.1. bake_font.py does not download.
+PressStart2P-Regular.ttf  https://github.com/google/fonts/raw/main/ofl/pressstart2p/PressStart2P-Regular.ttf  sha256 034c77f1f05ec89421e4a63f0e3a4ca1ecf852cc6d2bf611f126f275728e017d
+PressStart2P-OFL.txt  https://github.com/google/fonts/raw/main/ofl/pressstart2p/OFL.txt  sha256 705960c3281a5765ecc0b59bd4ed7ca59eed165748076bc2fc3e8fdbfeb944b0
+Micro5-Regular.ttf  https://github.com/google/fonts/raw/main/ofl/micro5/Micro5-Regular.ttf  sha256 08a08c0d10129d2ecd869ff2f8914fcbf32487d3cbee3568b2a2957866dfdac8
+Micro5-OFL.txt  https://github.com/google/fonts/raw/main/ofl/micro5/OFL.txt  sha256 b4c75058634d557a621406c8eb5e243fe02d5ac9c49e0a4567eee8d65295fad8
+ArkPixel10-Regular.otf  https://github.com/TakWolf/ark-pixel-font/releases/tag/2026.09.25 (ark-pixel-font-10px-proportional-otf-v2026.09.25.zip, file ark-pixel-10px-proportional-latin.otf)  sha256 353eb6bfb64b94a0192d0102898a93e8f71d77bfb8215fc226096456142b77ec
+ArkPixel-OFL.txt  OFL.txt from the same zip  sha256 3ab41567e68e3988ba1ef16dd2644eca95ca5648ea12e7d46e6287fc0bbe5aee

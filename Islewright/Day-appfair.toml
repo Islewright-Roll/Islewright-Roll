@@ -1,0 +1,7 @@
+# The App Fair build flavor: the identity the App Fair catalog builds and signs, with
+# `day --flavor appfair` (https://appfair.org/docs/getting-started/#configure-publication).
+# Keep `id` stable after the first publication. The version comes from the release tag; raise
+# `build` before each tag, because the stores refuse a repeated or lower build number.
+[app]
+id = "org.appfair.app.Islewright"
+build = 1

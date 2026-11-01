@@ -1,0 +1,14 @@
+Islewright {{version}}
+
+Ein Würfelspiel für eine Person: würfeln, dann Straßen, Dörfer, Burgen und Händler auf einer kleinen Insel bauen.
+
+Quelloffen unter der GNU GPL v3:
+https://github.com/islewright-roll/islewright
+
+Das Gelände und das Schiff des Königs stammen aus The Battle for Wesnoth (https://www.wesnoth.org), verwendet unter der GNU GPL v2 oder neuer, von J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier und weiteren Wesnoth-Künstlern; das Schiff stammt aus dem Projekt FreeCol. Schriften: Press Start 2P, Ark Pixel und Micro 5 (nur Ziffern), SIL Open Font License 1.1. Siehe ART_CREDITS.md im Repository.
+
+Soundeffekte: aus The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 oder neuer, von Lari Nieminen, J.W. Bjerk und Leonardo Magno Sampaio, und dessen Klickgeräusch von Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); von Kenney (https://kenney.nl), CC0; und eine Fanfare von MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Einige sind gekürzt, gefiltert oder in der Lautstärke angepasst.
+
+Ursprünglich von Ridgeline Apps, aus Google Code archiviert und von Hellmark überarbeitet, mit Verbesserungen von Islewright Team.
+
+Islewright steht in keiner Verbindung zur Catan GmbH und wird nicht von ihr unterstützt. CATAN® ist eine eingetragene Marke der Catan GmbH. Das Spielprinzip von Islewright beruht auf Spielregeln und Spielmechaniken, die das US-amerikanische Urheberrecht als nicht schützbare Spielmethoden ansieht (17 U.S.C. § 102(b)).

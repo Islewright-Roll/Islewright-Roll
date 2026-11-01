@@ -1,0 +1,61 @@
+# Goal
+
+On Tarnholm, see how high you can score in 15 turns.
+
+On Dunholm, race to 10 points in as few turns as you can.
+
+# Your turn
+
+You get three rolls each turn. Tap on dice to save them, then roll the rest.
+
+Tap a highlighted spot to build there. Once you build, the rolling is over for that turn, but you can keep building with any dice you have left.
+
+Built the wrong thing? The arrow beside the roll button takes back your last build, until your next roll.
+
+# Building
+
+New roads can be built to extend the roads you have.
+
+Village and castle sites stay locked until a road reaches them.
+
+On Tarnholm, villages, castles and traders are each built in number order.
+
+# Gold
+
+[icon_gold_12] Gold trades in pairs: two gold become any one resource you are missing. A single gold can't be used on its own.
+
+# Traders
+
+[glyph_trader_12] Hire a trader and they will bank a resource for you. It can be used at any time, but only once.
+
+Until you hire a trader, their resource sits on their cart. Once hired, it moves to the bottom left of the screen and stays there until you use it.
+
+[icon_any_12] The ? can be any resource. On Dunholm, each desert has two traders who share one ?. Hire both to earn it.
+
+# Banked or classic
+
+Usually a banked resource is spent by itself whenever a build needs it, so it works like a seventh die.
+
+With Trader resource classic mode on in Settings, it is not an extra die. Drag it from the bottom of the screen onto one of your rolled dice. That die turns to show the resource and stays for the rest of the turn. Drag a ? and you choose which resource it becomes.
+
+# Highlights
+
+![rules_highlight_now]
+
+Green: you can build it now.
+
+![rules_highlight_chain]
+
+Pale green: also within reach this turn. Tap it, and everything on the way there is built for you.
+
+![rules_highlight_bank]
+
+Blue: building here spends a resource one of your traders has banked.
+
+Pale blue: the same, once something else is built first. Tap it, and everything on the way there is built for you.
+
+# Scoring
+
+On Tarnholm, the number on each spot is what it scores. A turn with nothing built costs you 2 points.
+
+On Dunholm, a village is 1 point and a castle is 2. The marked road and your third trader each add 2 more.

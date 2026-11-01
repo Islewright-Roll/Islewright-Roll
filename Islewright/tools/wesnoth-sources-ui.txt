@@ -1,0 +1,10 @@
+# Wesnoth files read by tools/make_ui.py: only the ship below, for piece_kingship.png.
+# Every other UI sprite, icon, building, trader and road is authored in the script
+# (the village, castle and trader are original pixel art).
+# Read from the installed 1.16 data directory: wesnoth-1.16-data 1:1.16.11-1build3
+# which is Wesnoth tag 1.16.11, commit 83d4b397f1de466c721e4e393b361c71fc4f5b6c
+# Licence and author are Wesnoth's own record for the file: its row in copyrights.csv at
+# revision d4b2d151ce3 (the last to list images), matched by MD5. Master has a different sprite
+# under the same name (CC BY-SA 4.0), so do not swap this file without changing the licence text.
+# path | licence | author | MD5
+data/core/images/units/transport/transport-galleon.png | GNU GPL v2+ | FreeCol | 5bd94d18992557802578ce1e7bc41947

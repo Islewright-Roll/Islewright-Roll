@@ -1,0 +1,80 @@
+# The Islewright walkthrough: the welcome, a first turn played from the keyboard (the same on
+# every screen size and orientation), and the menu's pages. It checks the app end to end, audits
+# the accessibility of every dialog and page (each widget of the pixel-art kit is its own
+# accessible element), and takes the screenshots the store listings use (store/storefront.toml).
+# Run with: day launch -t <target> --script dayscript/walkthrough.yaml
+flow:
+  # The welcome opens over a fresh game, as a kit dialog. Play.
+  - wait_for: { id: board }
+  - wait_for: { id: dialog_title }
+  - a11y_audit: {}
+  - screenshot: welcome
+  - tap: { id: "dialog_button:play" }
+  - pause: { secs: 0.6 }
+  - assert_missing: { id: dialog_title }
+  - wait_idle: {}
+
+  # The island before the first roll, with the tutorial pointing at the roll button.
+  - screenshot: island
+  - a11y_audit: {}
+
+  # Roll, keep two dice, roll again, and build the spot the tutorial would suggest.
+  - focus: { id: board }
+  - key: { id: board, key: "8" }
+  - key: { id: board, key: "0" }
+  - wait_idle: {}
+  - key: { id: board, key: "1" }
+  - key: { id: board, key: "2" }
+  - screenshot: dice
+  - key: { id: board, key: "0" }
+  - wait_idle: {}
+  - key: { id: board, key: "9" }
+  - wait_idle: {}
+  - screenshot: building
+
+  # How to play, Top Scores, Settings and About, opened the way the menu opens them.
+  - navigate: { route: rules }
+  - wait_for: { id: rules_page }
+  - wait_idle: {}
+  - screenshot: rules
+  - a11y_audit: {}
+  - tap: { id: page_done }
+  # A button shows pressed for a moment before it acts
+  - pause: { secs: 0.6 }
+
+  - navigate: { route: scores }
+  - wait_for: { id: scores_page }
+  - wait_idle: {}
+  - screenshot: scores
+  - a11y_audit: {}
+  - tap: { id: page_done }
+  # A button shows pressed for a moment before it acts
+  - pause: { secs: 0.6 }
+
+  # Settings: a check box and a radio button change their prefs, and change back.
+  - navigate: { route: settings }
+  - wait_for: { id: settings_page }
+  - wait_idle: {}
+  - screenshot: settings
+  - a11y_audit: {}
+  - tap: { id: settings_haptics }
+  - a11y_audit: { id: settings_haptics }
+  - tap: { id: settings_haptics }
+  - tap: { id: "settings_early:careful" }
+  - tap: { id: "settings_early:smart" }
+  - tap: { id: settings_race_target_more }
+  - tap: { id: settings_race_target_less }
+  - a11y_audit: { id: settings_race_target }
+  - tap: { id: page_done }
+  # A button shows pressed for a moment before it acts
+  - pause: { secs: 0.6 }
+
+  - navigate: { route: about }
+  - wait_for: { id: about_screen }
+  - wait_idle: {}
+  - screenshot: about
+  - a11y_audit: {}
+  - tap: { id: page_done }
+  # A button shows pressed for a moment before it acts
+  - pause: { secs: 0.6 }
+  - wait_for: { id: board }
