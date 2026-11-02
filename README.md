@@ -13,8 +13,8 @@ Each turn you get up to three rolls of six dice. Keep the dice you want, then sp
 
 The next release is a port to Rust and [Day](https://daybrite.dev), for publication through the
 [App Fair](https://appfair.org) on iPhone and Android. The plan and its current state are in the
-[App Fair epic](https://github.com/islewright-roll/islewright/issues/8). The port is very early
-and lives on the [`feature/day-port`](https://github.com/islewright-roll/islewright/tree/feature/day-port)
+[App Fair epic](https://github.com/islewright-roll/islewright-roll/issues/8). The port is very early
+and lives on the [`feature/day-port`](https://github.com/islewright-roll/islewright-roll/tree/feature/day-port)
 branch, in `Islewright/`. The Java app in this branch is the game that ships today.
 
 To help, pick an open item from the epic and work on a feature branch. Port work branches from

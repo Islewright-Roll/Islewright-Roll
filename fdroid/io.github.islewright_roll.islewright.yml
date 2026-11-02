@@ -5,13 +5,13 @@ Categories:
   - Games
 License: GPL-3.0-or-later
 AuthorName: Islewright Team
-SourceCode: https://github.com/islewright-roll/islewright
-IssueTracker: https://github.com/islewright-roll/islewright/issues
+SourceCode: https://github.com/islewright-roll/islewright-roll
+IssueTracker: https://github.com/islewright-roll/islewright-roll/issues
 
 AutoName: 'Islewright: Roll'
 
 RepoType: git
-Repo: https://github.com/islewright-roll/islewright.git
+Repo: https://github.com/islewright-roll/islewright-roll.git
 
 Builds:
   - versionName: 2.0.0
