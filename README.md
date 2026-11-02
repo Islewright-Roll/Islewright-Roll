@@ -53,4 +53,6 @@ PKCS12 keystore), `ANDROID_KEYSTORE_PASSWORD` and, optionally, `ANDROID_KEY_ALIA
 
     ANDROID_KEYSTORE=/path/to/key.p12 ANDROID_KEYSTORE_PASSWORD=... ./gradlew :app:assembleRelease
 
+## Legal notice
+
 Islewright is not affiliated with or endorsed by Catan GmbH. CATAN® is a registered trademark of Catan GmbH. Islewright’s gameplay is based on game rules and mechanics, which U.S. copyright law treats as unprotectable methods of play (17 U.S.C. § 102(b)).
