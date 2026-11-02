@@ -3,7 +3,7 @@ Islewright: Roll {{version}}
 Un juego de dados en solitario: tira los dados y construye caminos, aldeas, castillos y mercaderes en una pequeña isla.
 
 Código abierto bajo la GNU GPL v3:
-https://github.com/islewright-roll/islewright
+https://github.com/islewright-roll/islewright-roll
 
 El terreno y el barco del rey proceden de The Battle for Wesnoth (https://www.wesnoth.org), usados bajo la GNU GPL v2 o posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier y otros artistas de Wesnoth; el barco procede del proyecto FreeCol. Fuentes: Press Start 2P, Ark Pixel y Micro 5 (solo los números), SIL Open Font License 1.1. Consulta CREDITS.md en el repositorio.
 

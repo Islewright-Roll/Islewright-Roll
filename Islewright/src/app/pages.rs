@@ -441,8 +441,8 @@ pub fn about(m: &Metrics, width: i32) -> Vec<W> {
         m,
         day::id!(about_website),
         width,
-        "https://github.com/islewright-roll/islewright",
-        "https://github.com/islewright-roll/islewright",
+        "https://github.com/islewright-roll/islewright-roll",
+        "https://github.com/islewright-roll/islewright-roll",
     ));
     items
 }
@@ -458,7 +458,7 @@ mod tests {
             let about = about_source(locale);
             assert!(about.contains("{{version}}"), "{locale}");
             assert!(
-                about.contains("https://github.com/islewright-roll/islewright"),
+                about.contains("https://github.com/islewright-roll/islewright-roll"),
                 "{locale}"
             );
         }

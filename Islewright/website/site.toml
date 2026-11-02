@@ -3,7 +3,7 @@
 
 # The site's address. For GitHub Pages: https://<owner>.github.io/<repository>, with the
 # repository's name spelled exactly as GitHub spells it.
-host = "https://islewright-roll.github.io/islewright"
+host = "https://islewright-roll.github.io/islewright-roll"
 locales = ["en", "fr", "de", "es", "id", "it", "pt-BR"]
 
 # The game's own amber, the color of an earned bonus.

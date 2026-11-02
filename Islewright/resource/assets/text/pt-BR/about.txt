@@ -3,7 +3,7 @@ Islewright: Roll {{version}}
 Um jogo de dados para um jogador: role os dados e construa estradas, vilas, castelos e mercadores em uma pequena ilha.
 
 Código aberto sob a GNU GPL v3:
-https://github.com/islewright-roll/islewright
+https://github.com/islewright-roll/islewright-roll
 
 O terreno e o navio do rei vêm de The Battle for Wesnoth (https://www.wesnoth.org), usados sob a GNU GPL v2 ou posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier e outros artistas de Wesnoth; o navio vem do projeto FreeCol. Fontes: Press Start 2P, Ark Pixel e Micro 5 (apenas os números), SIL Open Font License 1.1. Veja CREDITS.md no repositório.
 

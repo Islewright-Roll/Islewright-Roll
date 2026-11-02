@@ -4,7 +4,7 @@ version.workspace = true
 edition = "2024"
 license = "GPL-3.0-or-later"
 description = "A solitaire dice game: roll, then build roads, villages, castles and traders across a small island."
-repository = "https://github.com/islewright-roll/islewright"
+repository = "https://github.com/islewright-roll/islewright-roll"
 publish = false
 
 [features]
