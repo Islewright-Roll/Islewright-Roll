@@ -132,6 +132,24 @@ impl Image {
     }
 
     /// Scale up by an integer factor with nearest-neighbor sampling.
+    /// This image `k` times smaller, keeping the middle pixel of every block (PixelImage.fit).
+    pub fn shrink(&self, k: u32) -> Image {
+        if k <= 1 {
+            return self.clone();
+        }
+        let (w, h) = ((self.width / k).max(1), (self.height / k).max(1));
+        let mut out = Image::new(w, h);
+        for y in 0..h {
+            for x in 0..w {
+                let (sx, sy) = (x * k + k / 2, y * k + k / 2);
+                let from = ((sy * self.width + sx) * 4) as usize;
+                let to = ((y * w + x) * 4) as usize;
+                out.rgba[to..to + 4].copy_from_slice(&self.rgba[from..from + 4]);
+            }
+        }
+        out
+    }
+
     pub fn upscale(&self, k: u32) -> Image {
         let (w, h) = (self.width * k, self.height * k);
         let mut out = Vec::with_capacity((w * h * 4) as usize);

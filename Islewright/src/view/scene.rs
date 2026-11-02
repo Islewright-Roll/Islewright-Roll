@@ -32,8 +32,8 @@ use crate::rules::voyage::{self, Stage};
 
 use super::assets::{Assets, Tinted};
 use super::layout::{
-    self, BadgePlace, DIE, Edge, LABEL_INSET, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab,
-    Rotation, Spot, UNDO_SIZE,
+    self, BadgePlace, DIE, Edge, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab, Rotation, Spot,
+    UNDO_SIZE,
 };
 
 // The UI kit's palette (tools/make_ui.py), ARGB
@@ -76,9 +76,9 @@ const RECIPE_GAP: i32 = 4;
 const RECIPE_INSET_X: i32 = 3;
 const RECIPE_INSET_Y: i32 = 3;
 const BUOY_DROP: i32 = 4;
-const TAB_PAD: i32 = 4;
-const TAB_H: i32 = 10;
-const LABEL_PAD: i32 = 2;
+/// A race's sign: its height, and the space inside it either side of its label.
+const SIGN_H: i32 = 13;
+const SIGN_PAD: i32 = 3;
 const BADGE_GLYPH: i32 = 7;
 const BADGE_GAP_IN: i32 = 2;
 const BADGE_GAP: i32 = 5;
@@ -119,8 +119,6 @@ const LEGEND_VILLAGE: [DiceValue; 4] = [
 #[derive(Clone, Debug, Default)]
 pub struct Strings {
     pub score: String,
-    pub costs: String,
-    pub turns: String,
     pub bonuses: String,
     pub first_roll: String,
     pub second_roll: String,
@@ -156,7 +154,8 @@ impl Strings {
     }
 }
 
-/// A button shown pressed for a moment after a tap (there is no press event to hold it by).
+/// A button shown pressed: while a finger holds it, or for a moment after a key or a tap on a
+/// platform with no press event to hold it by.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Button {
     Menu,
@@ -818,7 +817,8 @@ impl Scene {
             }
         }
         if stage != Stage::None {
-            layer.sprite(&a.king_ship, bx + at.x, by + at.y, 255);
+            // Its flag is team magenta, flying the player's colour as the strip's ship does
+            layer.sprite(&tinted.king_ship, bx + at.x, by + at.y, 255);
         }
 
         for (c, &color) in OFFER_COLORS.iter().enumerate() {
@@ -976,11 +976,13 @@ impl Scene {
 
     fn draw_hud(&self, frame: &mut Image, game: &Game, l: &Layout, ui: &Ui, s: &Strings, now: u64) {
         upright_in(frame, l, l.score, |f, r| self.draw_score(f, game, r, s));
-        self.draw_costs(frame, l, s);
+        self.draw_costs(frame, l);
         let down = ui.is_pressed(Button::Menu, now);
         upright_in(frame, l, l.menu, |f, r| draw_menu(f, r, down));
         self.draw_voyage(frame, game, l);
-        self.draw_strip_label(frame, game, l, s);
+        if game.is_race() {
+            self.draw_bonuses(frame, game, l, s);
+        }
     }
 
     fn draw_score(&self, frame: &mut Image, game: &Game, r: Rect, s: &Strings) {
@@ -995,39 +997,20 @@ impl Scene {
             r.y + 3 - FONT_CAP_ROW,
             MUTED,
         );
-        let score = game.playsheet.score();
+        // The number alone, centred in the tray below its label: a turn's gain is on the turn strip
+        let below = 3 + 7 + 1;
         centred(
             &a.font_display,
             frame,
-            &score.to_string(),
+            &game.playsheet.score().to_string(),
             r.x,
             r.w,
-            r.y + 13,
+            r.y + below + (layout::BOX_H - 1 - below - 8) / 2,
             IVORY,
         );
-        if !game.is_game_done() {
-            let before = game
-                .playsheet
-                .turn_score
-                .get(game.turns_taken.max(0) as usize)
-                .copied()
-                .unwrap_or(0);
-            if score - before > 0 {
-                let gain = format!("+{}", score - before);
-                centred(
-                    &a.font_body,
-                    frame,
-                    &gain,
-                    r.x,
-                    r.w,
-                    r.y + 23 - FONT_CAP_ROW,
-                    GOLD,
-                );
-            }
-        }
     }
 
-    fn draw_costs(&self, frame: &mut Image, l: &Layout, s: &Strings) {
+    fn draw_costs(&self, frame: &mut Image, l: &Layout) {
         let t = self.tinted.as_ref().expect("tinted");
         let a = &self.assets;
         let r = l.costs;
@@ -1037,8 +1020,8 @@ impl Scene {
         // In reading order, two rows of two or, in the tall HUD, one column of four
         let recipes: [(&Image, &[DiceValue]); 4] = [
             (&t.glyph_road, game::RESOURCES_ROAD),
-            (&a.glyph_castle, game::RESOURCES_CITY),
-            (&a.glyph_village, &LEGEND_VILLAGE),
+            (&t.glyph_castle, game::RESOURCES_CITY),
+            (&t.glyph_village, &LEGEND_VILLAGE),
             (&a.glyph_trader, game::RESOURCES_KNIGHT),
         ];
         for (i, (glyph, cost)) in recipes.into_iter().enumerate() {
@@ -1054,9 +1037,6 @@ impl Scene {
                 )
             };
             self.draw_recipe(frame, l, x, y, glyph, cost);
-        }
-        if !l.roomy {
-            self.edge_label(frame, l, r.x + LABEL_INSET, r.y, &s.costs, GOLD);
         }
     }
 
@@ -1086,154 +1066,90 @@ impl Scene {
                 l,
                 self.assets.icon12(v),
                 strip_x + 1 + 13 * i as i32,
-                y + 1,
+                // The brick's ink sits low in its cell (it is drawn to stand on a cart bed)
+                y + if v == DiceValue::Brick { 0 } else { 1 },
                 255,
             );
         }
-    }
-
-    /// A label over the top edge of a frame: (x, edge) is where its ink starts across and
-    /// the frame's edge row, broken behind it unless the bar is roomy.
-    fn edge_label(&self, frame: &mut Image, l: &Layout, x: i32, edge: i32, text: &str, argb: u32) {
-        let font = &self.assets.font_body;
-        if !l.roomy {
-            frame.fill_argb(
-                x - LABEL_PAD,
-                edge,
-                font.ink_width(text) + 2 * LABEL_PAD,
-                1,
-                WOOD_DARK,
-            );
-        }
-        font.draw(frame, text, x, edge - l.label_above - FONT_CAP_ROW, argb);
-    }
-
-    /// A label's tab in the roomy bar. Returns the column after it.
-    fn draw_tab(
-        &self,
-        frame: &mut Image,
-        l: &Layout,
-        x: i32,
-        top: i32,
-        text: &str,
-        hangs: bool,
-    ) -> i32 {
-        let font = &self.assets.font_body;
-        let w = font.ink_width(text) + 2 * TAB_PAD;
-        frame.fill_argb(x, top, w, TAB_H, INK);
-        let free = if hangs { top + TAB_H - 1 } else { top };
-        frame.fill_argb(x, free, 1, 1, WOOD_DARK);
-        frame.fill_argb(x + w - 1, free, 1, 1, WOOD_DARK);
-        let edge = l.track.rows[0].band.y;
-        font.draw(
-            frame,
-            text,
-            x + TAB_PAD,
-            edge - l.label_above - FONT_CAP_ROW,
-            GOLD,
-        );
-        x + w
     }
 
     fn badge_width(&self, bonus: i32) -> i32 {
         BADGE_GLYPH + BADGE_GAP_IN + self.assets.font_body.ink_width(&format!("+{bonus}"))
     }
 
-    fn draw_strip_label(&self, frame: &mut Image, game: &Game, l: &Layout, s: &Strings) {
+    /// A race's two bonuses: on a wooden sign hung by two ropes from the bar, with their label on
+    /// the wood and the badges in a dark strip sunk into it, or in a small tray in the columns.
+    /// Each is dim until earned and amber after.
+    fn draw_bonuses(&self, frame: &mut Image, game: &Game, l: &Layout, s: &Strings) {
         let map = game.map;
         let a = &self.assets;
-        let edge = l.turns_label.1;
-        let mut taken = l.turns_label.0;
-        if l.roomy {
-            let turns_end = self.draw_tab(
-                frame,
-                l,
-                l.hud_x + layout::HUD_INSET + 2,
-                edge - TAB_H,
-                &s.turns,
-                false,
-            );
-            taken = self.draw_tab(
-                frame,
-                l,
-                (l.costs.x + 4).max(turns_end + 3),
-                l.costs.y + l.costs.h,
-                &s.costs,
-                true,
-            );
-        } else {
-            self.edge_label(frame, l, l.turns_label.0, edge, &s.turns, GOLD);
-        }
-        if !game.is_race() {
-            return;
-        }
         let trader = map.trader_bonus_at > 0;
         let road = map.long_road.is_some();
-        let (mut right, glyph_y, set_in) = match l.badges {
-            BadgePlace::Tray {
-                right,
-                top,
-                h,
-                label,
-            } => {
-                let inner = if trader {
-                    self.badge_width(map.trader_bonus)
-                } else {
-                    0
-                } + if road {
-                    self.badge_width(map.long_road_bonus)
-                } else {
-                    0
-                } + if trader && road { BADGE_GAP } else { 0 };
+        let inner = if trader {
+            self.badge_width(map.trader_bonus)
+        } else {
+            0
+        } + if road {
+            self.badge_width(map.long_road_bonus)
+        } else {
+            0
+        } + if trader && road { BADGE_GAP } else { 0 };
+        let (mut at, glyph_y) = match l.badges {
+            BadgePlace::Sign { right, top } => {
+                let label_w = a.font_body.ink_width(&s.bonuses);
+                let strip_w = inner + 4;
+                let w = 1 + SIGN_PAD + label_w + SIGN_PAD + strip_w + 2 + 1;
+                let x = right - w;
+                frame.fill_argb(x + 4, top - layout::SIGN_DROP, 1, layout::SIGN_DROP, MUTED);
+                frame.fill_argb(
+                    x + w - 5,
+                    top - layout::SIGN_DROP,
+                    1,
+                    layout::SIGN_DROP,
+                    MUTED,
+                );
+                frame.plate(x, top, w, SIGN_H, INK);
+                frame.plate(x + 1, top + 1, w - 2, SIGN_H - 2, WOOD);
+                frame.fill_argb(x + 2, top + 1, w - 4, 1, WOOD_LIGHT);
+                a.font_body.draw(
+                    frame,
+                    &s.bonuses,
+                    x + 1 + SIGN_PAD,
+                    top + 3 - FONT_CAP_ROW,
+                    MUTED,
+                );
+                let strip_x = x + w - 3 - strip_w;
+                frame.fill_argb(strip_x, top + 2, strip_w, SIGN_H - 4, INK);
+                (strip_x + 2, top + 3)
+            }
+            BadgePlace::Tray { right, top, h } => {
                 let tray_w = inner + 6;
                 let tray_x = right - tray_w;
                 tray(frame, tray_x, top, tray_w, h);
-                if label {
-                    let label_x = tray_x - 3 - a.font_body.ink_width(&s.bonuses);
-                    if label_x >= taken + 4 {
-                        let line = edge - l.label_above - FONT_CAP_ROW;
-                        a.font_body.draw(frame, &s.bonuses, label_x, line, MUTED);
-                    }
-                }
-                (tray_x + tray_w - 3, top + 1, None)
+                (tray_x + 3, top + 1)
             }
-            BadgePlace::Edge { right } => (right, edge - l.label_above, Some(edge)),
         };
-        if trader {
-            right -= self.badge_width(map.trader_bonus);
-            let earned = game.playsheet.trader_count() >= map.trader_bonus_at;
-            let glyph = &a.badge_trader;
-            self.draw_badge(
-                frame,
-                l,
-                right,
-                glyph_y,
-                set_in,
-                glyph,
-                map.trader_bonus,
-                earned,
-            );
-            right -= BADGE_GAP;
-        }
         if let Some(r) = map.long_road {
-            right -= self.badge_width(map.long_road_bonus);
             let glyph = &self.tinted.as_ref().expect("tinted").badge_road;
             let earned = game.playsheet.roads[r];
+            self.draw_badge(frame, l, at, glyph_y, glyph, map.long_road_bonus, earned);
+            at += self.badge_width(map.long_road_bonus) + BADGE_GAP;
+        }
+        if trader {
+            let earned = game.playsheet.trader_count() >= map.trader_bonus_at;
             self.draw_badge(
                 frame,
                 l,
-                right,
+                at,
                 glyph_y,
-                set_in,
-                glyph,
-                map.long_road_bonus,
+                &a.badge_trader,
+                map.trader_bonus,
                 earned,
             );
         }
     }
 
-    /// One bonus badge: its 7 px glyph with its top at `y`, and what the bonus is worth,
-    /// breaking the frame's edge row behind it when it is set into one.
+    /// One bonus badge: its 7 px glyph with its top at `y`, and what the bonus is worth.
     #[allow(clippy::too_many_arguments)]
     fn draw_badge(
         &self,
@@ -1241,16 +1157,11 @@ impl Scene {
         l: &Layout,
         x: i32,
         y: i32,
-        set_in: Option<i32>,
         glyph: &Image,
         bonus: i32,
         earned: bool,
     ) {
         let font = &self.assets.font_body;
-        if let Some(edge) = set_in {
-            let w = self.badge_width(bonus) + 2 * LABEL_PAD;
-            frame.fill_argb(x - LABEL_PAD, edge, w, 1, WOOD_DARK);
-        }
         let alpha = if earned { 255 } else { BADGE_DIM_ALPHA };
         upright_sprite(frame, l, glyph, x, y, alpha);
         let color = if earned { AMBER } else { WOOD_LIGHT };
@@ -1285,7 +1196,8 @@ impl Scene {
                 voyage::cell(map.turn_cap, game.turns_taken, done, reached),
             )
         };
-        let buoy = &self.tinted.as_ref().expect("tinted").buoy;
+        let tinted = self.tinted.as_ref().expect("tinted");
+        let buoy = &tinted.buoy;
         for row in &track.rows {
             let b = row.band;
             let y = row.water_y();
@@ -1322,7 +1234,7 @@ impl Scene {
         upright_sprite(
             frame,
             l,
-            &a.track_ship,
+            &tinted.track_ship,
             row.origin_x + row.strip.ship_x(j),
             row.water_y(),
             255,
@@ -1331,7 +1243,8 @@ impl Scene {
         upright_sprite(
             frame,
             l,
-            &a.track_pier,
+            // Over the ship lying at it, so its tower is whole
+            &tinted.track_pier,
             last.origin_x + last.strip.pier_x(),
             last.water_y(),
             255,
@@ -1900,7 +1813,11 @@ impl Scene {
         if game.can_undo() && Rect::new(u.x - 2, u.y - 2, u.w + 4, u.h + 4).contains(x, y) {
             return Hit::Undo;
         }
-        if let Some(slot) = self.mini_slot_at(game, l, x, y) {
+        // Only one that can be picked up takes the touch from what is under it
+        if let Some(slot) = self
+            .mini_slot_at(game, l, x, y)
+            .filter(|&slot| self.may_carry(game, slot))
+        {
             return Hit::MiniDie(slot);
         }
         if let Some(i) = l.dice.iter().position(|d| d.contains(x, y)) {

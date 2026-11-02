@@ -1688,11 +1688,13 @@ version = "3.0.0"
 dependencies = [
  "crc32fast",
  "day-app",
+ "day-bridge",
  "day-build",
  "day-part-haptics",
  "day-part-sensors",
  "day-part-sound",
  "day-piece-settings",
+ "day-platform-android",
  "day-toolkit-dom",
  "png",
  "serde",

@@ -18,7 +18,7 @@ use std::task::{Context, Poll, Waker};
 use day::prelude::*;
 
 use super::metrics::{Metrics, metrics};
-use super::paint::{self, FOCUS, Icon, kit};
+use super::paint::{self, Icon, kit};
 use super::text::{Align, Block, Face};
 use super::widget::{self, Button, Style, W};
 
@@ -26,8 +26,8 @@ use super::widget::{self, Button, Style, W};
 const PAD: i32 = 8;
 const GAP: i32 = 4;
 const MAX_W: i32 = 216;
-/// A button's width in a row, as PixelDialog.BUTTON_ART_W, plus its focus margin.
-const ROW_BUTTON_W: i32 = 90 + 2 * FOCUS;
+/// A button's width in a row, as PixelDialog.BUTTON_ART_W.
+const ROW_BUTTON_W: i32 = 90;
 /// The space round a dialog that leaves the game showing at its edges.
 const MARGIN: i32 = 8;
 
@@ -38,10 +38,15 @@ struct Choice<T> {
     icon: Option<Icon>,
 }
 
-/// A dialog to `ask`: a title, a message, and buttons that each answer with a value.
+/// What builds a dialog's own content for the width it is given.
+pub type Content = Rc<dyn Fn(&Metrics, i32) -> W>;
+
+/// A dialog to `ask`: a title, a message or content of its own, and buttons that each answer
+/// with a value.
 pub struct Dialog<T> {
     title: String,
     paragraphs: Vec<String>,
+    content: Option<Content>,
     choices: Vec<Choice<T>>,
     stacked: bool,
     focus: Option<String>,
@@ -53,6 +58,7 @@ impl<T: 'static> Dialog<T> {
         Dialog {
             title: title.into(),
             paragraphs: Vec::new(),
+            content: None,
             choices: Vec::new(),
             stacked: false,
             focus: None,
@@ -69,6 +75,12 @@ impl<T: 'static> Dialog<T> {
                 .filter(|p| !p.is_empty())
                 .map(str::to_string),
         );
+        self
+    }
+
+    /// Content of the dialog's own in place of a message: PixelDialog.custom.
+    pub fn content(mut self, build: impl Fn(&Metrics, i32) -> W + 'static) -> Dialog<T> {
+        self.content = Some(Rc::new(build));
         self
     }
 
@@ -112,6 +124,15 @@ impl<T: 'static> Dialog<T> {
         self
     }
 
+    /// Only the first button answers with its value; any other is the same as dismissing it, as
+    /// PixelDialog.custom's Cancel is.
+    pub fn ok_only(mut self) -> Dialog<T> {
+        for c in self.choices.iter_mut().skip(1) {
+            c.value = None;
+        }
+        self
+    }
+
     /// The buttons one above the other, full width, whether or not they would fit in a row.
     pub fn stacked(mut self) -> Dialog<T> {
         self.stacked = true;
@@ -139,6 +160,7 @@ struct Open {
     id: u64,
     title: String,
     paragraphs: Vec<String>,
+    content: Option<Content>,
     buttons: Vec<(String, String, Option<Icon>)>,
     stacked: bool,
     focus: usize,
@@ -151,6 +173,9 @@ thread_local! {
     static QUEUE: RefCell<VecDeque<Rc<Open>>> = const { RefCell::new(VecDeque::new()) };
     static NEXT_ID: Cell<u64> = const { Cell::new(1) };
     static SHOWING: Cell<Option<Signal<u64>>> = const { Cell::new(None) };
+    /// The one dialog opened over the dialog on screen, as the color picker opens over Settings.
+    static OVER: RefCell<Option<Rc<Open>>> = const { RefCell::new(None) };
+    static OVER_SHOWING: Cell<Option<Signal<u64>>> = const { Cell::new(None) };
     static ANNOUNCED: Cell<u64> = const { Cell::new(0) };
 }
 
@@ -164,6 +189,27 @@ fn showing() -> Signal<u64> {
             s
         }
     })
+}
+
+/// The id of the dialog over the dialog on screen, 0 for none.
+fn over_showing() -> Signal<u64> {
+    OVER_SHOWING.with(|c| match c.get() {
+        Some(s) => s,
+        None => {
+            let s = Signal::global(0);
+            c.set(Some(s));
+            s
+        }
+    })
+}
+
+/// Forgets every dialog: what waited on their answers went with the tree they were asked from.
+pub fn reset() {
+    QUEUE.with(|q| q.borrow_mut().clear());
+    OVER.with(|o| *o.borrow_mut() = None);
+    over_showing().set(0);
+    showing().set(0);
+    ANNOUNCED.with(|a| a.set(0));
 }
 
 /// Whether a dialog is on screen. Tracked.
@@ -196,9 +242,8 @@ impl<T> Future for Answer<T> {
     }
 }
 
-/// Presents `dialog` (after any already showing) and resolves to the value of the button
-/// pressed, or `None` if it was dismissed.
-pub fn ask<T: 'static>(dialog: Dialog<T>) -> Answer<T> {
+/// Takes the dialog's values out, leaving what is shown.
+fn opened<T: 'static>(dialog: Dialog<T>) -> (Rc<Open>, Answer<T>) {
     let shared = Rc::new(RefCell::new(Shared {
         value: None,
         waker: None,
@@ -220,6 +265,7 @@ pub fn ask<T: 'static>(dialog: Dialog<T>) -> Answer<T> {
         id,
         title: dialog.title,
         paragraphs: dialog.paragraphs,
+        content: dialog.content,
         buttons,
         stacked: dialog.stacked,
         focus,
@@ -236,6 +282,14 @@ pub fn ask<T: 'static>(dialog: Dialog<T>) -> Answer<T> {
             }
         }))),
     });
+    (open, Answer { shared })
+}
+
+/// Presents `dialog` (after any already showing) and resolves to the value of the button
+/// pressed, or `None` if it was dismissed.
+pub fn ask<T: 'static>(dialog: Dialog<T>) -> Answer<T> {
+    let (open, answer) = opened(dialog);
+    let id = open.id;
     let first = QUEUE.with(|q| {
         let mut q = q.borrow_mut();
         q.push_back(open);
@@ -244,7 +298,29 @@ pub fn ask<T: 'static>(dialog: Dialog<T>) -> Answer<T> {
     if first {
         showing().set(id);
     }
-    Answer { shared }
+    answer
+}
+
+/// As `ask`, for a dialog opened over the one on screen, which stays open beneath it.
+pub fn ask_over<T: 'static>(dialog: Dialog<T>) -> Answer<T> {
+    let (open, answer) = opened(dialog);
+    let id = open.id;
+    OVER.with(|o| *o.borrow_mut() = Some(open));
+    over_showing().set(id);
+    answer
+}
+
+/// Closes the dialog on top, as a tap outside it does.
+pub fn dismiss_top() {
+    let over = over_showing().get_untracked();
+    let id = if over != 0 {
+        over
+    } else {
+        showing().get_untracked()
+    };
+    if id != 0 {
+        close(id, None);
+    }
 }
 
 /// A question with Yes and No, true for Yes.
@@ -264,6 +340,21 @@ pub async fn confirm(
 
 /// Closes the dialog on screen with an answer and shows the next one waiting.
 fn close(id: u64, answer: Option<usize>) {
+    let over = OVER.with(|o| {
+        let mut o = o.borrow_mut();
+        match o.as_ref() {
+            Some(open) if open.id == id => o.take(),
+            _ => None,
+        }
+    });
+    if let Some(open) = over {
+        over_showing().set(0);
+        let resolve = open.resolve.borrow_mut().take();
+        if let Some(r) = resolve {
+            r(answer);
+        }
+        return;
+    }
     let open = QUEUE.with(|q| {
         let mut q = q.borrow_mut();
         match q.front() {
@@ -328,10 +419,11 @@ impl Plan {
         out
     }
 
-    /// The plan for a panel `panel_w` art pixels wide. Up to three buttons sit in a row when
-    /// their labels fit (one width for all, as PixelDialog had it); a stacked dialog keeps them
-    /// one above the other at the design width, and goes to a row, or to two columns, only on a
-    /// panel wider than that.
+    /// The plan for a panel `panel_w` art pixels wide. At the design width, as PixelDialog had
+    /// it: a stacked dialog's buttons are full width, one above the other; otherwise buttons in a
+    /// row are one width when every label fits that, and if one does not, each is as wide as its
+    /// label and the last takes the rest of the row. On a panel wider than that, up to three
+    /// buttons share a row, and more go in two columns.
     pub fn with_width(m: &Metrics, natural: &[i32], stacked: bool, panel_w: i32) -> Plan {
         let inner = panel_w - 2 * PAD;
         let n = natural.len().max(1) as i32;
@@ -343,21 +435,42 @@ impl Plan {
             button_w,
             arrange,
         };
-        if n <= 3 && (!stacked || wide) {
-            let cap = if wide { inner } else { ROW_BUTTON_W };
-            let each = cap.min((inner - (n - 1) * GAP) / n);
+        if !wide {
+            if stacked {
+                return plan(vec![inner; natural.len()], Arrange::Columns(1));
+            }
+            let each = if n == 1 {
+                ROW_BUTTON_W
+            } else {
+                ROW_BUTTON_W.min((inner - GAP) / 2)
+            };
+            if natural.iter().all(|&w| w <= each) {
+                return plan(vec![each; natural.len()], Arrange::Row);
+            }
+            let mut widths = natural.to_vec();
+            if let Some(last) = widths.last_mut() {
+                let used: i32 = natural[..natural.len() - 1].iter().sum::<i32>() + (n - 1) * GAP;
+                *last = inner - used;
+            }
+            if widths.iter().all(|&w| w >= 16) {
+                return plan(widths, Arrange::Row);
+            }
+            return plan(vec![inner; natural.len()], Arrange::Columns(1));
+        }
+        if n <= 3 {
+            let each = inner.min((inner - (n - 1) * GAP) / n);
             if natural.iter().all(|&w| w <= each) {
                 return plan(vec![each; natural.len()], Arrange::Row);
             }
             // Each as wide as its label, the room left shared out
             let total: i32 = natural.iter().sum::<i32>() + (n - 1) * GAP;
-            if wide && total <= inner {
+            if total <= inner {
                 let extra = (inner - total) / n;
                 return plan(natural.iter().map(|w| w + extra).collect(), Arrange::Row);
             }
         }
         let half = (inner - GAP) / 2;
-        let cols = if wide && n > 3 && natural.iter().all(|&w| w <= half) {
+        let cols = if n > 3 && natural.iter().all(|&w| w <= half) {
             2
         } else {
             1
@@ -370,10 +483,13 @@ impl Plan {
     pub fn buttons_h(&self, heights: &[i32]) -> i32 {
         match self.arrange {
             Arrange::Row => heights.iter().copied().max().unwrap_or(0),
-            Arrange::Columns(cols) => heights
-                .chunks(cols.max(1) as usize)
-                .map(|row| row.iter().copied().max().unwrap_or(0))
-                .sum(),
+            Arrange::Columns(cols) => {
+                let rows: Vec<i32> = heights
+                    .chunks(cols.max(1) as usize)
+                    .map(|row| row.iter().copied().max().unwrap_or(0))
+                    .collect();
+                rows.iter().sum::<i32>() + (rows.len() as i32 - 1).max(0) * GAP
+            }
         }
     }
 
@@ -384,7 +500,7 @@ impl Plan {
         let block = |face: Face, s: &str, align: Align| {
             Block::new(kit.font(face), face, m.t, s, inner, align).height
         };
-        let head = block(Face::Display, &open.title, Align::Center) + 2 + 1 + 6;
+        let head = block(Face::Display, &open.title, Align::Center) + 1 + 6;
         let body: i32 = open
             .paragraphs
             .iter()
@@ -412,19 +528,39 @@ impl Plan {
     }
 }
 
-/// The dialog layer, over the game: the dialog showing, or nothing.
+/// The dialog layer, over the game: the dialog showing and any opened over it, or nothing.
 pub fn layer() -> impl Piece {
-    keyed(
-        move || {
-            let id = showing().get();
-            (id != 0).then(|| (id, metrics(), day::locale().get()))
-        },
-        |(id, m, _)| view(*id, m),
-    )
+    // The dim reaches under the navigation bar and the system's back comes to the dialog, as
+    // with a dialog window of its own
+    Effect::new(move || {
+        super::window::dim(showing().get() != 0, || {
+            super::widget::escape();
+        })
+    });
+    zstack((
+        keyed(
+            move || {
+                let id = showing().get();
+                (id != 0).then(|| (id, metrics(), day::locale().get()))
+            },
+            |(id, m, _)| view(*id, m),
+        ),
+        keyed(
+            move || {
+                let id = over_showing().get();
+                (id != 0).then(|| (id, metrics(), day::locale().get()))
+            },
+            |(id, m, _)| view(*id, m),
+        ),
+    ))
+    .align(Alignment::TopLeading)
 }
 
 fn view(id: u64, m: &Metrics) -> AnyPiece {
-    let Some(open) = QUEUE.with(|q| q.borrow().iter().find(|o| o.id == id).cloned()) else {
+    let over = OVER.with(|o| o.borrow().clone()).filter(|o| o.id == id);
+    let Some(open) =
+        over.or_else(|| QUEUE.with(|q| q.borrow().iter().find(|o| o.id == id).cloned()))
+    else {
         return spacer().any();
     };
     if ANNOUNCED.with(|a| a.replace(id)) != id {
@@ -471,23 +607,21 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
         &open.title,
         Style::TITLE,
     );
-    let head_h = title.h + 2 + 1 + 6;
+    let head_h = title.h + 1 + 6;
     let head = widget::vstack(
         m,
-        vec![
-            title,
-            widget::gap(m, inner, 2),
-            widget::rule(m, inner),
-            widget::gap(m, inner, 6),
-        ],
+        vec![title, widget::rule(m, inner), widget::gap(m, inner, 6)],
         0,
     );
 
-    let body: Vec<W> = open
-        .paragraphs
-        .iter()
-        .map(|p| widget::text(m, None, inner, p, Style::BODY))
-        .collect();
+    let body = match &open.content {
+        Some(build) => vec![build(m, inner)],
+        None => open
+            .paragraphs
+            .iter()
+            .map(|p| widget::text(m, None, inner, p, Style::BODY))
+            .collect::<Vec<W>>(),
+    };
     let has_body = !body.is_empty();
     let body = widget::vstack(m, body, 6);
 
@@ -509,7 +643,15 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
     let buttons = match plan.arrange {
         Arrange::Row => {
             let row = widget::hstack(m, buttons, GAP);
-            widget::center(m, row, inner)
+            // Whole art pixels from the left, as PixelDialog's row margin
+            widget::inset(
+                m,
+                row,
+                (inner
+                    - plan.button_w.iter().sum::<i32>()
+                    - (plan.button_w.len() as i32 - 1) * GAP)
+                    / 2,
+            )
         }
         Arrange::Columns(cols) => {
             let mut rows = Vec::new();
@@ -518,15 +660,13 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
                 let row: Vec<W> = it.by_ref().take(cols.max(1) as usize).collect();
                 rows.push(widget::hstack(m, row, GAP));
             }
-            widget::vstack(m, rows, 0)
+            widget::vstack(m, rows, GAP)
         }
     };
 
-    // What does not fit the window scrolls: the message alone while the buttons leave it three
-    // lines, else the message and the buttons together under the title. A scroll is cut through
-    // the middle of a line, so the text plainly goes on below.
+    // What does not fit the window scrolls: the content alone while the buttons leave it three
+    // lines, else the content and the buttons together under the title.
     let pitch = kit().body.height() * m.t;
-    let cut = |room: i32| (room - room % pitch - pitch / 2).max(pitch);
     let below = if has_body { 8 } else { 0 };
     let top = 2 * PAD + head_h;
     let mut parts = vec![head];
@@ -538,7 +678,7 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
         parts.push(buttons);
     } else if plan.max_h - top - below - buttons.h >= 3 * pitch {
         let room = plan.max_h - top - below - buttons.h;
-        parts.push(super::page::scroller(m, body, inner, cut(room)));
+        parts.push(super::page::scroller(m, body, inner, room, true));
         parts.push(widget::gap(m, inner, below));
         parts.push(buttons);
     } else {
@@ -549,16 +689,21 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
         }
         rest.push(buttons);
         let rest = widget::vstack(m, rest, 0);
-        parts.push(super::page::scroller(m, rest, inner, cut(plan.max_h - top)));
+        parts.push(super::page::scroller(
+            m,
+            rest,
+            inner,
+            plan.max_h - top,
+            true,
+        ));
     }
     let content = widget::vstack(m, parts, 0);
     let (pw, ph) = (plan.panel_w, content.h + 2 * PAD);
 
     let k = kit();
-    let panel_art = k.panel.clone();
     let panel = W::new(
         widget::art(m, pw, ph, move |img| {
-            paint::frame(img, &panel_art, 0, 0, pw, ph)
+            paint::frame(img, k.panel_art(), 0, 0, pw, ph)
         }),
         pw,
         ph,
@@ -571,7 +716,7 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
     let backdrop = canvas(|d, size| {
         d.fill(
             Shape::Rect(Rect::new(0.0, 0.0, size.width, size.height)),
-            Color::rgba(0.04, 0.02, 0.0, 0.55),
+            Color::rgba(0.0, 0.0, 0.0, 0.6),
         );
     })
     .on_tap(move || {
@@ -581,16 +726,18 @@ fn view(id: u64, m: &Metrics) -> AnyPiece {
     })
     .a11y(|a| a.hidden())
     .grow();
-    zstack((
-        backdrop,
-        zstack((panel.piece, content.piece.padding(m.pt(PAD))))
-            .align(Alignment::TopLeading)
-            .padding(Insets::new(m.pt(y), m.pt(x), 0.0, 0.0)),
-    ))
-    .align(Alignment::TopLeading)
-    .id(day::id!(dialog))
-    .grow()
-    .any()
+    // An overlay, so the panel never sizes the window: just after the screen turns it still has
+    // the old window's height, and the window probe would hand that height straight back
+    backdrop
+        .overlay_aligned(
+            Alignment::TopLeading,
+            zstack((panel.piece, content.piece.padding(m.pt(PAD))))
+                .align(Alignment::TopLeading)
+                .padding(Insets::new(m.pt(y), m.pt(x), 0.0, 0.0)),
+        )
+        .id(day::id!(dialog))
+        .grow()
+        .any()
 }
 
 #[cfg(test)]
@@ -607,16 +754,16 @@ mod tests {
         assert_eq!(p.panel_w, 200);
         assert_eq!(p.inner_w(), 184);
         assert_eq!(p.arrange, Arrange::Row);
-        // Two buttons split the inside, less the gap between them
-        assert_eq!(p.button_w, vec![(184 - GAP) / 2; 2]);
+        // Two buttons at PixelDialog's width
+        assert_eq!(p.button_w, vec![ROW_BUTTON_W; 2]);
         assert_eq!(p.panel_w % 2, 0);
     }
 
     #[test]
-    fn long_labels_stack_full_width() {
-        let p = Plan::new(&phone(), &[40, 150], false);
-        assert_eq!(p.arrange, Arrange::Columns(1));
-        assert_eq!(p.button_w, vec![p.inner_w(); 2]);
+    fn a_long_label_keeps_its_width_and_the_last_takes_the_rest() {
+        let p = Plan::new(&phone(), &[104, 48], false);
+        assert_eq!(p.arrange, Arrange::Row);
+        assert_eq!(p.button_w, vec![104, 184 - 104 - GAP]);
         let s = Plan::new(&phone(), &[40, 40], true);
         assert_eq!(s.arrange, Arrange::Columns(1));
     }
@@ -636,7 +783,7 @@ mod tests {
         // Seven short ones go in two columns
         let menu = Plan::with_width(&wide, &[100; 7], true, last);
         assert_eq!(menu.arrange, Arrange::Columns(2));
-        assert_eq!(menu.buttons_h(&[26; 7]), 4 * 26);
+        assert_eq!(menu.buttons_h(&[22; 7]), 4 * 22 + 3 * GAP);
     }
 
     #[test]

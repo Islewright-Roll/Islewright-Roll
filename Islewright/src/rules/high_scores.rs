@@ -37,11 +37,11 @@ pub const MUSIC_VOLUME_MIN: i32 = 0;
 pub const MUSIC_VOLUME_MAX: i32 = 100;
 pub const MUSIC_VOLUME_DEFAULT: i32 = 60;
 
-/// The Dunholm target setting: the score that wins the race, 1 to the most the island can
-/// give (MapDef::max_score). Read when a race starts and kept by the game, so a saved game
-/// goes on with the target it was started with. Top Scores record only a game played to the
+/// The Dunholm target setting: the score that wins the race, the island's own target to the most
+/// the island can give (MapDef::max_score): the setting only lengthens a race. Read when a race
+/// starts and kept by the game, so a saved game goes on with the target it was started with. Top Scores record only a game played to the
 /// island's own target, since fewer turns to another target is not the same feat.
-pub const RACE_TARGET_MIN: i32 = 1;
+pub const RACE_TARGET_MIN: i32 = 10;
 /// Dunholm's own target (MapDef::dunholm().target_score; a test holds them together).
 pub const RACE_TARGET_DEFAULT: i32 = 10;
 

@@ -5,7 +5,7 @@
 
 use day_piece_settings::prelude::Pref;
 
-use crate::rules::high_scores::{EARLY_PROMPT_SMART, RACE_TARGET_DEFAULT};
+use crate::rules::high_scores::{EARLY_PROMPT_SMART, MUSIC_VOLUME_DEFAULT, RACE_TARGET_DEFAULT};
 use crate::rules::player_color;
 
 /// Sound effects on or off.
@@ -34,5 +34,10 @@ pub static SHOW_WELCOME: Pref<bool> = Pref::new("islewright.show_welcome", || tr
 /// The player's color, as 0xAARRGGBB.
 pub static PLAYER_COLOR: Pref<i64> =
     Pref::new("islewright.player_color", || player_color::DEFAULT as i64);
+/// The Theme setting's stored name (`Theme::name`).
+pub static THEME: Pref<String> = Pref::new("islewright.theme", || "system".to_string());
+/// How loud the music plays, 0 to 100.
+pub static MUSIC_VOLUME: Pref<i64> =
+    Pref::new("islewright.music_volume", || MUSIC_VOLUME_DEFAULT as i64);
 /// The island on screen: "tarnholm" or "dunholm".
 pub static ISLAND: Pref<String> = Pref::new("islewright.island", || "tarnholm".to_string());

@@ -21,3 +21,6 @@ min_height = 400
 # Report which element ids the dayscripts reach: https://daybrite.dev/docs/how-to/dayscript
 [dayscript.coverage]
 enabled = true
+
+[android]
+resource-overlays = ["platform/android/res"]

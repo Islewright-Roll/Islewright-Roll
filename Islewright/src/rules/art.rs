@@ -11,7 +11,7 @@ pub const TRACK_BUOY_W: i32 = 5;
 pub const TRACK_BUOY_H: i32 = 7;
 pub const TRACK_FLAG_W: i32 = 13;
 pub const TRACK_SHIP_W: i32 = 14;
-pub const TRACK_PIER_W: i32 = 10;
+pub const TRACK_PIER_W: i32 = 14;
 // The clear field of a flag, in the flag's own pixels: 11 x 7, for a 5 px tall number
 pub const TRACK_FLAG_FIELD_X: i32 = 1;
 pub const TRACK_FLAG_FIELD_W: i32 = 11;

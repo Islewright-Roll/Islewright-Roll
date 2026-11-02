@@ -61,7 +61,9 @@ SPANISH = "áéíóúüñÁÉÍÓÚÜÑ¡¿"
 FRENCH = "àâçèéêëîïôùûüÿœæÀÂÇÈÉÊËÎÏÔÙÛÜŸŒÆ«»" + NBSP
 PORTUGUESE = "áàâãçéêíóôõúÁÀÂÃÇÉÊÍÓÔÕÚ"
 ITALIAN = "àèéìòùÀÈÉÌÒÙ"
-CODEPOINTS = sorted(set(range(32, 127)) | {ord(c) for c in GERMAN + SPANISH + FRENCH + PORTUGUESE + ITALIAN})
+# Beyond the languages: a name and a trademark sign in the About text
+CREDITS = "\u00e5\u00ae"
+CODEPOINTS = sorted(set(range(32, 127)) | {ord(c) for c in GERMAN + SPANISH + FRENCH + PORTUGUESE + ITALIAN + CREDITS})
 PER_ROW = 16
 GAP = 1
 
@@ -89,6 +91,29 @@ def render_glyph(font, ch, scale, cw, height):
     if scale > 1:
         img = img.resize((cw, height), Image.NEAREST)
     return img
+
+
+def kerning_lines(path, codepoints):
+    """The font's kerning pairs between the glyphs baked, as "first second pixels" lines."""
+    from fontTools.ttLib import TTFont
+
+    font = TTFont(path)
+    cmap = font.getBestCmap()
+    units = font["head"].unitsPerEm / 10
+    by_name = {}
+    for cp in sorted(codepoints):
+        if cp in cmap:
+            by_name.setdefault(cmap[cp], []).append(cp)
+    pairs = {}
+    for lookup in font["GPOS"].table.LookupList.Lookup:
+        for sub in lookup.SubTable:
+            for first, rows in zip(sub.Coverage.glyphs, sub.PairSet):
+                for row in rows.PairValueRecord:
+                    amount = row.Value1.XAdvance if row.Value1 else 0
+                    for a in by_name.get(first, []):
+                        for b in by_name.get(row.SecondGlyph, []):
+                            pairs.setdefault((a, b), int(round(amount / units)))
+    return ["%d %d %d" % (a, b, v) for (a, b), v in sorted(pairs.items()) if v]
 
 
 def bake(name, ttf, size, scale, proportional, codepoints, copy_to_assets):
@@ -129,6 +154,17 @@ def bake(name, ttf, size, scale, proportional, codepoints, copy_to_assets):
         assert px[:3] == (255, 255, 255), "non-white colour in %s: %s" % (name, px)
 
     atlas.save(os.path.join(PNG_DIR, "font_%s.png" % name))
+    if name == "body":
+        # The dialogs and pages set Ark Pixel as Android's text views did, on the font's own
+        # advances: the same atlas, without the clear pixel the game canvas keeps after the ink.
+        text = lines[:1]
+        for ln in lines[1:]:
+            f = ln.split()
+            f[5] = str(int(round(font.getlength(chr(int(f[0]))) / scale)))
+            text.append(" ".join(f))
+        text.extend(kerning_lines(path, {int(ln.split()[0]) for ln in lines[1:]}))
+        with open(os.path.join(RAW_DIR, "font_text.txt"), "w", encoding="utf-8", newline="\n") as f:
+            f.write("\n".join(text) + "\n")
     with open(os.path.join(RAW_DIR, "font_%s.txt" % name), "w", encoding="utf-8", newline="\n") as f:
         f.write("\n".join(lines) + "\n")
     if copy_to_assets:

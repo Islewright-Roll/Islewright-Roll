@@ -11,26 +11,40 @@
 //! - `metrics`: the art pixel and the text size on this screen, large text included.
 //! - `text`: wrapping and drawing the bitmap fonts.
 //! - `paint`: the frames, boxes and focus ring.
-//! - `widget`: text, buttons, check boxes, radio buttons, the stepper, links, pictures.
+//! - `widget`: text, buttons, check boxes, radio buttons, sliders, links, pictures, the wheel.
 //! - `dialog`: overlays over the game, with an awaitable `ask`.
 //! - `page`: full-window pages for Day covers.
+//! - `toast`: a short message that goes by itself.
 
 pub mod dialog;
 pub mod metrics;
 pub mod page;
 pub mod paint;
 pub mod text;
+pub mod toast;
 pub mod widget;
+pub mod window;
 
 use day::prelude::*;
 
-pub use dialog::{Dialog, ask, confirm};
+pub use dialog::{Dialog, ask, ask_over, confirm};
 pub use metrics::{Metrics, metrics};
 pub use paint::Icon;
 pub use widget::{Button, Style, W};
 
 /// The app's content with the kit's layers round it: the probes that measure the window and the
 /// text size beneath, the dialog layer above.
-pub fn host(content: impl Piece) -> impl Piece {
-    zstack((metrics::probes(), content, dialog::layer())).align(Alignment::TopLeading)
+pub fn host(content: impl Piece, page_open: impl Fn() -> bool + 'static) -> impl Piece {
+    zstack((
+        metrics::probes(),
+        content,
+        keyed(move || (!page_open()).then_some(()), |_| overlays()),
+    ))
+    .align(Alignment::TopLeading)
+}
+
+/// What shows over everything: dialogs and messages. A page on Android is a raised native view
+/// nothing outside it can draw over, so while one is open it hosts these itself.
+pub fn overlays() -> impl Piece {
+    zstack((dialog::layer(), toast::layer())).align(Alignment::TopLeading)
 }

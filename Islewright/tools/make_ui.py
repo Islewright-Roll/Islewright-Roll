@@ -3,13 +3,13 @@
 
 Run from the repository root as:  python3 -I tools/make_ui.py
 
-Environment: WESNOTH_DIR (default /usr/share/games/wesnoth/1.16, the installed package), read only.
+Environment: WESNOTH_DIR (default: a wesnoth checkout beside this repository), read only.
 
 Everything here is drawn at 1:1 art pixels, no antialiasing, in tiny fixed
 palettes. The app scales the whole art bitmap by an integer factor with
-nearest-neighbor, so these sprites sit beside Wesnoth's 72 px terrain.
+nearest neighbour, so these sprites sit beside Wesnoth's 72 px terrain.
 
-Outputs go to resource/assets/art/. Side files:
+Outputs go to app/src/main/res/drawable-nodpi/. Side files:
   tools/pieces.txt              anchors for the cropped Wesnoth pieces and the road sprites
   tools/wesnoth-sources-ui.txt  Wesnoth commit plus every Wesnoth file read
   tools/preview_ui.png          contact sheet (untracked, never git add)
@@ -24,8 +24,8 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "resource/assets/art")
-WESNOTH = os.environ.get("WESNOTH_DIR", "/usr/share/games/wesnoth/1.16")
+OUT = os.path.join(ROOT, "app/src/main/res/drawable-nodpi")
+WESNOTH = os.environ.get("WESNOTH_DIR", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "wesnoth"))
 IMG = os.path.join(WESNOTH, "data/core/images")
 
 TEAM_MAGENTA = ["F49AC1", "3F0016", "55002A", "690039", "7B0045", "8C0051", "9E005D",
@@ -224,7 +224,9 @@ def make_dice():
 
 # F49AC1 is the reference shade, which becomes the player colour itself: the kerb's body.
 # Lighter and darker key shades light and shade it.
-KERB_LIT, KERB_MID, KERB_DARK = "F6ADCD", "F49AC1", "EC008C"
+# On the board the kerb is a little darker than the colour itself (F172AC maps to about 89%
+# of it), so it holds its own against the bright terrain; EC008C still marks the joints.
+KERB_LIT, KERB_MID, KERB_DARK = "F172AC", "F172AC", "EC008C"
 COBBLE = ["8A7A62", "B09E7C", "D0C29E"]
 MORTAR = "4E3E2C"
 
@@ -1129,19 +1131,20 @@ GLYPH_ROAD = ["............",
               "kcccck......",
               ".kkk........",
               "............"]
+# The roof is in team magenta (p the reference pink, P its shade), so it takes the player colour
 GLYPH_VILLAGE = ["............",
                  ".....kk.....",
-                 "....krrk....",
-                 "...krrrrk...",
-                 "..krrrrrrk..",
-                 ".krrrrrrrrk.",
-                 "kRRRRRRRRRRk",
+                 "....kppk....",
+                 "...kppppk...",
+                 "..kppppppk..",
+                 ".kppppppppk.",
+                 "kPPPPPPPPPPk",
                  ".kwwwwwwwwk.",
                  ".kwwddwwbbk.",
                  ".kwwddwwwWk.",
                  ".kkkkkkkkkk.",
                  "............"]
-GLYPH = dict(k=K, c="A09078", m="C8B898", r="C8502D", R="8C2D19", w="F0E0B8", W="D8C494",
+GLYPH = dict(k=K, c="A09078", m="C8B898", p="F49AC1", P="EC008C", w="F0E0B8", W="D8C494",
              d="8B5A2B", b="4F93AD", s="B8B8B8", S="8C8C8C", l="E0B870")
 START_ARROW = ["..kkkk..",
                "..kllk..",
@@ -1172,21 +1175,24 @@ UNDO = ["................",
         "................"]
 
 
-CASTLE_GLYPH = dict(L="E0E0E0", m="A8A8A8", S="707070", k=K, r="C8502D", R="8C2D19", d="8B5A2B")
-CASTLE = ["....drrr..",
-          "....dRR...",
-          "...Ld.S...",
-          "...LmmS...",
-          "...LmkS...",
-          "L.SLmkSL.S",
-          "LmSLmmSLmS",
-          "LmSLmmSLmS",
-          "LmSLkkSLmS",
-          "LmSLkkSLmS"]
+# The board castle in little: two towers with cone roofs either side of a wall and gatehouse,
+# a banner over the gate. Roofs and banner in team magenta (p the reference pink, P its shade),
+# so they take the player colour like the castle on the board.
+CASTLE_GLYPH = dict(L="C8C0B0", s="9C9488", S="6E665A", k=K, p="F49AC1", P="EC008C", d="4A2C14")
+CASTLE = [".p......p.",
+          "ppP....ppP",
+          "ppP....ppP",
+          "LsS.ss.LsS",
+          "LsSssssLsS",
+          "LsSsppsLsS",
+          "LsSsPPsLsS",
+          "LsSskksLsS",
+          "LsSkddkLsS",
+          "LsSkddkLsS"]
 
 
 def make_castle_glyph():
-    """12 px castle: a 10 x 10 picture (crenellated keep, pennant, lower wings, a gate) inside
+    """12 px castle: a 10 x 10 picture (two towers, wall and gatehouse, as on the board) inside
     the cell so the 1 px outline ring lands whole inside it."""
     return glyph_from_art(CASTLE, CASTLE_GLYPH)
 
@@ -1783,7 +1789,7 @@ def make_icons():
 # ---------------------------------------------------------------- authored village and city
 
 SHADOW_ALPHA = 96
-ROOF_LIGHT, ROOF_MID, ROOF_EDGE, ROOF_SHADE, ROOF_DEEP = "F6ADCD", "F49AC1", "EC008C", "9E005D", "690039"
+ROOF_LIGHT, ROOF_MID, ROOF_EDGE, ROOF_SHADE, ROOF_DEEP = "F49AC1", "F49AC1", "EC008C", "9E005D", "690039"
 B_OUT = "2A1A0E"
 
 
@@ -1876,6 +1882,9 @@ def footprint_shadow(x, yb, xr, dx, dy):
     return [(x + 2, yb + 1), (xr + 2, yb + 1), (xr + dx + 2, yb - dy + 1), (x + dx + 2, yb - dy + 1)]
 
 
+SHUTTER = "A8743C"
+
+
 def make_village():
     c = dict(front="F0E0B8", side="C0AC80", shade="D8C494")
     im = Image.new("RGBA", (30, 30), (0, 0, 0, 0))
@@ -1888,10 +1897,15 @@ def make_village():
     d.line([(x0 + 1, yt + 2), (x0 + 1, yb - 1)], fill=rgb("7A5230"))         # timber posts
     d.line([(xr - 1, yt + 2), (xr - 1, yb - 1)], fill=rgb("7A5230"))
     d.line([(x0 + 1, yt + 1), (xr - 1, yt + 1)], fill=rgb("7A5230"))         # beam
-    d.rectangle([x0 + 3, yb - 4, x0 + 5, yb - 1], fill=rgb(B_OUT))           # door, left of centre
-    d.point((x0 + 5, yb - 2), fill=rgb("E6B422"))
-    d.rectangle([x0 + 7, yt + 3, x0 + 8, yt + 4], fill=rgb("4F93AD"))        # window
-    d.rectangle([xr + 2, yt + 1, xr + 3, yt + 3], fill=rgb("4F93AD"))        # side window
+    d.rectangle([x0 + 3, yb - 4, x0 + 4, yb - 1], fill=rgb(B_OUT))           # door, left of centre
+    d.point((x0 + 4, yb - 2), fill=rgb("E6B422"))
+    # windows with their wooden shutters swung open: dark opening between two leaves
+    d.line([(x0 + 7, yt + 3), (x0 + 7, yt + 4)], fill=rgb(B_OUT))
+    d.line([(x0 + 6, yt + 3), (x0 + 6, yt + 4)], fill=rgb(SHUTTER))
+    d.line([(x0 + 8, yt + 3), (x0 + 8, yt + 4)], fill=rgb(SHUTTER))
+    d.line([(xr + 3, yt + 1), (xr + 3, yt + 3)], fill=rgb(B_OUT))
+    d.line([(xr + 2, yt + 1), (xr + 2, yt + 3)], fill=rgb(SHUTTER))
+    d.line([(xr + 4, yt), (xr + 4, yt + 2)], fill=rgb(SHUTTER))
     # chimney sitting on the ridge
     cx, cy = g["ax"] + 3, g["ay"] - 2
     d.rectangle([cx, cy - 2, cx + 2, cy + 1], fill=rgb("9C9488"))
@@ -1903,53 +1917,60 @@ def make_village():
 
 
 def cone_roof(d, x0, x1, base_y, apex_y):
-    """Round tower roof: a cone in team magenta, lit left half, shaded right half, banded."""
-    apex = ((x0 + x1) // 2, apex_y)
-    poly(d, [(x0 - 1, base_y), (x1 + 1, base_y), apex], ROOF_MID)
-    mid = apex[0]
-    poly(d, [(mid + 1, apex_y + 1), (x1, base_y - 1), (mid + 1, base_y - 1)], ROOF_SHADE, outline=None)
-    d.line([(x0 - 1, base_y), (x1 + 1, base_y)], fill=rgb(ROOF_DEEP))
+    """Round tower roof: a cone in team magenta, lit left half, shaded right half, ringed.
+    Drawn row by row so the flanks step evenly, one pixel out every two rows, and with no
+    outline of its own: finish_outline gives it the same single pixel edge as the rest."""
+    mid = (x0 + x1) // 2
     h = base_y - apex_y
-    for k in (h // 3, 2 * h // 3):
+    for k in range(h + 1):
         yy = apex_y + k
-        half = int(round((x1 - x0 + 2) / 2.0 * k / float(h)))
-        d.line([(mid - half + 1, yy), (mid + 1, yy)], fill=rgb(ROOF_EDGE))
-    d.line([(mid - 1, apex_y + 2), (mid - 2, apex_y + 5)], fill=rgb(ROOF_LIGHT))
-    d.point(apex, fill=rgb(ROOF_LIGHT))
+        half = min((k + 1) // 2, mid - x0 + 1)
+        ring = k in (h // 3 + 1, 2 * h // 3 + 1)
+        for xx in range(mid - half, mid + half + 1):
+            if k == h:
+                col = ROOF_DEEP                                    # eave
+            elif xx <= mid:
+                col = ROOF_EDGE if ring else ROOF_MID
+            else:
+                col = ROOF_DEEP if ring else ROOF_SHADE
+            d.point((xx, yy), fill=rgb(col))
+    for k in (2, 3):                                               # glint down the lit flank
+        d.point((mid - 1, apex_y + k), fill=rgb(ROOF_LIGHT))
 
 
 def make_castle():
     """Small castle, front on: two round towers with magenta cone roofs, a crenellated
-    curtain wall, a raised gatehouse with an arch and a magenta banner over the gate."""
+    curtain wall, a raised gatehouse with an arch and a magenta banner over the gate. The
+    towers carry arrow slits, no glass."""
     im = Image.new("RGBA", (40, 40), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     st, lt, sh, cs = rgb("9C9488"), rgb("C8C0B0"), rgb("6E665A"), rgb("8A8276")
-    door, win = rgb("4A2C14"), rgb("4F93AD")
+    door = rgb("4A2C14")
     out = rgb(B_OUT)
-    yb = 33
+    yb, ox = 33, 1                     # ox: everything sits 1 px in so the left eave keeps its outline
     # curtain wall between the towers, with merlons
-    d.rectangle([8, 24, 16, yb], fill=st)
+    d.rectangle([8 + ox, 24, 16 + ox, yb], fill=st)
     for x in range(8, 17, 2):
-        d.rectangle([x, 22, x, 23], fill=st)
-    d.line([(8, 24), (16, 24)], fill=lt)
+        d.rectangle([x + ox, 22, x + ox, 23], fill=st)
+    d.line([(8 + ox, 24), (16 + ox, 24)], fill=lt)
     for yy in (28, 31):
-        d.line([(8, yy), (16, yy)], fill=cs)
+        d.line([(8 + ox, yy), (16 + ox, yy)], fill=cs)
     # gatehouse, raised, centred on x = 12
-    d.rectangle([9, 18, 15, yb], fill=st)
+    d.rectangle([9 + ox, 18, 15 + ox, yb], fill=st)
     for x in (9, 11, 13, 15):
-        d.rectangle([x, 16, x, 17], fill=st)
-    d.line([(9, 18), (15, 18)], fill=lt)
-    d.line([(9, 19), (9, yb)], fill=lt)
-    d.line([(15, 19), (15, yb)], fill=sh)
+        d.rectangle([x + ox, 16, x + ox, 17], fill=st)
+    d.line([(9 + ox, 18), (15 + ox, 18)], fill=lt)
+    d.line([(9 + ox, 19), (9 + ox, yb)], fill=lt)
+    d.line([(15 + ox, 19), (15 + ox, yb)], fill=sh)
     for yy in (22, 25):
-        d.line([(10, yy), (14, yy)], fill=cs)
-    d.rectangle([10, 28, 14, yb], fill=out)                        # gate arch
-    d.rectangle([11, 27, 13, 27], fill=out)
-    d.rectangle([11, 29, 13, yb], fill=door)
+        d.line([(10 + ox, yy), (14 + ox, yy)], fill=cs)
+    d.rectangle([10 + ox, 28, 14 + ox, yb], fill=out)              # gate arch
+    d.rectangle([11 + ox, 27, 13 + ox, 27], fill=out)
+    d.rectangle([11 + ox, 29, 13 + ox, yb], fill=door)
     for x in (11, 13):
-        d.line([(x, 28), (x, yb)], fill=out)
+        d.line([(x + ox, 28), (x + ox, yb)], fill=out)
     # banner hung over the gate: team magenta, swallow tailed
-    bx0, bx1, by0 = 10, 14, 19
+    bx0, bx1, by0 = 10 + ox, 14 + ox, 19
     for yy in range(by0, by0 + 6):
         for xx in range(bx0, bx1 + 1):
             if yy == by0 + 5 and xx == (bx0 + bx1) // 2:
@@ -1958,21 +1979,24 @@ def make_castle():
                                                 (ROOF_EDGE if yy >= by0 + 4 else ROOF_MID))
             d.point((xx, yy), fill=rgb(col))
     d.line([(bx0 - 1, by0 - 1), (bx1 + 1, by0 - 1)], fill=out)
-    # towers
-    for (x0, x1, light_left) in ((1, 7, True), (17, 23, True)):
+    # towers: the body stops 1 px short of x0 and x1, where finish_outline lays a single edge
+    for (x0, x1) in ((1 + ox, 7 + ox), (17 + ox, 23 + ox)):
         tt = 16
-        d.rectangle([x0, tt, x1, yb], fill=st, outline=out)
-        d.rectangle([x0 + 1, tt + 1, x0 + 2, yb - 1], fill=lt)
-        d.rectangle([x1 - 2, tt + 1, x1 - 1, yb - 1], fill=sh)
+        d.rectangle([x0 + 1, tt + 1, x1 - 1, yb], fill=st)
+        inner = x1 if x0 < 12 else x0                              # seam against the wall
+        d.line([(inner, tt + 1), (inner, yb)], fill=out)
+        d.rectangle([x0 + 1, tt + 1, x0 + 2, yb], fill=lt)
+        d.rectangle([x1 - 2, tt + 1, x1 - 1, yb], fill=sh)
         for yy in range(tt + 4, yb, 4):
             d.line([(x0 + 3, yy), (x1 - 3, yy)], fill=cs)
         mid = (x0 + x1) // 2
-        d.rectangle([mid - 1, tt + 3, mid, tt + 5], fill=out)       # arrow slit
-        d.rectangle([mid - 1, tt + 11, mid, tt + 12], fill=win)
+        d.line([(mid, tt + 3), (mid, tt + 6)], fill=out)           # arrow slits
+        d.line([(mid, tt + 10), (mid, tt + 13)], fill=out)
         cone_roof(d, x0, x1, tt, tt - 9)
-    anchor = (12, yb)
+    anchor = (12 + ox, yb)
     finish_outline(im)
-    foot = [(1, yb + 1), (23, yb + 1), (26, yb), (26, yb + 1), (24, yb + 2), (2, yb + 2)]
+    foot = [(x + ox, y) for (x, y) in
+            ((1, yb + 1), (23, yb + 1), (26, yb), (26, yb + 1), (24, yb + 2), (2, yb + 2))]
     return crop_to_content(ground_shadow(im, foot), anchor)
 
 
@@ -2130,9 +2154,9 @@ TRACK_EMPTY_ROWS = ["K............",
                     "K...oo.......",
                     "K............",
                     "K............"]
-# the King's ship as the board shows it: a galleon under full white sail heading right, the royal
-# flag in purple and gold at the masthead
-TRACK_SHIP = dict(o="2A1A0E", g="E6B422", P="6A3A9C", Q="4A2670", w="F0E0B8", s="D8C494",
+# the King's ship as the board shows it: a galleon under full white sail heading right, its flag
+# at the masthead in team magenta (P the reference pink, Q its shade) so it flies the player's colour
+TRACK_SHIP = dict(o="2A1A0E", g="E6B422", P="F49AC1", Q="EC008C", w="F0E0B8", s="D8C494",
                   M="C8955A", d="5C3A1E")
 TRACK_SHIP_ROWS = ["gPPPPPd.......",
                    ".QQQQQd.......",
@@ -2147,21 +2171,22 @@ TRACK_SHIP_ROWS = ["gPPPPPd.......",
                    ".odgdgdgdgddo.",
                    "..oddddddddo..",
                    "...oooooooo..."]
-TRACK_PIER = dict(o="2A1A0E", P="6A3A9C", Q="4A2670", L="C8C0B0", D="6E665A", W="C8955A",
-                  w="8B5A2B", p="5C3A1E")
-TRACK_PIER_ROWS = [".....oPPP.",
-                   ".....oQQ..",
-                   "..oLoLoLo.",
-                   "..oLLLLLo.",
-                   "..oLLLLDo.",
-                   "..oLLLLDo.",
-                   "..oLooLDo.",
-                   "..oLooLDo.",
-                   "..oLooLDo.",
-                   "WWWWWWWWWW",
-                   "wwwwwwwwww",
-                   "pp..pp..pp",
-                   "pp..pp..pp"]
+# the end of the voyage: a castle tower on a small island, its flag in team magenta like the ship's
+TRACK_PIER = dict(o="2A1A0E", P="F49AC1", Q="EC008C", L="C8C0B0", D="6E665A",
+                  G="6E9A3E", S="D8C08A", f="C8E0E0")
+TRACK_PIER_ROWS = ["..............",          # open water over the flag
+                   ".....oPPP.....",
+                   ".....oQQ......",
+                   "...oLoLoLo....",
+                   "...oLLLLLo....",
+                   "...oLLLLDo....",
+                   "...oLooLDo....",
+                   "...oLooLDo....",
+                   "...oLooLDo....",
+                   ".GGGGGGGGGGGG.",
+                   "fSSSSSSSSSSSSf",
+                   ".ff.f....f.ff.",
+                   ".............."]          # the strip's bottom row stays open water, clear of the frame
 
 
 def make_track():
@@ -2170,13 +2195,15 @@ def make_track():
     put("track_flag.png", art(TRACK_FLAG_ROWS, TRACK_FLAG, (13, 13)))
     put("track_flag_empty.png", art(TRACK_EMPTY_ROWS, TRACK_EMPTY, (13, 13)))
     put("track_ship.png", art(TRACK_SHIP_ROWS, TRACK_SHIP, (14, 13)))
-    put("track_pier.png", art(TRACK_PIER_ROWS, TRACK_PIER, (10, 13)))
+    put("track_pier.png", art(TRACK_PIER_ROWS, TRACK_PIER, (14, 13)))
 
 
 # ---------------------------------------------------------------- the King's ship on the board
 
 KINGSHIP = "data/core/images/units/transport/transport-galleon.png"
-ROYAL_PURPLE = ["2A1442", "4A2670", "6A3A9C", "8A5CC0", "B08ADC"]     # dark to light
+# The flag's shades, dark to light, in team magenta so the flag flies the player's colour
+# (F49AC1, the lightest, is the colour itself)
+FLAG_TEAM = ["690039", "8C0051", "B10069", "EC008C", "F49AC1"]
 ROYAL_GOLD = "E6B422"
 
 
@@ -2189,8 +2216,8 @@ def make_kingship():
     """Wesnoth 1.16's transport galleon exactly as shipped: its own soft alpha channel (the
     antialiased edges and the faint wake that is part of the sprite) is kept untouched, nothing is
     scaled, the crop is the bounding box of every pixel with alpha above 0, and no shadow is added
-    (the wake is the water line). Only the team colour flag is recoloured, by colour, to royal
-    purple and gold; each pixel keeps its own alpha. Returns (image, crop box)."""
+    (the wake is the water line). Only the team colour flag is redrawn, in team magenta shades
+    (recoloured to the player's colour at draw time) with a gold fly; each pixel keeps its own alpha. Returns (image, crop box)."""
     src = read_wesnoth_pkg(KINGSHIP).convert("RGBA")
     out = src.copy()
     sp, op = src.load(), out.load()
@@ -2200,7 +2227,7 @@ def make_kingship():
             p = sp[x, y]
             if p[3] and is_team_colour(p):
                 team.append((x, y))
-    # team colour: brightness picks the purple, the fly end of each row of the flag is gold
+    # team colour: brightness picks the shade, the fly end of each row of the flag is gold
     lum = {q: sum(sp[q][:3]) for q in team}
     lo, hi = min(lum.values()), max(lum.values())
     rows = {}
@@ -2208,7 +2235,7 @@ def make_kingship():
         rows.setdefault(y, []).append(x)
     for (x, y) in team:
         t = (lum[(x, y)] - lo) / float(max(1, hi - lo))
-        c = ROYAL_PURPLE[min(len(ROYAL_PURPLE) - 1, int(t * len(ROYAL_PURPLE)))]
+        c = FLAG_TEAM[min(len(FLAG_TEAM) - 1, int(t * len(FLAG_TEAM)))]
         if x >= max(rows[y]) - 1 and y >= min(rows):
             c = ROYAL_GOLD
         op[x, y] = rgb(c)[:3] + (sp[x, y][3],)
@@ -2263,7 +2290,7 @@ def extract_pieces():
             ("piece_castle.png", make_castle(), "castle; tower cone roofs and the gate banner"),
             ("piece_trader.png", make_trader(), "merchant and open hand cart; cloak and the cart's side stripe")):
         put(name, im, limited="piece")
-        notes.append("%s: %dx%d, authored in make_ui.py (%s in team magenta F6ADCD, F49AC1, "
+        notes.append("%s: %dx%d, authored in make_ui.py (%s in team magenta F49AC1, "
                      "EC008C, 9E005D, 690039 so it takes the player colour). Anchor (bottom "
                      "centre of the base) = (%d, %d). A ground shadow of alpha 96 trails right "
                      "and below; use alpha > 128 for a footprint."
@@ -2278,8 +2305,7 @@ def extract_pieces():
         "NOT the redrawn sprite of the same name in newer Wesnoth) cropped to the bounding box of "
         "every pixel with alpha above 0, its own soft alpha channel kept exactly as shipped "
         "(antialiased edges and the faint wake stay, no shadow added, nothing scaled), the team "
-        "colour flag recoloured to royal purple and gold (so it is NOT player coloured and must "
-        "not go through the recolour). The pixels with alpha of 128 or more, the ship itself, fill "
+        "colour flag in team magenta and gold (so it IS player coloured: recolour it at draw time). The pixels with alpha of 128 or more, the ship itself, fill "
         "the box x %d to %d, y %d to %d (%d x %d); the rest is wake. It heads to the lower right, "
         "stern at the upper left, keel at about 3 across for 1 down. To moor, put the ship's "
         "CONTACT pixel (%d, %d), the tip of its bowsprit, on the dock's mooring point (the dock is "
@@ -2291,7 +2317,7 @@ def extract_pieces():
         % (ship.width, ship.height, solid[0], solid[2] - 1, solid[1], solid[3] - 1,
            solid[2] - solid[0], solid[3] - solid[1], SHIP_MOOR_CONTACT[0], SHIP_MOOR_CONTACT[1]))
     notes.append("icon_foreground.png and icon_background.png: 432x432, the adaptive icon layers drawn on a "
-                 "108x108 art pixel canvas at exactly 4x nearest-neighbor. The background is opaque deep "
+                 "108x108 art pixel canvas at exactly 4x nearest neighbour. The background is opaque deep "
                  "sea (0D3947) with a few quiet ticks. The foreground is transparent outside a flat topped "
                  "hexagon medallion 67 art px (268 px) point to point, centred, just inside the 72 dp circle, "
                  "with a 1.7 px dark outline, a 2 px lighter rim and an island scene of seven terrain hexes in perspective (mountain, desert, hills, farmland, lake, pasture, forest) with the castle, 20 opaque colours. "
@@ -2302,7 +2328,7 @@ def extract_pieces():
                  "(tiles horizontally, seamless), track_buoy.png 5x7 (a turn still to come: a buoy in team magenta F49AC1 and EC008C, so it takes the player colour through the recolour, with a fixed dark outline), track_flag.png 13x13 "
                  "(post on the left edge, clear ivory field at sprite x 1..11, y 1..7, 11x7, "
                  "for a 5 px tall number), track_flag_empty.png 13x13, track_ship.png 14x13, "
-                 "track_pier.png 10x13.")
+                 "track_pier.png 14x13.")
     return notes
 
 
@@ -2364,14 +2390,12 @@ def write_outputs():
             assert n <= 8, "%s has %d opaque colours (max 8)" % (name, n)
             for p in im.getdata():
                 assert p[3] in (0, 255), "%s has partial alpha" % name
-        # The 512 px store icon is the master for the app icon: Day builds every platform's
-        # icon from resource/icons/icon.png, which is this image doubled with nearest-neighbor
-        # scaling (see README). The 192 px launcher icon of the Android app is kept only as a
-        # preview, outside the app.
+        # The store listing icon is not an app resource, so it stays out of the APK.
         if name == "market_icon.png":
-            dest = os.path.join(ROOT, "tools", "icon")
+            dest = os.path.join(ROOT, "store")
         elif name == "ic_launcher.png":
-            dest = os.path.join(ROOT, "tools", "icon")
+            # The legacy launcher icon; Android 8 and later use the adaptive layers instead.
+            dest = os.path.join(ROOT, "app/src/main/res/mipmap-xxxhdpi")
         else:
             dest = OUT
         os.makedirs(dest, exist_ok=True)
@@ -2437,7 +2461,7 @@ def write_side_files(notes):
         "NOTE: on a flat-top hex the upper-right edge (named NE) runs top-left to bottom-right "
         "('\\'), so it takes road_backslash.png; the lower-right edge takes road_slash.png ('/'). The "
         "file names describe the shape of the road drawn in them, not a hex edge name.",
-        "Road kerbs use magenta F6ADCD (lit), F49AC1 (body, the player colour itself), EC008C (joints) so they take the "
+        "Road kerbs use magenta F49AC1 (body and lit stones, the player colour itself), EC008C (joints) so they take the "
         "player colour through the team-colour recolour.",
     ]
     tw, th = outputs["piece_trader.png"][0].size
@@ -2779,7 +2803,7 @@ def hud_strip(turns, scores, ship_at, halved=False):
     for x in range(0, 209, 14):
         sea.alpha_composite(water, (x, 0))
     im.alpha_composite(sea, (2, 2))
-    im.alpha_composite(outputs["track_pier.png"][0], (2 + 209 - 10, 2))
+    im.alpha_composite(outputs["track_pier.png"][0], (2 + 209 - 14, 2))
     pitch = 199.0 / turns
     for i in range(turns):
         cx = 2 + (i + 0.5) * pitch
@@ -2815,7 +2839,7 @@ def dock_mock():
 def icon_masks(fg, bg):
     """The adaptive icon as a launcher shows it: the 108 dp layers cut to the central 72 dp by a
     circle, a squircle or a rounded square, at 108 px (1x), 216 px (2x) and 54 px (about 48 dp),
-    each made by nearest-neighbor from the 432 px composite."""
+    each made by nearest neighbour from the 432 px composite."""
     comp = bg.copy()
     comp.alpha_composite(fg)
     out = []
@@ -2850,7 +2874,7 @@ def icon_masks(fg, bg):
 
 def preview_icon(sheet, d, y, pad, font):
     """Old (commit a0ce51d) and new launcher icon at 4x, masked to a circle and a rounded square,
-    then the same at 54 px by nearest-neighbor and by a smooth filter."""
+    then the same at 54 px by nearest neighbour and by a smooth filter."""
     white = (255, 255, 255, 255)
     d.text((pad, y), "launcher icon, old then new, at 4x masked to a circle and a rounded square (central 72 dp), "
            "then at 54 px nearest and smooth", fill=white, font=font)
@@ -2859,7 +2883,7 @@ def preview_icon(sheet, d, y, pad, font):
     def old_layer(name):
         try:
             raw = subprocess.check_output(["git", "-C", ROOT, "show",
-                                           "a0ce51d:resource/assets/art/" + name])
+                                           "a0ce51d:app/src/main/res/drawable-nodpi/" + name])
         except (OSError, subprocess.CalledProcessError):
             return None
         return Image.open(io.BytesIO(raw)).convert("RGBA")

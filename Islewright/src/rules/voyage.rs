@@ -68,8 +68,8 @@ pub const DOCK_SPRITE: Pt = Pt::new(210, 134);
 /// (its masthead flag is one row below), and the row just under the island's lowest building.
 pub const HARBOUR_TOP: i32 = 94;
 pub const ISLAND_FOOT: i32 = 366;
-/// Rows of sea wanted between the top bar and the harbour row on a screen that has room.
-pub const SEA_ABOVE_HARBOUR: i32 = 24;
+/// How far above the exact middle the map sits: the eye weighs the island, not the masthead.
+pub const MAP_RAISE: i32 = 15;
 
 // ---------------------------------------------------------------- where the ship is
 
@@ -203,26 +203,18 @@ pub(crate) fn java_round(v: f64) -> i32 {
     (v + 0.5).floor() as i32
 }
 
-/// Where the board's top left goes on the art canvas. Across, the board is centred. Down, the
-/// island's centre goes in the middle of the space between the top bar (ending at bar_bottom)
-/// and the bottom bar (starting at tray_top), unless that would put the moored ship's
-/// masthead under the top bar: then the board sits lower, as far as it needs to and no
-/// further than keeps the island's foot above the bottom bar. Where the screen is tall
-/// enough, it also sits low enough to show SEA_ABOVE_HARBOUR rows of sea over the harbour
-/// row, so that the ship's far stop is well in view, while the island's foot stays a little
-/// above the bottom bar.
+/// Where the board's top left goes on the art canvas. Across, the board is centred. Down, what
+/// the map shows at its fullest, from the moored ship's masthead to the island's foot, is centred
+/// between the top bar (ending at bar_bottom) and the bottom bar (starting at tray_top), then
+/// raised by MAP_RAISE, as far as the masthead stays under the top bar. A screen too short to
+/// show all of it keeps the island's foot above the bottom bar.
 pub fn board_origin(art_width: i32, bar_bottom: i32, tray_top: i32) -> Pt {
-    let mut y = (bar_bottom + tray_top) / 2 - board::CENTRE_Y;
-    let for_sea = (tray_top - 6 - ISLAND_FOOT).min(bar_bottom - (HARBOUR_TOP - SEA_ABOVE_HARBOUR));
-    if for_sea > y {
-        y = for_sea;
-    }
-    let for_harbour = bar_bottom - HARBOUR_TOP;
-    let for_foot = tray_top - ISLAND_FOOT;
-    if y < for_harbour {
-        y = y.max(for_harbour.min(for_foot));
-    }
-    Pt::new(art_width / 2 - board::CENTRE_X, y)
+    let y = (bar_bottom + tray_top - HARBOUR_TOP - ISLAND_FOOT) / 2 - MAP_RAISE;
+    let y = y.max(bar_bottom - HARBOUR_TOP);
+    Pt::new(
+        art_width / 2 - board::CENTRE_X,
+        y.min(tray_top - ISLAND_FOOT),
+    )
 }
 
 // ---------------------------------------------------------------- the dock

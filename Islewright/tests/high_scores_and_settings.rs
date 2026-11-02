@@ -571,7 +571,7 @@ fn race_target_defaults_to_the_islands_own_and_is_not_written_while_default() {
 
 #[test]
 fn race_target_round_trips_through_the_document() {
-    for target in [1, 9, 11, 15, 19] {
+    for target in [11, 15, 19] {
         let mut source = load(CURRENT);
         source.race_target = target;
         assert_eq!(
@@ -590,7 +590,7 @@ fn race_target_round_trips_through_the_document() {
 fn a_stray_race_target_is_clamped_to_what_the_island_can_give_or_ignored() {
     assert_eq!(19, high_scores::race_target_max());
     assert_eq!(19, load(&with("\"raceTarget\": 40")).race_target);
-    assert_eq!(1, load(&with("\"raceTarget\": 0")).race_target);
+    assert_eq!(10, load(&with("\"raceTarget\": 0")).race_target);
     let text = load(&with("\"raceTarget\": \"lots\""));
     assert_eq!(10, text.race_target);
     assert!(!text.race_target_was_specified);

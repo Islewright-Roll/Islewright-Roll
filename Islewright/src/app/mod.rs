@@ -2,12 +2,14 @@
 //! The app around the game screen: the saved games, the settings, the menu and the pages it
 //! opens, sound, haptics, and the accelerometer that places the dice.
 //!
-//! Everything here is drawn with the pixel-art kit (`crate::ui`): the menu and every question
-//! are kit dialogs over the game, and How to play, Top Scores, Settings and About are kit pages
-//! in a Day cover. Day's own Settings surface, About page and the web's window bar are not
+//! Everything here is drawn with the pixel-art kit (`crate::ui`): the menu, Settings and every
+//! question are kit dialogs over the game, and How to play, Top Scores and About are kit pages in
+//! a Day cover. Day's own Settings surface, About page and the web's window bar are not
 //! used, so no part of the app shows in the platform's default style.
 
 mod audio;
+#[cfg(debug_assertions)]
+mod debug;
 pub mod orientation;
 mod pages;
 pub mod prefs;
@@ -20,7 +22,9 @@ use day::prelude::*;
 
 use crate::res;
 use crate::rules::game::Game;
+use crate::rules::high_scores::Theme;
 use crate::rules::map_def::MapDef;
+use crate::rules::palette::Palette;
 use crate::ui::{self, Dialog};
 use crate::view::{self, Haptic, ScreenHost};
 
@@ -31,7 +35,6 @@ day::routes! {
     pub(crate) enum Page {
         Rules => "rules",
         Scores => "scores",
-        Settings => "settings",
         About => "about",
     }
 }
@@ -91,6 +94,8 @@ enum Choice {
     Rules,
     Scores,
     About,
+    #[cfg(debug_assertions)]
+    Debug,
 }
 
 /// What the menu acts on.
@@ -121,13 +126,19 @@ impl Shell {
                 res::str::settings_menu().format(),
                 Choice::Settings,
             ),
-            ("rules", res::str::rules_title().format(), Choice::Rules),
+            ("rules", res::str::rules_menu().format(), Choice::Rules),
             (
                 "scores",
                 res::str::high_scores_menu().format(),
                 Choice::Scores,
             ),
             ("about", res::str::about_menu().format(), Choice::About),
+            #[cfg(debug_assertions)]
+            (
+                "debug",
+                res::str::debug_scenario_menu().format(),
+                Choice::Debug,
+            ),
         ]
     }
 
@@ -139,7 +150,6 @@ impl Shell {
             for (key, label, choice) in me.entries() {
                 menu = menu.button(key, label, choice);
             }
-            let menu = menu.cancel(res::str::settings_cancel().format());
             view::hold_tutorial(true);
             let choice = ui::ask(menu).await;
             view::hold_tutorial(false);
@@ -151,19 +161,53 @@ impl Shell {
     }
 
     /// The welcome, once per launch while the setting is on: this island's goal, the other
-    /// island, and the basics. How to play opens the rules.
+    /// island, and the basics. How to play opens the rules. The box is read when it closes.
     fn welcome(&self) {
         let me = self.clone();
         day::task(async move {
-            let dialog = view::welcome_dialog(&me.game.borrow(), RACE_TARGET.get() as i32);
+            let hide = Signal::global(false);
+            let dialog = pages::welcome_dialog(&me.game.borrow(), RACE_TARGET.get() as i32, hide);
             view::hold_tutorial(true);
             let choice = ui::ask(dialog).await;
             view::hold_tutorial(false);
-            match choice {
-                Some(view::WelcomeChoice::HowToPlay) => me.page.set(Some(Page::Rules)),
-                Some(view::WelcomeChoice::PlayAndHide) => SHOW_WELCOME.set(false),
-                Some(view::WelcomeChoice::Play) | None => {}
+            if hide.get_untracked() {
+                SHOW_WELCOME.set(false);
             }
+            if choice == Some(pages::WelcomeChoice::HowToPlay) {
+                me.page.set(Some(Page::Rules));
+            }
+            me.refresh.update(|n| *n += 1);
+        });
+    }
+
+    /// Settings: a dialog of its own over the game. The theme previews as it is chosen; OK saves
+    /// the rest, and however it closes the stored look is the one that stands. The player color
+    /// opens over it and saves itself.
+    fn settings(&self) {
+        let me = self.clone();
+        day::task(async move {
+            use res::str as s;
+            let draft = pages::Draft::new();
+            let on_color: Rc<dyn Fn()> = Rc::new(pick_color);
+            let dialog = Dialog::new(s::settings_title().format())
+                .content(move |m, w| pages::settings(m, w, draft, on_color.clone()))
+                .button("ok", s::ok_button().format(), ())
+                .button("cancel", s::settings_cancel().format(), ());
+            // Cancel answers like a tap outside: only OK reports a value of its own
+            let dialog = dialog.ok_only();
+            view::hold_tutorial(true);
+            let answer = ui::ask(dialog).await;
+            view::hold_tutorial(false);
+            let tutorial = draft.tutorial.get_untracked();
+            if answer.is_some() || tutorial {
+                draft.apply();
+            }
+            if tutorial {
+                TUTORIAL.set(true);
+                TUTORIAL_SEEN.set(0);
+                view::configure_tutorial(true, 0);
+            }
+            apply_theme(pages::current_theme());
             me.refresh.update(|n| *n += 1);
         });
     }
@@ -200,10 +244,15 @@ impl Shell {
                 *self.game.borrow_mut() = open_game(next);
                 self.refresh.update(|n| *n += 1);
             }
-            Choice::Settings => self.page.set(Some(Page::Settings)),
+            Choice::Settings => self.settings(),
             Choice::Rules => self.page.set(Some(Page::Rules)),
             Choice::Scores => self.page.set(Some(Page::Scores)),
             Choice::About => self.page.set(Some(Page::About)),
+            #[cfg(debug_assertions)]
+            Choice::Debug => {
+                debug::apply_scenario(&mut self.game.borrow_mut());
+                self.refresh.update(|n| *n += 1);
+            }
         }
     }
 
@@ -216,38 +265,44 @@ impl Shell {
             move || (ui::metrics(), day::locale().get()),
             move |(m, _)| {
                 let done: Rc<dyn Fn()> = Rc::new(move || open.set(None));
-                let (title, id) = match page {
-                    Page::Rules => (res::str::rules_title().format(), day::id!(rules_page)),
-                    Page::Scores => (
-                        res::str::high_scores_title().format(),
-                        day::id!(scores_page),
-                    ),
-                    Page::Settings => {
-                        (res::str::settings_title().format(), day::id!(settings_page))
-                    }
-                    Page::About => (res::str::about_menu().format(), day::id!(about_screen)),
-                };
                 let m = *m;
-                ui::page::page(
-                    &m,
-                    id,
-                    &title,
-                    &res::str::done().format(),
-                    done,
-                    |w| match page {
-                        Page::Rules => pages::rules(&m, w),
-                        Page::Scores => pages::scores(&m, w),
-                        Page::Settings => pages::settings(&m, w),
-                        Page::About => pages::about(&m, w),
-                    },
-                )
+                let ok = res::str::ok_button().format();
+                match page {
+                    Page::Rules => ui::page::page(
+                        &m,
+                        day::id!(rules_page),
+                        &res::str::rules_title().format(),
+                        &ok,
+                        done,
+                        ui::page::Fill::Scroll { thumb: true },
+                        |w, _| pages::rules(&m, w),
+                    ),
+                    Page::Scores => ui::page::page(
+                        &m,
+                        day::id!(scores_page),
+                        &res::str::high_scores_title().format(),
+                        &ok,
+                        done,
+                        ui::page::Fill::Exact,
+                        |w, h| pages::scores(&m, w, h),
+                    ),
+                    Page::About => ui::page::page(
+                        &m,
+                        day::id!(about_screen),
+                        &res::str::about_menu().format(),
+                        &ok,
+                        done,
+                        ui::page::Fill::Scroll { thumb: false },
+                        |w, h| pages::about(&m, w, h),
+                    ),
+                }
             },
         )
         .any()
     }
 }
 
-/// A finished game made its island's list: say so, as the Android app's toast did. The
+/// A finished game made its island's list: say so with a toast, as the Android app did. The
 /// fanfare is the rules' own (SoundCues).
 fn announce_rank(rank: i32) {
     let title = if rank == 1 {
@@ -255,24 +310,76 @@ fn announce_rank(rank: i32) {
     } else {
         res::str::high_scores_top_5_toast()
     };
+    ui::toast::show(title.format(), true);
+}
+
+/// The color picker, over Settings: OK saves the color, which reaches the game at once.
+fn pick_color() {
     day::task(async move {
-        view::hold_tutorial(true);
-        let _ =
-            ui::ask(Dialog::new(title.format()).button("ok", res::str::ok_button().format(), ()))
-                .await;
-        view::hold_tutorial(false);
+        use res::str as s;
+        let color = Signal::global(PLAYER_COLOR.get() as u32);
+        let dialog = Dialog::new(s::player_color_title().format())
+            .content(move |m, w| pages::color_picker(m, w, color))
+            .button("ok", s::ok_button().format(), ())
+            .button("cancel", s::settings_cancel().format(), ())
+            .ok_only();
+        if ui::ask_over(dialog).await.is_some() {
+            PLAYER_COLOR.set((0xFF000000 | color.get_untracked()) as i64);
+        }
     });
+}
+
+/// Makes the look follow a Theme setting and the system's night mode.
+fn apply_theme(theme: Theme) {
+    ui::paint::set_palette(*Palette::for_mode(theme, day::dark_mode()));
 }
 
 /// The app's root: the game screen, with the kit's dialogs over it and the menu's pages in a
 /// cover above that.
+/// A build of `root` and what it leaves running. On Android a theme or language switch runs `root`
+/// again on a new tree, and everything built on the root scope would live on: its keyed pieces see
+/// the old node ids alive in the new tree, which repeats them, and build into it a second time.
+struct Mounted<P> {
+    scope: Scope,
+    piece: P,
+}
+
+impl<P: Piece> Piece for Mounted<P> {
+    fn build(self, cx: &mut day::BuildCx) -> day::RNode {
+        self.scope.enter(|| self.piece.build(cx))
+    }
+}
+
 pub fn root() -> impl Piece {
+    thread_local! {
+        static MOUNT: Cell<Option<Scope>> = const { Cell::new(None) };
+    }
+    if let Some(last) = MOUNT.take() {
+        last.dispose();
+        ui::dialog::reset();
+    }
+    let scope = Scope::child();
+    MOUNT.set(Some(scope));
+    Mounted {
+        scope,
+        piece: scope.enter(build_root),
+    }
+}
+
+fn build_root() -> impl Piece {
     // The saved language applies from the start, as Day's settings surface did when it was
     // installed; the Settings page's Language choice writes the same pref.
     day_piece_settings::wire_general();
     let _sounds = audio::Sounds::install();
 
+    #[cfg(debug_assertions)]
+    debug::apply_settings();
+
+    apply_theme(pages::current_theme());
+
     let game = Rc::new(RefCell::new(open_game(current_island())));
+    #[cfg(debug_assertions)]
+    debug::apply_scenario(&mut game.borrow_mut());
     let refresh = Signal::new(0u64);
     let page: Signal<Option<Page>> = Signal::new(None);
     let dice_side = orientation::dice_side();
@@ -357,9 +464,7 @@ pub fn root() -> impl Piece {
         }
         day_part_haptics::play(match h {
             Haptic::Tap => day_part_haptics::Haptic::Selection,
-            Haptic::Roll => day_part_haptics::Haptic::Light,
-            Haptic::Build => day_part_haptics::Haptic::Medium,
-            Haptic::Reject => day_part_haptics::Haptic::Warning,
+            Haptic::Roll | Haptic::Build => day_part_haptics::Haptic::Medium,
         });
     });
     // A press in a dialog or on a page clicks and taps as the game's own buttons do
@@ -376,8 +481,16 @@ pub fn root() -> impl Piece {
         on_changed,
         haptic,
     });
-    ui::host(zstack((
-        screen,
-        cover(page, move |p: &Page| shell.page_view(p)).background(|_| ui::page::wood()),
-    )))
+    // The game has the whole screen, as the Android app's fullscreen window did
+    ui::host(
+        zstack((
+            screen,
+            cover(page, move |p: &Page| {
+                zstack((shell.page_view(p), ui::overlays())).align(Alignment::TopLeading)
+            })
+            .background(|_| ui::page::surround()),
+        )),
+        move || page.get().is_some(),
+    )
+    .status_bar_hidden(true)
 }

@@ -44,6 +44,7 @@ macro_rules! font {
 
 pub const FONT_BODY: &[u8] = font!("font_body", png);
 pub const FONT_BODY_TXT: &str = font!("font_body", txt);
+pub const FONT_TEXT_TXT: &str = font!("font_text", txt);
 pub const FONT_DISPLAY: &[u8] = font!("font_display", png);
 pub const FONT_DISPLAY_TXT: &str = font!("font_display", txt);
 pub const FONT_NUMERALS: &[u8] = font!("font_numerals", png);
@@ -258,7 +259,12 @@ pub struct Tinted {
     pub die_face_held: Image,
     pub badge_road: Image,
     pub glyph_road: Image,
+    pub glyph_village: Image,
+    pub glyph_castle: Image,
     pub buoy: Image,
+    pub track_ship: Image,
+    pub track_pier: Image,
+    pub king_ship: Image,
 }
 
 impl Tinted {
@@ -276,7 +282,12 @@ impl Tinted {
             die_face_held: recolored(&a.die_face_held, color),
             badge_road: recolored(&a.badge_road, color),
             glyph_road: recolored(&a.glyph_road, color),
+            glyph_village: recolored(&a.glyph_village, color),
+            glyph_castle: recolored(&a.glyph_castle, color),
             buoy: recolored(&a.track_buoy, color),
+            track_ship: recolored(&a.track_ship, color),
+            track_pier: recolored(&a.track_pier, color),
+            king_ship: recolored(&a.king_ship, color),
         }
     }
 }

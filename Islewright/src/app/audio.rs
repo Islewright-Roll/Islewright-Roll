@@ -49,6 +49,13 @@ pub struct Sounds(Rc<Inner>);
 
 impl SoundSink for Sounds {
     fn play(&mut self, sfx: Sfx, delay_ms: i32) {
+        // There are two roll sounds, a rattle and a throw: each roll plays one of them. The
+        // clock's last bit will do for a coin: a roll comes when a finger says so.
+        let sfx = if sfx == Sfx::Roll && crate::clock::now_ms() % 2 == 1 {
+            Sfx::RollB
+        } else {
+            sfx
+        };
         self.0.playback.borrow_mut().play(sfx, delay_ms);
         self.wake();
     }

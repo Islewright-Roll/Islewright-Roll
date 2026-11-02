@@ -42,6 +42,43 @@ pub fn to_hex(color: u32) -> String {
     format!("#{:06X}", color & 0xFFFFFF)
 }
 
+/// A color from its hue in degrees, and saturation and value from 0 to 1, opaque.
+pub fn hsv_to_argb(hue: f64, sat: f64, value: f64) -> u32 {
+    let h = hue.rem_euclid(360.0) / 60.0;
+    let c = value * sat;
+    let x = c * (1.0 - (h % 2.0 - 1.0).abs());
+    let (r, g, b) = match h as i32 {
+        0 => (c, x, 0.0),
+        1 => (x, c, 0.0),
+        2 => (0.0, c, x),
+        3 => (0.0, x, c),
+        4 => (x, 0.0, c),
+        _ => (c, 0.0, x),
+    };
+    let m = value - c;
+    let byte = |v: f64| ((v + m) * 255.0).round().clamp(0.0, 255.0) as u32;
+    0xFF000000 | (byte(r) << 16) | (byte(g) << 8) | byte(b)
+}
+
+/// The hue in degrees, saturation and value of a color, as Color.colorToHSV has them.
+pub fn argb_to_hsv(argb: u32) -> (f64, f64, f64) {
+    let ch = |shift: u32| ((argb >> shift) & 0xFF) as f64 / 255.0;
+    let (r, g, b) = (ch(16), ch(8), ch(0));
+    let max = r.max(g).max(b);
+    let min = r.min(g).min(b);
+    let d = max - min;
+    let hue = if d == 0.0 {
+        0.0
+    } else if max == r {
+        ((g - b) / d).rem_euclid(6.0) * 60.0
+    } else if max == g {
+        ((b - r) / d + 2.0) * 60.0
+    } else {
+        ((r - g) / d + 4.0) * 60.0
+    };
+    (hue, if max == 0.0 { 0.0 } else { d / max }, max)
+}
+
 pub fn with_alpha(color: u32, alpha: u32) -> u32 {
     (color & 0xFFFFFF) | ((alpha & 0xFF) << 24)
 }

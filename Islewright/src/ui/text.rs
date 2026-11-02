@@ -41,9 +41,7 @@ pub fn printable(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for c in s.chars() {
         match c {
-            'å' => out.push('a'),
             'Å' => out.push('A'),
-            '®' => out.push_str("(R)"),
             '©' => out.push_str("(C)"),
             '§' => out.push_str("S."),
             '•' => out.push('*'),
@@ -56,44 +54,126 @@ pub fn printable(s: &str) -> String {
     out
 }
 
-/// Breaks `text` into lines no wider than `max` font pixels of ink. Explicit newlines start new
-/// lines, words are kept whole where they fit, and a word wider than the whole line is cut
-/// between letters. An empty text is one empty line, so it still takes a line's height.
+/// The places a long unbroken word may break, as Android's line breaker has them: in a web address
+/// after "//" and "@", and before the other punctuation; elsewhere after a hyphen. Each piece
+/// stays attached to the next with no space between.
+fn pieces(word: &str) -> Vec<String> {
+    let url = word.contains("://");
+    let chars: Vec<char> = word.chars().collect();
+    let mut out = Vec::new();
+    let mut piece = String::new();
+    for (i, &c) in chars.iter().enumerate() {
+        let prev = i.checked_sub(1).map(|p| chars[p]);
+        let before_prev = i.checked_sub(2).map(|p| chars[p]);
+        let cut = match prev {
+            None => false,
+            Some(_) if !url => prev == Some('-') && c != '-',
+            Some(p) => {
+                (p == '@')
+                    || (p == '/' && before_prev == Some('/'))
+                    || matches!(p, '=' | '&')
+                    || (matches!(
+                        c,
+                        '~' | ',' | '-' | '.' | '_' | '?' | '#' | '%' | '/' | '=' | '&'
+                    ) && !(c == '/' && p == '/')
+                        && chars[i..].iter().any(|n| n.is_alphanumeric() || *n == '/'))
+            }
+        };
+        if cut && !piece.is_empty() {
+            out.push(std::mem::take(&mut piece));
+        }
+        piece.push(c);
+    }
+    if !piece.is_empty() {
+        out.push(piece);
+    }
+    out
+}
+
+/// Breaks `text` into lines no wider than `max` font pixels, the way Android's high quality line
+/// breaker does for a text view: of all the ways to break a paragraph it takes the one with the
+/// least squared room left at the ends of its lines, the last line not counting, plus a penalty
+/// for each line and a smaller one for each break inside a web address (Minikin's line and
+/// hyphen penalties, at the body font's 10 px). Explicit newlines start new lines, and a word wider than the whole line is cut between letters. An
+/// empty text is one empty line, so it still takes a line's height.
 pub fn wrap(font: &BitmapFont, text: &str, max: i32) -> Vec<String> {
     let text = printable(text);
     let max = max.max(1);
     let mut lines = Vec::new();
     for paragraph in text.split('\n') {
-        let mut line = String::new();
+        // Each piece, with whether a space comes before it and whether a break before it is
+        // inside a web address
+        let mut parts: Vec<(String, bool, bool)> = Vec::new();
         for word in paragraph.split(' ').filter(|w| !w.is_empty()) {
-            let candidate = if line.is_empty() {
-                word.to_string()
-            } else {
-                format!("{line} {word}")
-            };
-            if font.ink_width(&candidate) <= max {
-                line = candidate;
-                continue;
-            }
-            if !line.is_empty() {
-                lines.push(std::mem::take(&mut line));
-            }
-            if font.ink_width(word) <= max {
-                line = word.to_string();
-                continue;
-            }
-            // A word longer than a whole line: as many letters as fit, then the rest below.
-            for c in word.chars() {
-                let mut next = line.clone();
-                next.push(c);
-                if !line.is_empty() && font.ink_width(&next) > max {
-                    lines.push(std::mem::replace(&mut line, c.to_string()));
-                } else {
-                    line = next;
+            let url = word.contains("://");
+            let mut spaced = true;
+            for piece in pieces(word) {
+                if font.width(&piece) <= max {
+                    parts.push((piece, spaced, url && !spaced));
+                    spaced = false;
+                    continue;
+                }
+                for c in piece.chars() {
+                    parts.push((c.to_string(), spaced, url && !spaced));
+                    spaced = false;
                 }
             }
         }
-        lines.push(line);
+        if parts.is_empty() {
+            lines.push(String::new());
+            continue;
+        }
+        let join = |from: usize, to: usize| {
+            let mut line = String::new();
+            for (i, (piece, spaced, _)) in parts[from..to].iter().enumerate() {
+                if *spaced && i > 0 {
+                    line.push(' ');
+                }
+                line.push_str(piece);
+            }
+            line
+        };
+        let n = parts.len();
+        let inside_address = 5 * max as i64;
+        let per_line = 2 * inside_address;
+        let mut best = vec![i64::MAX; n + 1];
+        let mut from = vec![0usize; n + 1];
+        best[0] = 0;
+        for end in 1..=n {
+            for start in (0..end).rev() {
+                let width = font.width(&join(start, end));
+                if width > max && start + 1 < end {
+                    break;
+                }
+                if best[start] == i64::MAX {
+                    continue;
+                }
+                let room = (max - width).max(0) as i64;
+                let ending = if end == n {
+                    0
+                } else if parts[end].2 {
+                    room * room + inside_address
+                } else {
+                    room * room
+                };
+                let cost = best[start] + ending + per_line;
+                if cost <= best[end] {
+                    best[end] = cost;
+                    from[end] = start;
+                }
+            }
+        }
+        let mut cuts = vec![n];
+        while let Some(&end) = cuts.last() {
+            if end == 0 {
+                break;
+            }
+            cuts.push(from[end]);
+        }
+        cuts.reverse();
+        for pair in cuts.windows(2) {
+            lines.push(join(pair[0], pair[1]));
+        }
     }
     lines
 }
@@ -144,11 +224,11 @@ impl Block {
         }
     }
 
-    /// The widest line's ink, in art pixels.
-    pub fn ink_width(&self, font: &BitmapFont) -> i32 {
+    /// The widest line, in art pixels.
+    pub fn line_width(&self, font: &BitmapFont) -> i32 {
         self.lines
             .iter()
-            .map(|l| font.ink_width(l) * self.mult)
+            .map(|l| font.width(l) * self.mult)
             .max()
             .unwrap_or(0)
     }
@@ -156,12 +236,7 @@ impl Block {
     /// Draws the block with its top left at (x, y), in `argb`.
     pub fn draw(&self, font: &BitmapFont, img: &mut Image, x: i32, y: i32, argb: u32) {
         for (i, line) in self.lines.iter().enumerate() {
-            let w = font.ink_width(line) * self.mult;
-            let lx = match self.align {
-                Align::Start => x,
-                Align::Center => x + (self.width - w) / 2,
-                Align::End => x + self.width - w,
-            };
+            let lx = self.line_x(font, line, x);
             draw_line(
                 font,
                 img,
@@ -172,6 +247,24 @@ impl Block {
                 argb,
             );
         }
+    }
+
+    /// Where a line of this block starts, for a block at `x`. Half an art pixel rounds right,
+    /// as PixelUi.snapText rounded it.
+    pub fn line_x(&self, font: &BitmapFont, line: &str, x: i32) -> i32 {
+        let w = font.width(line) * self.mult;
+        match self.align {
+            Align::Start => x,
+            // As the Java app's: its titles round up, and its paragraphs, which Android lays out, down
+            Align::Center if self.face == Face::Display => x + (self.width - w + 1) / 2,
+            Align::Center => x + (self.width - w) / 2,
+            Align::End => x + self.width - w,
+        }
+    }
+
+    /// The distance from one line's top to the next, in art pixels.
+    pub fn line_pitch(&self) -> i32 {
+        self.pitch
     }
 }
 
@@ -200,10 +293,10 @@ pub fn draw_line(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::view::assets::{FONT_BODY, FONT_BODY_TXT, FONT_DISPLAY, FONT_DISPLAY_TXT};
+    use crate::view::assets::{FONT_BODY, FONT_DISPLAY, FONT_DISPLAY_TXT, FONT_TEXT_TXT};
 
     fn body() -> BitmapFont {
-        BitmapFont::parse(FONT_BODY, FONT_BODY_TXT).unwrap()
+        BitmapFont::parse(FONT_BODY, FONT_TEXT_TXT).unwrap()
     }
 
     fn display() -> BitmapFont {
@@ -217,7 +310,7 @@ mod tests {
         let lines = wrap(&font, text, 120);
         assert!(lines.len() > 1);
         for l in &lines {
-            assert!(font.ink_width(l) <= 120, "{l:?} is too wide");
+            assert!(font.width(l) <= 120, "{l:?} is too wide");
             assert!(!l.starts_with(' ') && !l.ends_with(' '));
         }
         assert_eq!(lines.join(" "), text);
@@ -239,8 +332,26 @@ mod tests {
     }
 
     #[test]
+    fn web_addresses_break_at_their_punctuation() {
+        assert_eq!(
+            pieces("(https://www.wesnoth.org),"),
+            vec!["(https:", "//", "www", ".wesnoth", ".org),"]
+        );
+        assert_eq!(pieces("well-known"), vec!["well-", "known"]);
+    }
+
+    #[test]
+    fn the_breaks_leave_the_least_room_at_line_ends() {
+        let font = body();
+        // Taking words greedily would leave a very short second line and a long third
+        let lines = wrap(&font, "aaaa bbbb cccc dddddddd eeee", 15 * 5);
+        assert!(lines.iter().all(|l| font.width(l) <= 75), "{lines:?}");
+        assert_eq!(lines.join(" "), "aaaa bbbb cccc dddddddd eeee");
+    }
+
+    #[test]
     fn missing_letters_become_their_nearest() {
-        assert_eq!(printable("Håskjold CATAN®"), "Haskjold CATAN(R)");
+        assert_eq!(printable("HÅSKJOLD"), "HASKJOLD");
         assert_eq!(printable("§ 102"), "S. 102");
     }
 
@@ -252,7 +363,7 @@ mod tests {
         assert_eq!(one.height, 14);
         let two = Block::new(&font, Face::Body, 2, "Sound effects", 200, Align::Start);
         assert_eq!(two.height, 28);
-        assert_eq!(two.ink_width(&font), one.ink_width(&font) * 2);
+        assert_eq!(two.line_width(&font), one.line_width(&font) * 2);
         // Display text drops the leading under its last line
         let d = display();
         let title = Block::new(&d, Face::Display, 1, "Menu", 200, Align::Center);

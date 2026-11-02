@@ -32,7 +32,7 @@ flow:
   - wait_idle: {}
   - screenshot: building
 
-  # How to play, Top Scores, Settings and About, opened the way the menu opens them.
+  # How to play and Top Scores, opened the way the menu opens them.
   - navigate: { route: rules }
   - wait_for: { id: rules_page }
   - wait_idle: {}
@@ -51,23 +51,22 @@ flow:
   # A button shows pressed for a moment before it acts
   - pause: { secs: 0.6 }
 
-  # Settings: a check box and a radio button change their prefs, and change back.
-  - navigate: { route: settings }
-  - wait_for: { id: settings_page }
+  # Settings, a dialog from the menu: radio buttons change their drafts, and Cancel drops them.
+  - focus: { id: board }
+  - key: { id: board, key: "m" }
+  - wait_for: { id: "dialog_button:settings" }
+  - tap: { id: "dialog_button:settings" }
+  - wait_for: { id: "settings_early:smart" }
   - wait_idle: {}
   - screenshot: settings
   - a11y_audit: {}
-  - tap: { id: settings_haptics }
-  - a11y_audit: { id: settings_haptics }
-  - tap: { id: settings_haptics }
   - tap: { id: "settings_early:careful" }
+  - a11y_audit: { id: "settings_early:careful" }
   - tap: { id: "settings_early:smart" }
-  - tap: { id: settings_race_target_more }
-  - tap: { id: settings_race_target_less }
-  - a11y_audit: { id: settings_race_target }
-  - tap: { id: page_done }
+  - tap: { id: "dialog_button:cancel" }
   # A button shows pressed for a moment before it acts
   - pause: { secs: 0.6 }
+  - assert_missing: { id: dialog_title }
 
   - navigate: { route: about }
   - wait_for: { id: about_screen }

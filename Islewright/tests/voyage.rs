@@ -444,7 +444,7 @@ fn the_stops_follow_what_the_screen_shows_but_never_stray_far() {
 /// shows, which needs the PNG).
 #[test]
 fn the_far_stop_on_each_screen_is_level_with_the_dock() {
-    let boards = [Pt::new(-144, -6), Pt::new(-132, -28)];
+    let boards = [Pt::new(-144, -13), Pt::new(-132, -30)];
     for (i, screen) in SCREENS.iter().enumerate() {
         let s = shown(*screen);
         let origin = voyage::board_origin(screen[0], TOP_H, screen[1] - BOTTOM_H - screen[3]);
@@ -535,24 +535,25 @@ fn the_sail_runs_from_start_to_end_eased_and_on_whole_pixels() {
     assert_eq!(Pt::new(120, 57), voyage::sail_at(to, from, 325, 650));
 }
 
-/// The island is centred between the bars where the harbour then shows, and sits lower where it
-/// would not, but never with its foot under the bottom bar.
+/// The map sits MAP_RAISE above the middle of the water between the bars, but never with the
+/// masthead under the top bar, and never with the island's foot under the bottom bar.
 #[test]
-fn the_board_sits_lower_on_a_short_screen_to_keep_the_harbour_in_sight() {
-    let tall = voyage::board_origin(216, 64, 480 - 66 - 13);
+fn the_map_with_the_ship_in_harbour_is_centred_between_the_bars() {
+    for (top, bottom) in [(62, 401), (62, 500), (80, 640)] {
+        let at = voyage::board_origin(216, top, bottom);
+        let above = at.y + voyage::HARBOUR_TOP - top;
+        let below = bottom - (at.y + voyage::ISLAND_FOOT);
+        assert!((below - above - 2 * voyage::MAP_RAISE).abs() <= 1, "{top}");
+        assert!(above >= 0 && below >= 0);
+    }
+    // Too little water to raise it all the way: the masthead stops at the top bar
     assert_eq!(
-        Pt::new(-144, 64 + voyage::SEA_ABOVE_HARBOUR - voyage::HARBOUR_TOP),
-        tall
+        76 - voyage::HARBOUR_TOP,
+        voyage::board_origin(216, 76, 375).y
     );
-    assert!(tall.y > (64 + 401) / 2 - board::CENTRE_Y);
-    assert_eq!(voyage::SEA_ABOVE_HARBOUR, voyage::HARBOUR_TOP + tall.y - 64);
-    assert!(tall.y + voyage::ISLAND_FOOT <= 401 - 6);
-    let small = voyage::board_origin(240, 64, 426 - 66 - 16);
-    assert_eq!(Pt::new(-132, 344 - 6 - voyage::ISLAND_FOOT), small);
-    assert_eq!(20, small.y - ((64 + 344) / 2 - board::CENTRE_Y));
-    assert!(64 - small.y <= voyage::HARBOUR_TOP);
-    assert!(small.y + voyage::ISLAND_FOOT <= 344);
-    // A screen too short for both: the island's foot wins, and stays above the bottom bar
-    let tiny = voyage::board_origin(216, 64, 300);
-    assert_eq!(300 - voyage::ISLAND_FOOT, tiny.y);
+    // A screen too short to show it all: the island's foot wins
+    assert_eq!(
+        300 - voyage::ISLAND_FOOT,
+        voyage::board_origin(216, 62, 300).y
+    );
 }

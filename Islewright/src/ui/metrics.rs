@@ -37,6 +37,8 @@ pub struct Metrics {
     /// The window in whole art pixels, and the part of it the system bars cover.
     pub width: i32,
     pub height: i32,
+    /// Device pixels the window's height has beyond its whole art pixels.
+    pub extra_h: i32,
     pub safe: Edges,
 }
 
@@ -55,6 +57,7 @@ impl Metrics {
             dpr,
             width: dw / k,
             height: dh / k,
+            extra_h: dh % k,
             safe: Edges {
                 top: up(safe.top),
                 left: up(safe.leading),
@@ -158,14 +161,31 @@ pub fn device_scale() -> f64 {
 /// The sample both text measurements use.
 const SAMPLE: &str = "Mg";
 /// The body style's nominal size on the platforms Day targets.
+#[cfg(not(target_os = "android"))]
 const BODY_PT: f64 = 17.0;
+/// Material's body style is laid out on a line of 24 scaled pixels, whatever the sample's own
+/// height, so the same text measured bare would count an untouched phone as large text.
+#[cfg(target_os = "android")]
+const BODY_LINE_PT: f64 = 24.0;
 
-/// The user's text scale: the probe's line against the same sample at the nominal size.
+/// The body style's line at the platform's default text size, in points.
+fn default_line() -> f64 {
+    #[cfg(target_os = "android")]
+    {
+        BODY_LINE_PT
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        day::measure_text(SAMPLE, BODY_PT, &CanvasFont::default()).height
+    }
+}
+
+/// The user's text scale: the probe's line against the same line at the default text size.
 fn text_ratio(line: f64) -> f64 {
     if line <= 0.0 {
         return 1.0;
     }
-    let nominal = day::measure_text(SAMPLE, BODY_PT, &CanvasFont::default()).height;
+    let nominal = default_line();
     if nominal > 0.0 { line / nominal } else { 1.0 }
 }
 

@@ -39,7 +39,7 @@ use super::DiceSide;
 
 // ---------------------------------------------------------------- the Android layout
 
-pub const TOP_H: i32 = 64;
+pub const TOP_H: i32 = 62;
 pub const BOTTOM_H: i32 = 66;
 pub const DICE_GAP: i32 = 6;
 pub const HUD_INSET: i32 = 6;
@@ -49,12 +49,9 @@ pub const BOX_H: i32 = 34;
 pub const SCORE_W: i32 = 40;
 pub const COSTS_W: i32 = 135;
 pub const MENU_W: i32 = DESIGN_W as i32 - 2 * HUD_INSET - 2 * BOX_GAP - SCORE_W - COSTS_W;
-pub const STRIP_Y: i32 = 46;
-pub const LABEL_ABOVE: i32 = 5;
-pub const LABEL_ABOVE_ROOMY: i32 = 9;
-pub const ROOMY_MIN_H: i32 = 440;
-pub const ROOMY_STRIP: i32 = 5;
-pub const LABEL_INSET: i32 = 6;
+pub const STRIP_Y: i32 = 43;
+/// A race's bonuses hang on a sign from the top bar's bottom edge, this many rows of rope below it.
+pub const SIGN_DROP: i32 = 3;
 /// A die is a square of this many art pixels.
 pub const DIE: i32 = 28;
 pub const ROLL_W: i32 = 96;
@@ -76,8 +73,7 @@ pub const COL_INSET: i32 = 6;
 pub const HUD_COL_W: i32 = COSTS_W + 2 * COL_INSET;
 /// The menu button in the HUD column: square to the score tray's height, nearly.
 pub const LAND_MENU_W: i32 = 32;
-/// Rows between one frame and the next in the HUD column, which hold the label set into the
-/// lower frame's edge.
+/// Rows between one frame and the next in the HUD column.
 pub const LAND_LABEL_GAP: i32 = 11;
 /// Rows between the two bands of the turn track.
 pub const TRACK_ROW_GAP: i32 = 2;
@@ -159,7 +155,7 @@ fn tall_hud(map: &MapDef, col_x: i32, top: i32) -> (Track, i32) {
 // The sprites the land extent is measured with (their PNGs' sizes; a test checks them)
 pub const VILLAGE_W: i32 = 20;
 pub const VILLAGE_H: i32 = 19;
-pub const CASTLE_W: i32 = 27;
+pub const CASTLE_W: i32 = 28;
 pub const CASTLE_H: i32 = 30;
 pub const TRADER_W: i32 = 28;
 pub const TRADER_H: i32 = 19;
@@ -667,16 +663,10 @@ pub enum Edge {
 /// Where the race bonuses go.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BadgePlace {
-    /// On the strip's label line, right to left from `right`, set into the frame's edge.
-    Edge { right: i32 },
-    /// In a small tray of their own whose right edge is `right` and top `top`, `h` tall, with
-    /// their label before it when `label` and it fits after `taken`.
-    Tray {
-        right: i32,
-        top: i32,
-        h: i32,
-        label: bool,
-    },
+    /// On a wooden sign whose right edge is `right` and top `top`, hung from the bar above it.
+    Sign { right: i32, top: i32 },
+    /// In a small tray of their own whose right edge is `right` and top `top`, `h` tall.
+    Tray { right: i32, top: i32, h: i32 },
 }
 
 /// How the banked mini dice stand.
@@ -706,8 +696,6 @@ pub struct Layout {
     pub columns: Option<Columns>,
     /// The four recipes of the costs tray in one column (the tall HUD), not two rows of two.
     pub costs_stacked: bool,
-    /// Portrait with the rows for the roomy top bar (see GameView's LABEL_ABOVE).
-    pub roomy: bool,
     pub pad_top: i32,
     pub pad_bottom: i32,
     pub pad_left: i32,
@@ -724,10 +712,6 @@ pub struct Layout {
     pub menu: Rect,
     /// The menu button and a couple of pixels round it.
     pub menu_hit: Rect,
-    /// How far above a frame's edge the labels' capitals start.
-    pub label_above: i32,
-    /// The label "Turns": where its ink starts, and the edge it is set into.
-    pub turns_label: (i32, i32),
     pub badges: BadgePlace,
     pub track: Track,
     pub dice: [Rect; 6],
@@ -852,7 +836,16 @@ impl Layout {
             (None, Some(scale)) => {
                 Layout::landscape(fit_at(w, h, scale), insets, map, side, Columns::Wide)
             }
-            _ => Layout::portrait(fit_at(w, h, portrait), insets, map),
+            _ => Layout::portrait(
+                // The art starts at the top of the window, as the Android app's did, so the rows
+                // left over go below the bottom bar and every pixel above lands where it did there
+                Fit {
+                    offset_y: 0,
+                    ..fit_at(w, h, portrait)
+                },
+                insets,
+                map,
+            ),
         }
     }
 
@@ -898,14 +891,7 @@ impl Layout {
         let pad_top = ceil_div(insets.top, fit.scale);
         let pad_bottom = ceil_div(insets.bottom, fit.scale);
         let hud_x = (width - DESIGN_W as i32) / 2;
-        let roomy = height - pad_top - pad_bottom >= ROOMY_MIN_H;
-        let top_h = if roomy { TOP_H + ROOMY_STRIP } else { TOP_H };
-        let strip_y = if roomy {
-            STRIP_Y + ROOMY_STRIP
-        } else {
-            STRIP_Y
-        };
-        let bar_bottom = pad_top + top_h;
+        let bar_bottom = pad_top + TOP_H;
         let bottom_top = height - pad_bottom - BOTTOM_H;
         let at = voyage::board_origin(width, bar_bottom, bottom_top);
 
@@ -918,9 +904,7 @@ impl Layout {
         let roll_y = dice_y + DIE + 6;
         let menu_x = hud_x + DESIGN_W as i32 - HUD_INSET - MENU_W;
         let box_top = pad_top + BOX_Y;
-        let edge = pad_top + strip_y;
-        let track = Track::one_row(map, hud_x, edge);
-        let strip = track.rows[0];
+        let track = Track::one_row(map, hud_x, pad_top + STRIP_Y);
         let island = Rect::new(0, bar_bottom, width, bottom_top - bar_bottom);
         Layout {
             fit,
@@ -931,7 +915,6 @@ impl Layout {
             landscape: None,
             columns: None,
             costs_stacked: false,
-            roomy,
             pad_top,
             pad_bottom,
             pad_left: 0,
@@ -958,24 +941,9 @@ impl Layout {
             ),
             menu: Rect::new(menu_x, box_top, MENU_W, BOX_H),
             menu_hit: Rect::new(menu_x - 2, pad_top, MENU_W + 4, BOX_Y + BOX_H + 2),
-            label_above: if roomy {
-                LABEL_ABOVE_ROOMY
-            } else {
-                LABEL_ABOVE
-            },
-            turns_label: (hud_x + HUD_INSET + LABEL_INSET, edge),
-            badges: if roomy {
-                BadgePlace::Tray {
-                    right: hud_x + DESIGN_W as i32 - HUD_INSET,
-                    top: edge - 10,
-                    h: 9,
-                    label: true,
-                }
-            } else {
-                BadgePlace::Edge {
-                    right: (hud_x + DESIGN_W as i32 - HUD_INSET - LABEL_INSET)
-                        .min(strip.origin_x + strip.strip.pier_x() - 4),
-                }
+            badges: BadgePlace::Sign {
+                right: hud_x + DESIGN_W as i32 - HUD_INSET,
+                top: bar_bottom + SIGN_DROP,
             },
             track,
             dice,
@@ -1068,7 +1036,6 @@ impl Layout {
                     right: menu_x - BOX_GAP,
                     top: top + (BOX_H - 9) / 2,
                     h: 9,
-                    label: false,
                 };
                 (costs, track, badges)
             }
@@ -1080,12 +1047,10 @@ impl Layout {
                     right: hud_x + hud_w - inset,
                     top: top + BOX_H + 3,
                     h: 9,
-                    label: false,
                 };
                 (costs, tall_hud(map, hud_x, top).0, badges)
             }
         };
-        let track_y = track.rows[0].band.y;
 
         // The dice column, centred down its height
         let dtop = usable_top + (usable_h - DICE_COL_CONTENT_H) / 2;
@@ -1110,7 +1075,6 @@ impl Layout {
             landscape: Some(side),
             columns: Some(columns),
             costs_stacked: columns == Columns::Tall,
-            roomy: false,
             pad_top,
             pad_bottom,
             pad_left,
@@ -1123,8 +1087,6 @@ impl Layout {
             costs,
             menu,
             menu_hit: Rect::new(menu.x - 2, menu.y - 2, menu.w + 4, menu.h + 4),
-            label_above: LABEL_ABOVE,
-            turns_label: (track.rows[0].band.x + LABEL_INSET, track_y),
             badges,
             track,
             dice,
@@ -1281,7 +1243,6 @@ mod tests {
         assert_eq!(l.isle.rotation, Rotation::None);
         assert_eq!(l.fit.scale, 5);
         assert_eq!((l.width, l.height), (216, 468));
-        assert!(l.roomy);
         assert_eq!(l.hud_x, 0);
         assert_eq!(MENU_W, 23);
         assert_eq!(l.menu, Rect::new(216 - 6 - 23, 6, 23, 34));
@@ -1290,14 +1251,14 @@ mod tests {
         assert_eq!(l.dice[0], Rect::new(9, 468 - 66 + 8, 28, 28));
         assert_eq!(l.roll, Rect::new(60, 468 - 66 + 8 + 34, 96, 20));
         assert_eq!(l.track.rows.len(), 1);
-        assert_eq!(l.track.rows[0].band, Rect::new(6, 51, 204, 15));
+        assert_eq!(l.track.rows[0].band, Rect::new(6, 43, 204, 15));
         // The island's board sits where the voyage module puts it
-        let at = voyage::board_origin(216, 69, 468 - 66);
+        let at = voyage::board_origin(216, 62, 468 - 66);
         assert_eq!((l.isle.board_x, l.isle.board_y), (at.x, at.y));
     }
 
     #[test]
-    fn a_short_portrait_screen_is_not_roomy_and_pads_for_system_bars() {
+    fn a_short_portrait_screen_pads_for_system_bars() {
         let insets = Insets {
             top: 60,
             bottom: 90,
@@ -1306,7 +1267,6 @@ mod tests {
         let l = Layout::new(720, 1280, insets, tarnholm(), DiceSide::Right);
         assert_eq!(l.fit.scale, 3);
         assert_eq!((l.pad_top, l.pad_bottom), (20, 30));
-        assert!(!l.roomy);
         assert_eq!(l.track.rows[0].band.y, 20 + STRIP_Y);
         assert_eq!(l.dice[0].y, l.height - 30 - BOTTOM_H + 8);
     }
@@ -1425,7 +1385,7 @@ mod tests {
         assert_eq!(scales(1284, 2778, none), (None, 5, 6));
         // Tablets, on their side and upright
         assert_eq!(scales(2560, 1600, none), (tall, 6, 5));
-        assert_eq!(scales(2048, 1536, none), (tall, 5, 5));
+        assert_eq!(scales(2048, 1536, none), (wide, 4, 4));
         assert_eq!(scales(1600, 2560, none), (None, 7, 7));
         assert_eq!(scales(1536, 2048, none), (None, 5, 5));
         // Desktop windows, a small laptop, a very wide screen and a nearly square window
@@ -1490,13 +1450,13 @@ mod tests {
                     assert_eq!(l.island.x, left.x + left.w);
                     assert_eq!(l.island.x + l.island.w, right.x);
                     // Top to bottom without overlap: score and menu, the bonuses, the costs
-                    // with their label above, the track's rows with theirs
+                    // then the track's rows
                     assert!(l.score.x + l.score.w < l.menu.x);
                     if let BadgePlace::Tray { right, top, h, .. } = l.badges
                         && has_badges(map)
                     {
                         assert!(top >= l.score.y + l.score.h && right <= hud.x + hud.w - 2);
-                        assert!(top + h + LABEL_ABOVE + 2 <= l.costs.y, "{what}");
+                        assert!(top + h + 2 <= l.costs.y, "{what}");
                     }
                     assert!(l.costs.y + l.costs.h + LAND_LABEL_GAP <= l.track.rows[0].band.y);
                     let t = &l.track;
@@ -1622,9 +1582,9 @@ mod tests {
             (10 - l.isle.board_x, 300 - l.isle.board_y)
         );
         // A device point goes to the art pixel it is in (the canvas is 2 device pixels wider
-        // and taller than the screen, so the screen starts a pixel in each way)
+        // wider than the screen, which starts a pixel in, and the art starts at the top)
         let spot = l.to_spot(12.0, 501.0);
-        assert_eq!((spot.x, spot.y, spot.sx, spot.sy), (2, 100, 11, 500));
+        assert_eq!((spot.x, spot.y, spot.sx, spot.sy), (2, 100, 11, 501));
     }
 
     #[test]

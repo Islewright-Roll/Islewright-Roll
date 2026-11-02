@@ -27,3 +27,8 @@ Hiring animation and confirmation: `tarnholm-hire-next` (two traders hired, dice
 third roll so no early build question) and `dunholm-pair-half-hired` (trader 6 of the north desert's pair
 hired, dice that pay for any trader: hire 7 to complete the pair and play the whole animation from the
 shared "?", hire 8 or 9 to get the "Start a second pair?" question). Both are on the third roll.
+
+Building and prompts: `tarnholm-build-ready` (third roll, the End Turn question when Done is tapped
+before building), `tarnholm-build-early` (first roll, dice that spend five, so no question),
+`tarnholm-build-prompted` (first roll, dice that spend only two, so the Build Now question) and
+`tarnholm-last-build` (final turn with a road to build, for a finished game that takes a new best).

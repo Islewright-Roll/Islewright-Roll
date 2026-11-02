@@ -17,12 +17,16 @@ struct Glyph {
     advance: i32,
     /// One past the last inked column of the cell, so text can be centred on its ink.
     ink: i32,
+    /// What kerning moves it by after the glyph before it.
+    kern: i32,
 }
 
 #[derive(Clone, Debug)]
 pub struct BitmapFont {
     atlas: Image,
     glyphs: HashMap<u32, Glyph>,
+    /// The font's own pairs, for fonts whose metrics list them.
+    kerning: HashMap<(u32, u32), i32>,
     height: i32,
 }
 
@@ -37,11 +41,16 @@ impl BitmapFont {
             .and_then(|h| h.parse().ok())
             .ok_or("font metrics have no height line")?;
         let mut glyphs = HashMap::new();
+        let mut kerning = HashMap::new();
         for line in lines {
             let f: Vec<i32> = line
                 .split_whitespace()
                 .filter_map(|n| n.parse().ok())
                 .collect();
+            if let [first, second, amount] = f[..] {
+                kerning.insert((first as u32, second as u32), amount);
+                continue;
+            }
             if f.len() < 6 {
                 continue;
             }
@@ -52,6 +61,7 @@ impl BitmapFont {
                 h: f[4],
                 advance: f[5],
                 ink: 0,
+                kern: 0,
             };
             g.ink = (0..g.w)
                 .rev()
@@ -62,6 +72,7 @@ impl BitmapFont {
         Ok(BitmapFont {
             atlas,
             glyphs,
+            kerning,
             height,
         })
     }
@@ -71,6 +82,7 @@ impl BitmapFont {
     /// some translations use are drawn as the plain ones the atlas has. Anything else the atlas
     /// lacks is a "?", as on Android.
     fn glyphs_of<'a>(&'a self, s: &'a str) -> impl Iterator<Item = Glyph> + 'a {
+        let mut previous = 0u32;
         s.chars().filter_map(move |c| {
             let c = match c {
                 '\u{2066}'..='\u{2069}' | '\u{200E}' | '\u{200F}' | '\u{200B}' => return None,
@@ -79,22 +91,29 @@ impl BitmapFont {
                 '\u{202F}' | '\u{2009}' => ' ',
                 other => other,
             };
+            let kern = self
+                .kerning
+                .get(&(previous, c as u32))
+                .copied()
+                .unwrap_or(0);
+            previous = c as u32;
             self.glyphs
                 .get(&(c as u32))
                 .or_else(|| self.glyphs.get(&('?' as u32)))
-                .copied()
+                .map(|g| Glyph { kern, ..*g })
         })
     }
 
     /// Pen advance of the whole string.
     pub fn width(&self, s: &str) -> i32 {
-        self.glyphs_of(s).map(|g| g.advance).sum()
+        self.glyphs_of(s).map(|g| g.kern + g.advance).sum()
     }
 
     /// Width up to the last inked pixel, without the final glyph's trailing space.
     pub fn ink_width(&self, s: &str) -> i32 {
         let (mut pen, mut ink) = (0, 0);
         for g in self.glyphs_of(s) {
+            pen += g.kern;
             if g.ink > 0 {
                 ink = pen + g.ink;
             }
@@ -114,6 +133,7 @@ impl BitmapFont {
         let color = rgba(argb);
         let mut pen = x;
         for g in self.glyphs_of(s) {
+            pen += g.kern;
             for cy in 0..g.h {
                 for cx in 0..g.w {
                     let a = (self.atlas.argb_at(g.x + cx, g.y + cy) >> 24) as u8;

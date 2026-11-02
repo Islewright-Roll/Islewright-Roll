@@ -238,3 +238,19 @@ With the second argument it also writes `NN_moment_chosen.wav` and `NN_moment_al
 `index.html` with a player for each, and `report.txt` (loudness before and after). Shaping,
 loudness matching and the output formats are described at the top of `tools/process_sfx.py`.
 Needs ffmpeg with libvorbis, ffprobe and python3 with numpy. The output is byte-identical between runs.
+
+## parity/parity.py
+
+Compares the port with the Java app in `app/`, screen by screen, on one emulator. It drives both
+debug builds into the same state through their scenario harnesses (`scenarios/`) and captures each
+screen from the device, so what is scored is what a player sees: v2, v3 and a mask of what differs
+go side by side in `build/parity/diff/`. Install both debug APKs on the emulator first, then:
+
+```
+python3 tools/parity/parity.py list
+python3 tools/parity/parity.py capture v2 [screen ...]
+python3 tools/parity/parity.py capture v3 [screen ...]
+python3 tools/parity/parity.py compare [screen ...]
+```
+
+A screen's score is the share of pixels whose channels are all within 10 of the Java app's.

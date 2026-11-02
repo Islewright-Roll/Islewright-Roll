@@ -52,8 +52,6 @@ pub enum Haptic {
     Build,
     /// Dice were thrown.
     Roll,
-    /// A tap that did nothing on purpose: the roll button locked after the game ended.
-    Reject,
 }
 
 pub struct ScreenHost {
@@ -102,77 +100,13 @@ pub fn hold_tutorial(held: bool) {
     HELD.with(|h| h.set(held));
 }
 
-// ---------------------------------------------------------------- the welcome
-
-/// What the player chose in the welcome.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub enum WelcomeChoice {
-    /// Open the rules, then play.
-    HowToPlay,
-    Play,
-    /// Play, and do not show the welcome again.
-    PlayAndHide,
-}
-
-/// The localized name of an island.
+/// An island's name in the current language.
 pub fn island_name(map: &MapDef) -> String {
     match map.id.as_str() {
         "dunholm" => res::str::map_dunholm(),
         _ => res::str::map_tarnholm(),
     }
     .format()
-}
-
-/// The welcome (the Android app's WelcomeDialog) as a kit dialog, for the shell to present
-/// once per launch: the goal of this game, the other island in a line, and the four things a
-/// new player needs. `other_race_target` is the race target setting, which names the goal of
-/// the other island when that one is a race.
-pub fn welcome_dialog(game: &Game, other_race_target: i32) -> ui::Dialog<WelcomeChoice> {
-    let map = game.map;
-    let mut lines = vec![if game.is_race() {
-        res::str::welcome_lead_race(game.target_score as i64).format()
-    } else {
-        res::str::welcome_lead_turns(map.turn_cap as i64).format()
-    }];
-    if let Some(other) = MapDef::all().into_iter().find(|m| m.id != map.id) {
-        let name = island_name(other);
-        lines.push(if other.target_score > 0 {
-            res::str::welcome_other_race(res::str::WelcomeOtherRace {
-                arg1: name,
-                arg2: other_race_target as i64,
-            })
-            .format()
-        } else {
-            res::str::welcome_other_turns(res::str::WelcomeOtherTurns {
-                arg1: name,
-                arg2: other.turn_cap as i64,
-            })
-            .format()
-        });
-    }
-    lines.push(res::str::welcome_dice().format());
-    lines.push(res::str::welcome_costs().format());
-    lines.push(res::str::welcome_roads().format());
-    lines.push(res::str::welcome_traders().format());
-    ui::Dialog::new(res::str::welcome_title().format())
-        .message(lines.join("\n\n"))
-        .button(
-            "how_to_play",
-            res::str::welcome_how_to_play().format(),
-            WelcomeChoice::HowToPlay,
-        )
-        .button(
-            "dont_show",
-            res::str::welcome_dont_show().format(),
-            WelcomeChoice::PlayAndHide,
-        )
-        .button(
-            "play",
-            res::str::welcome_play().format(),
-            WelcomeChoice::Play,
-        )
-        .stacked()
-        .default_button("play")
 }
 
 // ---------------------------------------------------------------- the screen
@@ -186,8 +120,6 @@ fn strings(game: &Game) -> Strings {
     };
     Strings {
         score: t::score().format(),
-        costs: t::legend_costs().format(),
-        turns: t::strip_turns().format(),
         bonuses: t::strip_bonuses().format(),
         first_roll: t::first_roll().format(),
         second_roll: t::second_roll().format(),
@@ -253,6 +185,8 @@ struct Screen {
     /// The canvas size in points.
     size: Cell<(f64, f64)>,
     dpr: Cell<f64>,
+    /// What the finger now down went down on, on a platform that says so at once.
+    touch: Cell<Option<Hit>>,
     /// A frame is being decoded; another render waits for it (`dirty`).
     in_flight: Cell<bool>,
     dirty: Cell<bool>,
@@ -277,6 +211,7 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
         shown: Signal::new(None),
         size: Cell::new((0.0, 0.0)),
         dpr: Cell::new(1.0),
+        touch: Cell::new(None),
         in_flight: Cell::new(false),
         dirty: Cell::new(false),
         frame: RefCell::new(None),
@@ -415,7 +350,13 @@ impl Screen {
             ui.tutorial_held = self.asking.get() > 0 || HELD.with(Cell::get);
             let frame = TUTORIAL
                 .with(|t| scene.render(&mut game, &layout, &mut ui, &mut t.borrow_mut(), &s, now));
-            (frame, layout, game.map.sea_fill)
+            // The rows left over below a portrait layout's bottom bar are of a piece with it
+            let backdrop = if layout.landscape.is_none() {
+                scene::WOOD_DARK
+            } else {
+                game.map.sea_fill
+            };
+            (frame, layout, backdrop)
         };
         if frame.tutorial_dirty {
             (self.host.on_changed)();
@@ -461,7 +402,58 @@ impl Screen {
         (self.host.haptic)(h);
     }
 
+    /// The finger went down at `spot`, on a platform that says so at once. As on the Java app, a
+    /// die holds now, and a button shows pressed until the lift with its click said now; what
+    /// the button does waits for the lift (`tap`).
+    fn touch_down(self: &Rc<Self>, spot: Spot) {
+        let hit = self.hit(spot);
+        let button = match hit {
+            Hit::GotIt => Some(Button::GotIt),
+            Hit::Skip => Some(Button::Skip),
+            Hit::Menu => Some(Button::Menu),
+            Hit::Undo => Some(Button::Undo),
+            Hit::Roll if self.host.game.borrow().roll_press() != RollPress::Locked => {
+                Some(Button::Roll)
+            }
+            _ => None,
+        };
+        self.touch.set(Some(hit));
+        if let Some(b) = button {
+            self.ui.borrow_mut().pressed = Some((b, u64::MAX));
+            if b != Button::Undo {
+                sound_sink::play(Sfx::Click);
+                self.haptic(Haptic::Tap);
+            }
+            self.request();
+        }
+        if let Hit::Die(i) = hit {
+            if self.host.game.borrow_mut().dice_touched(i) {
+                self.haptic(Haptic::Tap);
+            }
+            self.changed();
+        }
+    }
+
+    /// The finger moved or lifted: a roll button it slid off lets go at once, and any other
+    /// button shows pressed until the lift.
+    fn touch_moved(self: &Rc<Self>, spot: Spot, lifted: bool) {
+        let mut ui = self.ui.borrow_mut();
+        let Some((b, _)) = ui.pressed else {
+            return;
+        };
+        let slid_off = b == Button::Roll && self.hit_with(&ui, spot) != Hit::Roll;
+        if lifted || slid_off {
+            ui.pressed = None;
+            drop(ui);
+            self.request();
+        }
+    }
+
+    /// Shows a button pressed for a moment: not when a finger has already held it down.
     fn press(self: &Rc<Self>, b: Button) {
+        if self.touch.get().is_some() {
+            return;
+        }
         self.ui.borrow_mut().pressed = Some((b, crate::clock::now_ms() + PRESS_MS));
         sound_sink::play(Sfx::Click);
         self.haptic(Haptic::Tap);
@@ -477,11 +469,15 @@ impl Screen {
     }
 
     fn hit(&self, spot: Spot) -> Hit {
+        self.hit_with(&self.ui.borrow(), spot)
+    }
+
+    fn hit_with(&self, ui: &Ui, spot: Spot) -> Hit {
         let game = self.host.game.borrow();
         let scene = self.scene.borrow();
         let layout = self.layout.borrow();
         match (scene.as_ref(), layout.as_ref()) {
-            (Some(scene), Some(l)) => scene.hit(&game, l, &self.ui.borrow(), spot),
+            (Some(scene), Some(l)) => scene.hit(&game, l, ui, spot),
             _ => Hit::Nothing,
         }
     }
@@ -490,12 +486,34 @@ impl Screen {
         if self.asking.get() > 0 {
             return;
         }
+        let down = self.touch.take();
         let Some(spot) = self.spot(p) else {
             return;
         };
-        match self.hit(spot) {
+        let hit = self.hit(spot);
+        if let Some(down) = down {
+            // A die has held already, and a button only answers the finger that pressed it
+            let button = matches!(
+                down,
+                Hit::GotIt | Hit::Skip | Hit::Menu | Hit::Undo | Hit::Roll
+            );
+            if matches!(down, Hit::Die(_)) || (button && hit != down) {
+                return;
+            }
+        }
+        // The press was shown from the finger going down, or is shown now
+        let held = down.is_some();
+        self.touch.set(down);
+        self.act(hit);
+        if held {
+            self.touch.set(None);
+        }
+    }
+
+    fn act(self: &Rc<Self>, hit: Hit) {
+        match hit {
             Hit::GotIt | Hit::Skip => {
-                let got_it = self.hit(spot) == Hit::GotIt;
+                let got_it = hit == Hit::GotIt;
                 self.press(if got_it { Button::GotIt } else { Button::Skip });
                 TUTORIAL.with(|t| {
                     let mut t = t.borrow_mut();
@@ -534,6 +552,7 @@ impl Screen {
     /// and M or Escape opens the menu. The walkthroughs drive the game this way too, the same
     /// on every screen size.
     fn key(self: &Rc<Self>, k: &day::KeyEvent) {
+        self.touch.set(None);
         if self.asking.get() > 0 || k.modifiers & (day::KeyEvent::PRIMARY | day::KeyEvent::ALT) != 0
         {
             return;
@@ -583,9 +602,7 @@ impl Screen {
     fn roll(self: &Rc<Self>) {
         let press = self.host.game.borrow().roll_press();
         match press {
-            RollPress::Locked => {
-                self.haptic(Haptic::Reject);
-            }
+            RollPress::Locked => {}
             RollPress::ConfirmEndTurn => {
                 self.press(Button::Roll);
                 let rev = self.host.game.borrow().revision();
@@ -698,6 +715,7 @@ impl Screen {
         };
         match g.phase {
             DragPhase::Began => {
+                self.touch.set(None);
                 if self.asking.get() > 0 || self.ui.borrow().carry.is_some() {
                     return;
                 }
@@ -723,9 +741,17 @@ impl Screen {
                     self.ui.borrow_mut().carry = Some(Carry { slot, x, y });
                     self.haptic(Haptic::Tap);
                     self.request();
+                } else if g.translation.x == 0.0
+                    && g.translation.y == 0.0
+                    && let Some(spot) = self.spot(g.location)
+                {
+                    self.touch_down(spot);
                 }
             }
             DragPhase::Changed => {
+                if let Some(spot) = self.spot(g.location) {
+                    self.touch_moved(spot, false);
+                }
                 let mut ui = self.ui.borrow_mut();
                 if let Some(c) = ui.carry.as_mut() {
                     c.x = x;
@@ -735,6 +761,9 @@ impl Screen {
                 }
             }
             DragPhase::Ended => {
+                if let Some(spot) = self.spot(g.location) {
+                    self.touch_moved(spot, true);
+                }
                 let Some(c) = self.ui.borrow_mut().carry.take() else {
                     return;
                 };
@@ -1110,8 +1139,6 @@ mod tests {
         let mut t = Tutorial::new(false, 0);
         let s = Strings {
             score: "Score".into(),
-            costs: "Costs".into(),
-            turns: "Turns".into(),
             play_again: "Play again".into(),
             next_turn: "Next turn".into(),
             finish: "Finish".into(),

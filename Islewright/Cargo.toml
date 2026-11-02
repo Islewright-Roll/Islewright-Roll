@@ -47,6 +47,11 @@ simd-adler32 = "0.3"
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 day-toolkit-dom = "0.6.3"
 
+# What dialogs need of the window, which Day has no call for (src/ui/window.rs).
+[target.'cfg(target_os = "android")'.dependencies]
+day-bridge = "0.6.3"
+day-platform-android = "0.6.3"
+
 [build-dependencies]
 day-build = { version = "0.6.3" }
 

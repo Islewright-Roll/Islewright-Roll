@@ -34,7 +34,8 @@ version has.
   English, French, German, Spanish, Indonesian, Italian and Brazilian Portuguese.
 - `store/storefront.toml`: the store listing. `website/`: the project site.
 - `tools/`: the scripts that generate the art, fonts and sounds from their sources; see
-  `tools/README.md` and `CREDITS.md`.
+  `tools/README.md` and `CREDITS.md`. `tools/parity` scores the port's screens against the Java
+  app's on an emulator.
 - `Day-appfair.toml`: the App Fair identity (`org.appfair.app.Islewright`); `Day.toml`'s own id is
   for development builds.
 
