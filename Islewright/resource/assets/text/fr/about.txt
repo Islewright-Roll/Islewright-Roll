@@ -5,10 +5,10 @@ Un jeu de dés en solitaire : lancez les dés, puis bâtissez routes, villages, 
 Logiciel libre sous licence GNU GPL v3 :
 https://github.com/islewright-roll/islewright
 
-Le terrain et le navire du roi proviennent de The Battle for Wesnoth (https://www.wesnoth.org), utilisés sous licence GNU GPL v2 ou ultérieure, par J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier et d'autres artistes de Wesnoth ; le navire provient du projet FreeCol. Polices : Press Start 2P, Ark Pixel et Micro 5 (chiffres uniquement), SIL Open Font License 1.1. Voir ART_CREDITS.md dans le dépôt.
+Le terrain et le navire du roi proviennent de The Battle for Wesnoth (https://www.wesnoth.org), utilisés sous licence GNU GPL v2 ou ultérieure, par J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier et d'autres artistes de Wesnoth ; le navire provient du projet FreeCol. Polices : Press Start 2P, Ark Pixel et Micro 5 (chiffres uniquement), SIL Open Font License 1.1. Voir CREDITS.md dans le dépôt.
 
 Effets sonores : de The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 ou ultérieure, par Lari Nieminen, J.W. Bjerk et Leonardo Magno Sampaio, et son clic de bouton par Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/) ; de Kenney (https://kenney.nl), CC0 ; et une fanfare de MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Certains sont raccourcis, filtrés ou modifiés en volume.
 
-Créé à l'origine par Ridgeline Apps, archivé depuis Google Code et remis en état par Hellmark, avec des améliorations d'Islewright Team.
+Créé à l'origine par Ridgeline Apps. Marcus Hoffmann (Bubu) l'a relancé en 2017, avec une traduction allemande de tmaex, et Hellmark a préservé l'archive Google Code. Depuis, par Islewright Team.
 
 Islewright n'est ni affilié à Catan GmbH ni approuvé par elle. CATAN® est une marque déposée de Catan GmbH. Le jeu d'Islewright repose sur des règles et des mécaniques de jeu, que le droit d'auteur américain considère comme des méthodes de jeu non protégeables (17 U.S.C. § 102(b)).

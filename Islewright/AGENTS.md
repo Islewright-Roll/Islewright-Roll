@@ -1,7 +1,7 @@
 # Working on Islewright
 
 Islewright is a solitaire dice game built with [Day](https://daybrite.dev), which renders native
-widgets from one Rust codebase, for iOS, Android and the web. It is published through the
+widgets from one Rust codebase, for iOS, Android and the web. It is being prepared for publication through the
 [App Fair](https://appfair.org).
 
 ## Day documentation
@@ -33,7 +33,7 @@ version has.
   English, French, German, Spanish, Indonesian, Italian and Brazilian Portuguese.
 - `store/storefront.toml`: the store listing. `website/`: the project site.
 - `tools/`: the scripts that generate the art, fonts and sounds from their sources; see
-  `tools/README.md` and `ART_CREDITS.md`.
+  `tools/README.md` and `CREDITS.md`.
 - `Day-appfair.toml`: the App Fair identity (`org.appfair.app.Islewright`); `Day.toml`'s own id is
   for development builds.
 
@@ -43,7 +43,7 @@ version has.
   checks it).
 - Add user-facing strings to every locale, and reference them through `res::str::…`.
 - New art goes through `tools/` and must have a license and author recorded in
-  `ART_CREDITS.md`; the App Fair reviews every asset.
+  `CREDITS.md`; the App Fair reviews every asset.
 - No network use, analytics, ads or permissions beyond what a feature needs, and keep
   `PRIVACY.md` accurate.
 - Comments explain why, in plain sentences.

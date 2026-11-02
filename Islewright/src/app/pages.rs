@@ -441,8 +441,8 @@ pub fn about(m: &Metrics, width: i32) -> Vec<W> {
         m,
         day::id!(about_website),
         width,
-        "https://islewright-roll.github.io/islewright/",
-        "https://islewright-roll.github.io/islewright/",
+        "https://github.com/islewright-roll/islewright",
+        "https://github.com/islewright-roll/islewright",
     ));
     items
 }

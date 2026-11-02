@@ -5,9 +5,9 @@ schema = 1
 [app]
 # Development builds use their own id, so they install beside the App Fair copy. The published
 # identity is the appfair flavor's (Day-appfair.toml).
-id = "io.github.islewright_roll.islewright.dev"
+id = "io.github.islewrightroll.islewright.dev"
 title = "Islewright"
-build = 1
+build = 34
 targets = ["ios-uikit", "android-material", "web-dom"]
 
 # The window's size and minimum size in points, for every platform with resizable windows.

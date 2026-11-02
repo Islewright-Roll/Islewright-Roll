@@ -1,4 +1,4 @@
-Sources of the soundtrack (see ART_CREDITS.md and tools/encode_music.sh).
+Sources of the soundtrack (see CREDITS.md and tools/encode_music.sh).
 
 Artist: Vindsvept (https://vindsvept.se).
 Licence: Creative Commons Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/

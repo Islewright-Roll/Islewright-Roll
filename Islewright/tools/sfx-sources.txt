@@ -101,7 +101,7 @@ k_conf2|orig:x/interface-sounds/Audio/confirmation_002.ogg|0|-|80|-|33b17a9a9a23
 #   (copyrights.csv row dated 2023/09/15). Copy it into <originals>/wesnoth-master/ before running.
 # wes_button is sounds/button.wav, which is NOT GPL: Wesnoth's copyrights.csv records it as
 #   CC BY-SA 4.0, author "Argentum Age" (row dated 2018/03/04). It is used under CC BY-SA 4.0
-#   (https://creativecommons.org/licenses/by-sa/4.0/), credited in ART_CREDITS.md and in the app,
+#   (https://creativecommons.org/licenses/by-sa/4.0/), credited in CREDITS.md and in the app,
 #   and changed here by trimming, mixing to mono and a change of level.
 # NOT USED: sounds/bell.wav (also CC BY-SA 4.0 "Argentum Age"); a Kenney bell is the dock bell.
 # wes_gold_one is one clink cut from wes_gold's file (data/core/sounds/gold.ogg, same sha256, same author) by start

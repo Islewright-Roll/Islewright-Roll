@@ -1,3 +1,19 @@
+# Credits
+
+Islewright is free software under the GNU GPL version 3 or later (see `COPYING`).
+
+## Code
+
+* Ridgeline Apps (FatMonkeySmile): the original Resource Dice Game, 2012 to 2013.
+  <https://github.com/FatMonkeySmile/android-dice-game>
+* Marcus Hoffmann (Bubu): versions 1.13 to 1.15 in 2017, which moved the project to Gradle, kept it
+  running on newer Android and returned it to F-Droid.
+  <https://git.bubu1.eu/Bubu/android-dice-game>
+* tmaex: the German translation, whose menu and button strings are still in use.
+* Hellmark: preserved the Google Code archive and the F-Droid 1.15 release.
+  <https://github.com/Hellmark/android-dice-game>
+* Islewright Team: everything since version 1.15, including this port.
+
 # Art and font credits
 
 ## Terrain and the King's ship: The Battle for Wesnoth
@@ -35,8 +51,10 @@ The King's ship on the board (`piece_kingship.png`) is
 `data/core/images/units/transport/transport-galleon.png` from the same 1.16.11 data. Wesnoth
 records its author as the FreeCol project and its licence as GNU GPL v2+. Wesnoth has since
 replaced this sprite (current Wesnoth has a different sprite under the same name, licensed
-CC BY-SA 4.0); the one used here is the 1.16.11 file. Its team colour flag is recoloured to
-royal purple and gold.
+CC BY-SA 4.0); the one used here is the 1.16.11 file. It is unchanged except for its flag
+(100 of its pixels). Wesnoth's flag is already team colour magenta; here its shades are remapped
+to the five this game recolours, with a gold fly added and each pixel's alpha kept, and the game
+turns the magenta into the player's colour as it draws.
 
 Changes. The terrain tiles are composited at native resolution with the blending rules of
 Wesnoth's terrain graphics, ported to `tools/bake_board.py` (differences from a live Wesnoth

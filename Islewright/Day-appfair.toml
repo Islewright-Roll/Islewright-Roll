@@ -4,4 +4,4 @@
 # `build` before each tag, because the stores refuse a repeated or lower build number.
 [app]
 id = "org.appfair.app.Islewright"
-build = 1
+build = 34

@@ -33,7 +33,7 @@ sent anywhere. Reading the accelerometer needs no permission on Android or iOS.
 
 ## The stores
 
-Islewright is distributed by the App Fair Project through the Apple App Store and Google Play.
+Islewright is planned for distribution by the App Fair Project through the Apple App Store and Google Play.
 Those stores may collect information about downloads and your device under their own privacy
 policies, which this app does not control.
 

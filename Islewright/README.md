@@ -8,7 +8,7 @@
 
 A solitaire dice game: roll, then build roads, villages, castles and traders across a small
 island. Islewright runs on iPhone, Android and the web from one Rust codebase, built with
-[Day](https://daybrite.dev), and is published through the [App Fair](https://appfair.org).
+[Day](https://daybrite.dev), and is being prepared for publication through the [App Fair](https://appfair.org).
 
 It is free, with no ads, no in-app purchases, no tracking and no account, and it works offline.
 See [PRIVACY.md](PRIVACY.md).
@@ -66,12 +66,13 @@ project, its locales and the store listing. The App Fair builds the published id
 ## Credits and license
 
 Islewright is free software under the GNU General Public License, version 3 or later; see
-[COPYING](COPYING). It began as Resource Dice Game by Ridgeline Apps (2012), was archived from
-Google Code and cleaned up by Hellmark, and was rebuilt by Islewright Team.
+[COPYING](COPYING). It began as Resource Dice Game by Ridgeline Apps (2012). Marcus Hoffmann (Bubu)
+revived it in 2017, with a German translation by tmaex, and Hellmark preserved the Google Code
+archive. Everything since is by Islewright Team.
 
 The island terrain, the King's ship and some sound effects come from The Battle for Wesnoth
 under the GNU GPL; the fonts are under the SIL Open Font License; other sounds are CC0 or
-CC BY-SA 4.0. [ART_CREDITS.md](ART_CREDITS.md) lists every source, author and license.
+CC BY-SA 4.0. [CREDITS.md](CREDITS.md) lists every source, author and license.
 
 Islewright is not affiliated with or endorsed by Catan GmbH. CATAN is a registered trademark of
 Catan GmbH.
