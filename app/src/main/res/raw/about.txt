@@ -3,9 +3,9 @@ Islewright: Roll {{version}}
 A solitaire dice game: roll, then build roads, villages, castles and traders across a small island.
 
 Open source under the GNU GPL v3:
-https://github.com/islewright-roll/islewright
+https://github.com/islewright-roll/islewright-roll
 
-Terrain and the King's ship from The Battle for Wesnoth (https://www.wesnoth.org), used under the GNU GPL v2 or later, by J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier and other Wesnoth artists; the ship comes from the FreeCol project. Fonts: Press Start 2P, Ark Pixel and Micro 5 (numerals only), SIL Open Font License 1.1. Full credits: https://github.com/islewright-roll/islewright/blob/prod/CREDITS.md
+Terrain and the King's ship from The Battle for Wesnoth (https://www.wesnoth.org), used under the GNU GPL v2 or later, by J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier and other Wesnoth artists; the ship comes from the FreeCol project. Fonts: Press Start 2P, Ark Pixel and Micro 5 (numerals only), SIL Open Font License 1.1. Full credits: https://github.com/islewright-roll/islewright-roll/blob/prod/CREDITS.md
 
 Sound effects: from The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 or later, by Lari Nieminen, J.W. Bjerk and Leonardo Magno Sampaio, and its button click by Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); from Kenney (https://kenney.nl), CC0; and a fanfare by MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Some are trimmed, filtered or changed in volume.
 
