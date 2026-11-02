@@ -11,4 +11,4 @@ Sound effects: from The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2
 
 Originally Resource Dice Game by Ridgeline Apps. Marcus Hoffmann (Bubu) revived it for F-Droid, with a German translation by tmaex, and Hellmark preserved the Google Code archive and the F-Droid release. Rebuilt as Islewright: Roll.
 
-Islewright is not affiliated with or endorsed by Catan GmbH. CATAN® is a registered trademark of Catan GmbH. Islewright’s gameplay is based on game rules and mechanics, which U.S. copyright law treats as unprotectable methods of play (17 U.S.C. § 102(b)).
+Islewright is not affiliated with or endorsed by Catan GmbH. CATAN® is a registered trademark of Catan GmbH.

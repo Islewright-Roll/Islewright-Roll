@@ -11,4 +11,4 @@ Effetti sonori: da The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 
 
 Creato originariamente da Ridgeline Apps. Marcus Hoffmann (Bubu) lo ha riportato in vita nel 2017, con una traduzione tedesca di tmaex, e Hellmark ha conservato l'archivio di Google Code. Da allora, di Islewright Team.
 
-Islewright: Roll non è affiliato né approvato da Catan GmbH. CATAN® è un marchio registrato di Catan GmbH. Il gioco di Islewright: Roll si basa su regole e meccaniche di gioco, che la legge statunitense sul diritto d'autore considera metodi di gioco non tutelabili (17 U.S.C. § 102(b)).
+Islewright: Roll non è affiliato né approvato da Catan GmbH. CATAN® è un marchio registrato di Catan GmbH.
