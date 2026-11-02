@@ -2,7 +2,7 @@
 # The game's own strings, converted from the Android app's res/values-it/strings.xml.
 # Positional arguments became $arg1, $arg2, in the same order.
 
-app_name = Islewright
+app_name = Islewright: Roll
 map_tarnholm = Tarnholm
 map_dunholm = Dunholm
 next_turn = Avanti
@@ -97,13 +97,13 @@ resource_ore = Minerale
 resource_lumber = Legname
 tutorial_got_it = Capito
 tutorial_skip = Salta il tutorial
-welcome_title = Ecco Islewright
+welcome_title = Ecco Islewright: Roll
 welcome_lead_turns = Costruisci più che puoi in { $arg1 } turni.
 welcome_lead_race = Arriva a { $arg1 } punti nel minor numero di turni.
 welcome_other_race = { $arg1 } è una corsa a { $arg2 } punti. Cambia isola dal menu; ognuna ha la sua partita.
 welcome_other_turns = A { $arg1 } si punta al punteggio più alto in { $arg2 } turni. Cambia isola dal menu; ognuna ha la sua partita.
 welcome_dice = Hai tre lanci per turno. Tocca i dadi che vuoi tenere, poi rilancia gli altri.
-welcome_costs = I costi di costruzione sono in alto sullo schermo.
+welcome_costs = I costi di costruzione sono accanto al punteggio.
 welcome_roads = Costruisci strade per sbloccare le caselle di villaggi e castelli.
 welcome_traders = Ingaggia mercanti per mettere da parte una risorsa per un turno successivo.
 welcome_dont_show = Non mostrare più

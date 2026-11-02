@@ -1,4 +1,4 @@
-Islewright {{version}}
+Islewright: Roll {{version}}
 
 Permainan dadu untuk satu pemain: lempar dadu, lalu bangun jalan, desa, kastil, dan pedagang di sebuah pulau kecil.
 
@@ -11,4 +11,4 @@ Efek suara: dari The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 at
 
 Awalnya dibuat oleh Ridgeline Apps. Marcus Hoffmann (Bubu) menghidupkannya kembali pada 2017, dengan terjemahan bahasa Jerman oleh tmaex, dan Hellmark melestarikan arsip Google Code. Sejak itu oleh Islewright Team.
 
-Islewright tidak berafiliasi dengan atau didukung oleh Catan GmbH. CATAN® adalah merek dagang terdaftar milik Catan GmbH. Cara bermain Islewright didasarkan pada aturan dan mekanisme permainan, yang menurut undang-undang hak cipta Amerika Serikat merupakan metode bermain yang tidak dapat dilindungi (17 U.S.C. § 102(b)).
+Islewright: Roll tidak berafiliasi dengan atau didukung oleh Catan GmbH. CATAN® adalah merek dagang terdaftar milik Catan GmbH. Cara bermain Islewright: Roll didasarkan pada aturan dan mekanisme permainan, yang menurut undang-undang hak cipta Amerika Serikat merupakan metode bermain yang tidak dapat dilindungi (17 U.S.C. § 102(b)).

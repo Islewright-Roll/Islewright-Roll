@@ -1,4 +1,4 @@
-Islewright {{version}}
+Islewright: Roll {{version}}
 
 A solitaire dice game: roll, then build roads, villages, castles and traders across a small island.
 
@@ -11,4 +11,4 @@ Sound effects: from The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2
 
 Originally by Ridgeline Apps. Marcus Hoffmann (Bubu) revived it in 2017, with a German translation by tmaex, and Hellmark preserved the Google Code archive. Since then, by Islewright Team.
 
-Islewright is not affiliated with or endorsed by Catan GmbH. CATAN® is a registered trademark of Catan GmbH. Islewright’s gameplay is based on game rules and mechanics, which U.S. copyright law treats as unprotectable methods of play (17 U.S.C. § 102(b)).
+Islewright: Roll is not affiliated with or endorsed by Catan GmbH. CATAN® is a registered trademark of Catan GmbH. Islewright: Roll’s gameplay is based on game rules and mechanics, which U.S. copyright law treats as unprotectable methods of play (17 U.S.C. § 102(b)).

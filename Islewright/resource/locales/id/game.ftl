@@ -2,7 +2,7 @@
 # The game's own strings, converted from the Android app's res/values-in/strings.xml.
 # Positional arguments became $arg1, $arg2, in the same order.
 
-app_name = Islewright
+app_name = Islewright: Roll
 map_tarnholm = Tarnholm
 map_dunholm = Dunholm
 next_turn = Lanjut
@@ -97,13 +97,13 @@ resource_ore = Bijih
 resource_lumber = Kayu
 tutorial_got_it = Mengerti
 tutorial_skip = Lewati tutorial
-welcome_title = Inilah Islewright
+welcome_title = Inilah Islewright: Roll
 welcome_lead_turns = Bangun sebanyak mungkin dalam { $arg1 } giliran.
 welcome_lead_race = Raih { $arg1 } poin dengan giliran sesedikit mungkin.
 welcome_other_race = { $arg1 } adalah balapan menuju { $arg2 } poin. Ganti pulau dari menu; tiap pulau punya permainannya sendiri.
 welcome_other_turns = Di { $arg1 }, kamu mengejar skor tertinggi dalam { $arg2 } giliran. Ganti pulau dari menu; tiap pulau punya permainannya sendiri.
 welcome_dice = Kamu punya tiga lemparan tiap giliran. Ketuk dadu yang mau kamu tahan, lalu lempar sisanya.
-welcome_costs = Biaya membangun ditampilkan di bagian atas layar.
+welcome_costs = Biaya membangun ditampilkan di samping skormu.
 welcome_roads = Bangun jalan untuk membuka tempat bagi desa dan kastel.
 welcome_traders = Rekrut pedagang untuk menyimpan satu sumber daya untuk giliran nanti.
 welcome_dont_show = Jangan tampilkan lagi

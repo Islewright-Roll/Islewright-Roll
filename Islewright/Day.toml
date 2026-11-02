@@ -6,7 +6,8 @@ schema = 1
 # Development builds use their own id, so they install beside the App Fair copy. The published
 # identity is the appfair flavor's (Day-appfair.toml).
 id = "io.github.islewrightroll.islewright.dev"
-title = "Islewright"
+title = "Islewright: Roll"
+artifact = "islewright-roll"
 build = 34
 targets = ["ios-uikit", "android-material", "web-dom"]
 

@@ -7,14 +7,18 @@
 //! a top bar with the score, the costs and the menu button over the turn track, the island
 //! in the middle, and a bottom bar with the dice and the roll button.
 //!
-//! Landscape puts the island in the middle with a column either side: the HUD (score, menu,
+//! A phone on its side keeps that layout, turned a quarter with the device, so its controls
+//! stay where the thumbs learned them (`Layout::turned`). The island stays upright, and so do
+//! the icons, which the scene draws turned back (`Rotation::inverse`). The rects stay portrait's,
+//! in the turned art; `Layout::ui_turn` takes them to the screen.
+//!
+//! Other wide canvases put the island in the middle with a column either side: the HUD (score, menu,
 //! costs, the turn track in two rows) on one, the dice, the roll button and the undo button
 //! on the other. On a screen with height to spare the same art is restacked into narrower,
 //! taller columns (`Columns::Tall`: the costs in one column of four, the track in more rows),
-//! which leaves the width for everything to go up a scale. The island turns a quarter turn so that its north faces the HUD, where the
-//! top of the screen was before the device turned: counterclockwise with the dice on the
-//! right, clockwise with them on the left. It is drawn upright into a layer of its own (see
-//! `Rotation`) and that layer is turned, pixel for pixel.
+//! which leaves the width for everything to go up a scale. The island stays upright, north at the
+//! top of the screen, in every layout, and the columns take the width it does not need. The dice
+//! go on the side that was the bottom of the screen.
 //!
 //! The screen has two regions, each at its own whole-number scale: the interface (the bars or
 //! columns, the HUD, the dice, the callouts) and the island under it (see `IslandView`). The
@@ -212,6 +216,15 @@ impl Rotation {
         }
     }
 
+    /// The turn that undoes this one.
+    pub fn inverse(self) -> Rotation {
+        match self {
+            Rotation::None => Rotation::None,
+            Rotation::Ccw => Rotation::Cw,
+            Rotation::Cw => Rotation::Ccw,
+        }
+    }
+
     /// The layer turned onto the frame.
     pub fn apply(self, layer: Image) -> Image {
         match self {
@@ -276,11 +289,14 @@ impl IslandView {
     /// own up, at which all of the land (`land`, in board pixels) shows inside `area` (the
     /// island's part of the screen, in interface pixels), with the land centred there.
     ///
-    /// The island never goes below the interface's scale, so on a phone, where nothing
-    /// larger fits, both share one scale and the screen is what it always was; then
-    /// `at_ui_scale` (where the portrait layout puts the board) places it, which may crop
-    /// the land on a short screen. Above it, the whole land must fit, so growing never hides
-    /// any of the island.
+    /// In portrait the island never goes below the interface's scale, so on a phone, where
+    /// nothing larger fits, both share one scale; then `at_ui_scale` (where the portrait layout
+    /// puts the board) places it, which may crop the land on a short screen. Above it, the
+    /// whole land must fit, so growing never hides any of the island.
+    ///
+    /// In landscape (`at_ui_scale` is None) the land must always fit, because the upright
+    /// island is taller than the columns need to be, so there it may go below the interface's
+    /// scale, as far as 1.
     fn fit(
         fit: &Fit,
         area: Rect,
@@ -291,6 +307,15 @@ impl IslandView {
         let ui = fit.scale;
         let (need_w, need_h) = land_on_screen(land, rotation);
         let mut scale = ui;
+        if at_ui_scale.is_none() {
+            while scale > 1 {
+                let a = area_at(area, ui, scale);
+                if a.w >= need_w && a.h >= need_h {
+                    break;
+                }
+                scale -= 1;
+            }
+        }
         // Each step up shrinks the area in island pixels, so the first that fails ends it
         while scale < 4 * ui {
             let a = area_at(area, ui, scale + 1);
@@ -665,11 +690,16 @@ pub enum MiniTab {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Layout {
-    /// The interface's fit: its scale, and where its pixels sit among the device's.
+    /// The interface's fit: its scale, and where its pixels sit among the device's. This is
+    /// the screen's size in art pixels, which `width` and `height` swap when turned.
     pub fit: Fit,
-    /// The interface's art canvas.
+    /// The interface's art canvas, before `ui_turn`.
     pub width: i32,
     pub height: i32,
+    /// How the interface's art is turned onto the screen.
+    pub ui_turn: Rotation,
+    /// The art rows the system bars take at the screen's top and bottom, after the turn.
+    pub screen_pad: (i32, i32),
     /// None in portrait; the dice side in landscape.
     pub landscape: Option<DiceSide>,
     /// None in portrait; how the columns are cut in landscape.
@@ -712,6 +742,10 @@ pub struct Layout {
     pub mini_tab: MiniTab,
 }
 
+/// How long a wide canvas must be for a phone on its side, in tenths of its height. Phones
+/// start at 19.5:9; a laptop or a tablet stops at 16:9.
+const PHONE_ASPECT_X10: u32 = 19;
+
 fn ceil_div(a: u32, b: u32) -> i32 {
     a.div_ceil(b.max(1)) as i32
 }
@@ -725,7 +759,7 @@ pub fn portrait_scale(w: u32, h: u32, insets: Insets) -> u32 {
 }
 
 /// The least art size the landscape layout with wide columns needs for an island: the two
-/// columns and the turned island between them, and the tallest of the three.
+/// columns and the upright island between them, and the tallest of the three.
 pub fn landscape_min(map: &'static MapDef) -> (i32, i32) {
     columns_min(map, Columns::Wide)
 }
@@ -738,12 +772,10 @@ pub fn columns_min(map: &'static MapDef, columns: Columns) -> (i32, i32) {
         Columns::Wide => HUD_COL_CONTENT_H,
         Columns::Tall => tall_hud(map, 0, 0).1,
     };
-    // Turned a quarter, the island's height across the board is its width on screen
-    let w = hud_w + land.h + dice_w;
-    let h = land
-        .w
-        .max(hud_h + 2 * COL_INSET)
-        .max(DICE_COL_CONTENT_H + 2 * COL_INSET);
+    let w = hud_w + land.w + dice_w;
+    // Only the columns: where the upright island is too tall, it goes down a scale on its own
+    // (`IslandView::fit`), so the dice stay large enough to tap on a sideways phone.
+    let h = (hud_h + 2 * COL_INSET).max(DICE_COL_CONTENT_H + 2 * COL_INSET);
     (w, h)
 }
 
@@ -763,7 +795,10 @@ pub fn columns_scale(
     let (min_w, min_h) = columns_min(map, columns);
     let aw = w.saturating_sub(insets.left + insets.right);
     let ah = h.saturating_sub(insets.top + insets.bottom);
-    let scale = (aw / min_w as u32).min(ah / min_h as u32);
+    // The interface stays within a scale of the island, whose height decides its own: larger
+    // and the columns would crowd out the game they frame.
+    let island = (ah / land_extent(map).h as u32).max(1);
+    let scale = (aw / min_w as u32).min(ah / min_h as u32).min(island + 1);
     (scale >= 1).then_some(scale)
 }
 
@@ -797,9 +832,15 @@ impl Layout {
     /// region's size for the other's. Neither does the HUD column get a scale apart from the
     /// dice column: the two share the fonts and the wood, and look of a piece only at one
     /// scale.
+    ///
+    /// A canvas with a phone's long shape takes the portrait layout turned instead: see
+    /// `Layout::turned`.
     pub fn new(w: u32, h: u32, insets: Insets, map: &'static MapDef, side: DiceSide) -> Layout {
         let w = w.max(1);
         let h = h.max(1);
+        if w * 10 >= h * PHONE_ASPECT_X10 {
+            return Layout::turned(w, h, insets, map, side);
+        }
         let portrait = portrait_scale(w, h, insets);
         let wide = landscape_scale(w, h, insets, map).filter(|&s| w > h && s >= portrait);
         let tall = columns_scale(w, h, insets, map, Columns::Tall)
@@ -813,6 +854,43 @@ impl Layout {
             }
             _ => Layout::portrait(fit_at(w, h, portrait), insets, map),
         }
+    }
+
+    /// A phone on its side: the portrait layout turned with the device, the dice on the side
+    /// that was the bottom of the screen. The island goes back upright between the bars, at the
+    /// largest scale its land fits there, and takes the height the sideways phone has.
+    fn turned(w: u32, h: u32, insets: Insets, map: &'static MapDef, side: DiceSide) -> Layout {
+        let (turn, art_insets) = match side {
+            DiceSide::Right => (
+                Rotation::Ccw,
+                Insets {
+                    top: insets.left,
+                    bottom: insets.right,
+                    left: insets.bottom,
+                    right: insets.top,
+                },
+            ),
+            DiceSide::Left => (
+                Rotation::Cw,
+                Insets {
+                    top: insets.right,
+                    bottom: insets.left,
+                    left: insets.top,
+                    right: insets.bottom,
+                },
+            ),
+        };
+        // The bars' ends must clear the system bars along the screen's short side
+        let across = h.saturating_sub(insets.top + insets.bottom);
+        let scale = portrait_scale(across, w, art_insets);
+        let mut l = Layout::portrait(fit_at(h, w, scale), art_insets, map);
+        l.fit = fit_at(w, h, scale);
+        l.landscape = Some(side);
+        l.ui_turn = turn;
+        l.screen_pad = (ceil_div(insets.top, scale), ceil_div(insets.bottom, scale));
+        let area = turn.rect_to_frame(l.island, l.width, l.height);
+        l.isle = IslandView::fit(&l.fit, area, Rotation::None, land_extent(map), None);
+        l
     }
 
     fn portrait(fit: Fit, insets: Insets, map: &'static MapDef) -> Layout {
@@ -848,6 +926,8 @@ impl Layout {
             fit,
             width,
             height,
+            ui_turn: Rotation::None,
+            screen_pad: (pad_top, pad_bottom),
             landscape: None,
             columns: None,
             costs_stacked: false,
@@ -928,9 +1008,9 @@ impl Layout {
         let pad_bottom = ceil_div(insets.bottom, fit.scale);
         let pad_left = ceil_div(insets.left, fit.scale);
         let pad_right = ceil_div(insets.right, fit.scale);
-        let (hud_x, dice_col_x, rotation) = match side {
-            DiceSide::Right => (pad_left, width - pad_right - dice_w, Rotation::Ccw),
-            DiceSide::Left => (width - pad_right - hud_w, pad_left, Rotation::Cw),
+        let (hud_x, dice_col_x) = match side {
+            DiceSide::Right => (pad_left, width - pad_right - dice_w),
+            DiceSide::Left => (width - pad_right - hud_w, pad_left),
         };
         let (hud_bar, dice_bar) = match side {
             DiceSide::Right => (
@@ -966,7 +1046,7 @@ impl Layout {
         };
         let island = Rect::new(island_x, usable_top, island_right - island_x, usable_h);
         // The land centred in the island's part of the screen, at the largest scale it fits
-        let isle = IslandView::fit(&fit, island, rotation, land_extent(map), None);
+        let isle = IslandView::fit(&fit, island, Rotation::None, land_extent(map), None);
 
         // The HUD column, centred down its height: the score and the menu side by side
         // (stacked they would be no narrower than the costs), then in the tall column the
@@ -1025,6 +1105,8 @@ impl Layout {
             fit,
             width,
             height,
+            ui_turn: Rotation::None,
+            screen_pad: (pad_top, pad_bottom),
             landscape: Some(side),
             columns: Some(columns),
             costs_stacked: columns == Columns::Tall,
@@ -1090,18 +1172,36 @@ impl Layout {
     /// The spot at a screen pixel.
     pub fn screen_spot(&self, sx: i32, sy: i32) -> Spot {
         let k = self.ui_scale();
-        Spot {
-            x: sx.div_euclid(k),
-            y: sy.div_euclid(k),
-            sx,
-            sy,
-        }
+        let (x, y) =
+            self.ui_turn
+                .to_layer(sx.div_euclid(k), sy.div_euclid(k), self.width, self.height);
+        Spot { x, y, sx, sy }
     }
 
     /// The spot in the middle of an interface pixel.
     pub fn ui_spot(&self, x: i32, y: i32) -> Spot {
         let k = self.ui_scale();
-        self.screen_spot(x * k + k / 2, y * k + k / 2)
+        let (fx, fy) = self.ui_turn.to_frame(x, y, self.width, self.height);
+        self.screen_spot(fx * k + k / 2, fy * k + k / 2)
+    }
+
+    /// An interface point on the screen's art, after the turn.
+    pub fn ui_to_screen(&self, x: i32, y: i32) -> (i32, i32) {
+        self.ui_turn.to_frame(x, y, self.width, self.height)
+    }
+
+    /// An interface rectangle on the screen's art, after the turn.
+    pub fn ui_rect_to_screen(&self, r: Rect) -> Rect {
+        self.ui_turn.rect_to_frame(r, self.width, self.height)
+    }
+
+    /// The way that is up on the screen, as a step in the interface's art.
+    pub fn screen_up(&self) -> (i32, i32) {
+        match self.ui_turn {
+            Rotation::None => (0, -1),
+            Rotation::Ccw => (1, 0),
+            Rotation::Cw => (-1, 0),
+        }
     }
 
     /// The spot in the middle of the island pixel a board pixel shows on.
@@ -1122,10 +1222,13 @@ impl Layout {
     /// starts on the island and moves into the interface starts from).
     pub fn island_to_ui(&self, x: i32, y: i32) -> Pt {
         let (k, ui) = (self.isle.scale as i32, self.ui_scale());
-        Pt::new(
+        let (ax, ay) = self.ui_turn.to_layer(
             (x * k + ui / 2).div_euclid(ui),
             (y * k + ui / 2).div_euclid(ui),
-        )
+            self.width,
+            self.height,
+        );
+        Pt::new(ax, ay)
     }
 
     /// The interface rectangle that covers a rectangle of the board wherever its island
@@ -1137,7 +1240,8 @@ impl Layout {
         let y0 = (f.y * k).div_euclid(ui);
         let x1 = -((-(f.x + f.w) * k).div_euclid(ui));
         let y1 = -((-(f.y + f.h) * k).div_euclid(ui));
-        Rect::new(x0, y0, x1 - x0, y1 - y0)
+        self.ui_turn
+            .rect_to_layer(Rect::new(x0, y0, x1 - x0, y1 - y0), self.width, self.height)
     }
 
     /// The top left of the mini die in the nth place (0 based).
@@ -1208,44 +1312,95 @@ mod tests {
     }
 
     #[test]
-    fn phone_landscape_turns_the_island_and_fits_the_columns() {
+    fn a_phone_on_its_side_is_portrait_turned_with_the_island_upright() {
         // 892 x 412 at 2.625
+        let upright = Layout::new(1082, 2342, Insets::default(), tarnholm(), DiceSide::Right);
         let l = Layout::new(2342, 1082, Insets::default(), tarnholm(), DiceSide::Right);
         assert_eq!(l.landscape, Some(DiceSide::Right));
-        assert_eq!(l.isle.rotation, Rotation::Ccw);
-        assert_eq!(l.fit.scale, 4);
-        let (min_w, min_h) = landscape_min(tarnholm());
-        assert!(l.width >= min_w && l.height >= min_h);
-        assert!(l.width < min_w * 5 / 4 || l.height < min_h * 5 / 4);
-        // HUD on the left, dice on the right, the island between
-        assert!(l.score.x < l.island.x && l.dice[2].x > l.island.x + l.island.w - 1);
-        assert_eq!(l.island.x, HUD_COL_W);
-        assert_eq!(l.island.x + l.island.w, l.width - DICE_COL_W);
-        // The turned land lies inside the island's part of the frame
-        let land = l.board_rect_to_ui(land_extent(tarnholm()));
-        assert!(land.x >= l.island.x && land.x + land.w <= l.island.x + l.island.w);
-        assert!(land.y >= l.island.y && land.y + land.h <= l.island.y + l.island.h);
+        assert_eq!(l.columns, None);
+        assert_eq!(l.ui_turn, Rotation::Ccw);
+        assert_eq!(l.isle.rotation, Rotation::None);
+        assert_eq!((l.fit.scale, l.isle.scale), (5, 3));
+        // The same art, rect for rect, as the phone held upright
+        assert_eq!((l.width, l.height), (upright.width, upright.height));
+        assert_eq!(l.dice, upright.dice);
+        assert_eq!(l.roll, upright.roll);
+        assert_eq!(l.menu, upright.menu);
+        assert_eq!(l.score, upright.score);
+        assert_eq!(l.costs, upright.costs);
+        assert_eq!(l.island, upright.island);
+        // The screen is the art with its sides swapped
         assert_eq!(
-            (land.w, land.h),
-            (land_extent(tarnholm()).h, land_extent(tarnholm()).w)
+            (l.fit.width as i32, l.fit.height as i32),
+            (l.height, l.width)
         );
+        assert_eq!(l.screen_size(), (2340, 1080));
+        // The top bar on the left, the dice on the right, the island between them
+        let area = l.ui_rect_to_screen(l.island);
+        assert!(l.ui_rect_to_screen(l.score).x < area.x);
+        assert!(l.ui_rect_to_screen(l.dice[0]).x >= area.x + area.w);
+        // All the upright land lies between the bars, taller than wide
+        let land = l.isle.rect_to_frame(land_extent(tarnholm()));
+        let k = l.isle.scale as i32;
+        let ui = l.ui_scale();
+        assert!(land.x * k >= area.x * ui && (land.x + land.w) * k <= (area.x + area.w) * ui);
+        assert!(land.y >= 0 && (land.y + land.h) * k <= l.screen_size().1 as i32);
+        assert!(land.h > land.w);
     }
 
     #[test]
-    fn the_dice_side_swaps_the_columns_and_the_turn() {
+    fn the_dice_side_turns_the_interface_and_never_the_island() {
         let right = Layout::new(2342, 1082, Insets::default(), tarnholm(), DiceSide::Right);
         let left = Layout::new(2342, 1082, Insets::default(), tarnholm(), DiceSide::Left);
-        assert_eq!(left.isle.rotation, Rotation::Cw);
-        assert!(left.dice[0].x < left.island.x);
-        assert!(left.score.x >= left.island.x + left.island.w);
-        assert_eq!(left.island.w, right.island.w);
-        // North (the top of the board) faces the HUD: left when the dice are right
-        let (nx, _) = right.isle.to_frame(252, 100);
-        let (sx, _) = right.isle.to_frame(252, 400);
-        assert!(nx < sx);
-        let (nx, _) = left.isle.to_frame(252, 100);
-        let (sx, _) = left.isle.to_frame(252, 400);
-        assert!(nx > sx);
+        assert_eq!(left.ui_turn, Rotation::Cw);
+        assert_eq!(left.dice, right.dice);
+        let area = left.ui_rect_to_screen(left.island);
+        assert!(left.ui_rect_to_screen(left.dice[0]).x < area.x);
+        assert!(left.ui_rect_to_screen(left.score).x >= area.x + area.w);
+        assert_eq!(left.isle.scale, right.isle.scale);
+        // North (the top of the board) is up, whichever side the dice are on
+        for l in [&right, &left] {
+            assert_eq!(l.isle.rotation, Rotation::None);
+            let (_, ny) = l.isle.to_frame(252, 100);
+            let (_, sy) = l.isle.to_frame(252, 400);
+            assert!(ny < sy);
+        }
+    }
+
+    #[test]
+    fn a_turned_interface_clears_the_system_bars() {
+        // A status bar along the screen's top: the bars' ends must stay out from under it
+        let bars = Insets {
+            top: 63,
+            left: 120,
+            ..Insets::default()
+        };
+        for side in [DiceSide::Right, DiceSide::Left] {
+            let l = Layout::new(2342, 1082, bars, tarnholm(), side);
+            assert_eq!(l.fit.scale, 4);
+            for r in [l.score, l.menu, l.costs, l.dice[0], l.dice[5], l.roll] {
+                let s = l.ui_rect_to_screen(r);
+                assert!(s.y * 4 >= 63, "{side:?} {s:?}");
+                assert!(s.x * 4 >= 120, "{side:?} {s:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn a_turned_spot_goes_through_the_turn_both_ways() {
+        for side in [DiceSide::Right, DiceSide::Left] {
+            let l = Layout::new(2342, 1082, Insets::default(), tarnholm(), side);
+            for (x, y) in [(0, 0), (215, 467), (20, 400), (100, 5)] {
+                let spot = l.ui_spot(x, y);
+                assert_eq!((spot.x, spot.y), (x, y));
+                assert_eq!(l.screen_spot(spot.sx, spot.sy), spot);
+            }
+            // A corner of a die, on the screen, is that die
+            let k = l.ui_scale();
+            let d = l.ui_rect_to_screen(l.dice[3]);
+            let spot = l.screen_spot((d.x + d.w) * k - 1, d.y * k);
+            assert!(l.dice[3].contains(spot.x, spot.y));
+        }
     }
 
     /// How a canvas is laid out: the columns (None for portrait), the interface's scale
@@ -1259,34 +1414,30 @@ mod tests {
     fn each_region_takes_the_largest_scale_it_fits() {
         let none = Insets::default();
         let (wide, tall) = (Some(Columns::Wide), Some(Columns::Tall));
-        // Phones: as before. In landscape the tall columns would leave the island room for 5,
-        // but give the interface no more than the wide ones, so the wide ones stay.
+        // Phones: upright, everything at 5. On its side the same interface turned keeps its 5,
+        // and the island's height holds it to 3.
         assert_eq!(scales(1082, 2342, none), (None, 5, 5));
-        assert_eq!(scales(2342, 1082, none), (wide, 4, 4));
-        // A 16:10 tablet (1280 x 800 at 2): the tall columns take everything from 4 to 5.
-        // Upright, the design width holds everything at 7.
-        assert_eq!(scales(2560, 1600, none), (tall, 5, 5));
-        assert_eq!(scales(1600, 2560, none), (None, 7, 7));
-        // Desktop windows: from 2 (island 3) to 3, from 3 (island 4) to 4
-        assert_eq!(scales(1440, 900, none), (tall, 3, 3));
-        assert_eq!(scales(1920, 1080, none), (tall, 4, 4));
-        assert_eq!(scales(2560, 1440, none), (tall, 5, 5));
-        assert_eq!(scales(3840, 2160, none), (tall, 8, 8));
-        // Odd sizes: a small laptop and a 720p window, where the tall columns gain nothing
-        // (the island still grows on the laptop), a nearly square window and a 4:3 tablet
-        // that stay upright (the tall columns would tie at 4), a very wide one, and longer
-        // phones turned, which go up to 5
-        assert_eq!(scales(1366, 768, none), (wide, 2, 3));
-        assert_eq!(scales(1280, 720, none), (wide, 2, 2));
-        assert_eq!(scales(1000, 900, none), (None, 2, 2));
-        assert_eq!(scales(2048, 1536, none), (None, 4, 4));
-        assert_eq!(scales(1536, 2048, none), (None, 5, 5));
-        assert_eq!(scales(3440, 1440, none), (wide, 6, 6));
-        assert_eq!(scales(900, 500, none), (wide, 1, 2));
-        assert_eq!(scales(2532, 1170, none), (tall, 5, 5));
-        assert_eq!(scales(2778, 1284, none), (wide, 5, 5));
+        assert_eq!(scales(2342, 1082, none), (None, 5, 3));
+        assert_eq!(scales(2400, 1080, none), (None, 5, 3));
+        assert_eq!(scales(2532, 1170, none), (None, 5, 4));
+        assert_eq!(scales(2778, 1284, none), (None, 5, 4));
         // A tall phone with room between its bars for the whole island at 6
         assert_eq!(scales(1284, 2778, none), (None, 5, 6));
+        // Tablets, on their side and upright
+        assert_eq!(scales(2560, 1600, none), (tall, 6, 5));
+        assert_eq!(scales(2048, 1536, none), (tall, 5, 5));
+        assert_eq!(scales(1600, 2560, none), (None, 7, 7));
+        assert_eq!(scales(1536, 2048, none), (None, 5, 5));
+        // Desktop windows, a small laptop, a very wide screen and a nearly square window
+        assert_eq!(scales(1440, 900, none), (wide, 3, 3));
+        assert_eq!(scales(1920, 1080, none), (wide, 4, 3));
+        assert_eq!(scales(2560, 1440, none), (tall, 6, 5));
+        assert_eq!(scales(3840, 2160, none), (wide, 8, 7));
+        assert_eq!(scales(1366, 768, none), (tall, 3, 2));
+        assert_eq!(scales(1280, 720, none), (tall, 3, 2));
+        assert_eq!(scales(1000, 900, none), (wide, 2, 2));
+        assert_eq!(scales(3440, 1440, none), (None, 6, 5));
+        assert_eq!(scales(900, 500, none), (tall, 2, 1));
         // Tiny and degenerate canvases still lay out, at 1
         assert_eq!(scales(300, 300, none), (None, 1, 1));
         assert_eq!(scales(1, 1, none), (None, 1, 1));
@@ -1297,14 +1448,14 @@ mod tests {
             right: 120,
             ..Insets::default()
         };
-        assert_eq!(scales(1920, 1080, bars), (wide, 3, 3));
-        assert_eq!(scales(2560, 1600, bars), (wide, 4, 4));
+        assert_eq!(scales(1920, 1080, bars), (tall, 4, 3));
+        assert_eq!(scales(2560, 1600, bars), (tall, 5, 5));
     }
 
     #[test]
     fn the_tall_columns_hold_everything_inside_them() {
         for map in MapDef::all() {
-            for (w, h) in [(2560, 1600), (1440, 900), (1920, 1080), (2532, 1170)] {
+            for (w, h) in [(2560, 1600), (2560, 1440), (1366, 768), (1280, 720)] {
                 for side in [DiceSide::Right, DiceSide::Left] {
                     let l = Layout::new(w, h, Insets::default(), map, side);
                     let what = format!("{} {w}x{h} {side:?}", map.id);
@@ -1383,7 +1534,6 @@ mod tests {
             (1366, 768),
             (900, 500),
             (1284, 2778),
-            (2342, 1082),
         ] {
             for side in [DiceSide::Right, DiceSide::Left] {
                 let l = Layout::new(w, h, Insets::default(), tarnholm(), side);
@@ -1522,7 +1672,7 @@ mod tests {
 
     #[test]
     fn the_landscape_track_keeps_its_pitch_in_two_rows() {
-        let l = Layout::new(2342, 1082, Insets::default(), tarnholm(), DiceSide::Right);
+        let l = Layout::new(1920, 1080, Insets::default(), tarnholm(), DiceSide::Right);
         let t = &l.track;
         assert_eq!(t.rows.len(), 2);
         assert_eq!(t.rows[0].cells + t.rows[1].cells, t.turns);
@@ -1549,7 +1699,7 @@ mod tests {
         assert_eq!(l.slot_x(1) - l.slot_x(0), MINI_DIE + MINI_GAP);
         assert_eq!(l.slot_x(6), l.slot_x(0));
         assert_eq!(l.slot_y(6), l.slot_y(0) - MINI_DIE - MINI_GAP);
-        let land = Layout::new(2342, 1082, Insets::default(), tarnholm(), DiceSide::Right);
+        let land = Layout::new(1920, 1080, Insets::default(), tarnholm(), DiceSide::Right);
         assert_eq!(land.slot_y(5), land.slot_y(0) - MINI_DIE - MINI_GAP);
         // Two rows of mini dice stay below the column's top and above the dice
         assert!(land.slot_y(5) >= land.pad_top);

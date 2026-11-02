@@ -32,8 +32,8 @@ use crate::rules::voyage::{self, Stage};
 
 use super::assets::{Assets, Tinted};
 use super::layout::{
-    self, BadgePlace, DIE, Edge, LABEL_INSET, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab, Spot,
-    UNDO_SIZE,
+    self, BadgePlace, DIE, Edge, LABEL_INSET, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab,
+    Rotation, Spot, UNDO_SIZE,
 };
 
 // The UI kit's palette (tools/make_ui.py), ARGB
@@ -719,7 +719,9 @@ impl Scene {
 
         // The interface over the island where both have one scale; else on a clear image of
         // its own at its own scale, which the encoding lays over the island's
-        let mut own = (v.scale != l.fit.scale).then(|| Image::new(l.width as u32, l.height as u32));
+        let turned = l.ui_turn != Rotation::None;
+        let mut own =
+            (v.scale != l.fit.scale || turned).then(|| Image::new(l.width as u32, l.height as u32));
         let frame = own.as_mut().unwrap_or(&mut island);
         for bar in &l.bars {
             draw_bar(frame, bar.rect, bar.edge);
@@ -727,8 +729,16 @@ impl Scene {
         self.draw_hud(frame, game, l, ui, s, now);
         animating |= self.draw_controls(frame, game, l, ui, s, now);
         self.draw_hires(frame, game, l, now);
+        if turned {
+            // The callout's words are read, so it goes on after the interface is turned
+            self.draw_carry(frame, game, l, ui);
+            own = own.map(|art| l.ui_turn.apply(art));
+        }
+        let frame = own.as_mut().unwrap_or(&mut island);
         let tutorial_dirty = self.draw_tutorial(frame, game, l, ui, tutorial, s, now);
-        self.draw_carry(frame, game, l, ui);
+        if !turned {
+            self.draw_carry(frame, game, l, ui);
+        }
         animating |= ui.pressed.is_some_and(|(_, until)| now < until);
         Frame {
             island,
@@ -965,9 +975,10 @@ impl Scene {
     // ------------------------------------------------------------ the HUD
 
     fn draw_hud(&self, frame: &mut Image, game: &Game, l: &Layout, ui: &Ui, s: &Strings, now: u64) {
-        self.draw_score(frame, game, l.score, s);
+        upright_in(frame, l, l.score, |f, r| self.draw_score(f, game, r, s));
         self.draw_costs(frame, l, s);
-        draw_menu(frame, l.menu, ui.is_pressed(Button::Menu, now));
+        let down = ui.is_pressed(Button::Menu, now);
+        upright_in(frame, l, l.menu, |f, r| draw_menu(f, r, down));
         self.draw_voyage(frame, game, l);
         self.draw_strip_label(frame, game, l, s);
     }
@@ -1042,17 +1053,25 @@ impl Scene {
                     top + RECIPE_ROW * (i as i32 / 2),
                 )
             };
-            self.draw_recipe(frame, x, y, glyph, cost);
+            self.draw_recipe(frame, l, x, y, glyph, cost);
         }
         if !l.roomy {
             self.edge_label(frame, l, r.x + LABEL_INSET, r.y, &s.costs, GOLD);
         }
     }
 
-    fn draw_recipe(&self, frame: &mut Image, x: i32, y: i32, glyph: &Image, cost: &[DiceValue]) {
+    fn draw_recipe(
+        &self,
+        frame: &mut Image,
+        l: &Layout,
+        x: i32,
+        y: i32,
+        glyph: &Image,
+        cost: &[DiceValue],
+    ) {
         frame.plate(x, y, recipe_width(cost.len()), RECIPE_H, WOOD);
         frame.plate(x, y, RECIPE_H, RECIPE_H, LEGEND_TILE);
-        frame.sprite(glyph, x + 1, y + 1, 255);
+        upright_sprite(frame, l, glyph, x + 1, y + 1, 255);
         let strip_x = x + RECIPE_H + 1;
         frame.fill_argb(
             strip_x,
@@ -1062,7 +1081,9 @@ impl Scene {
             INK,
         );
         for (i, &v) in cost.iter().enumerate() {
-            frame.sprite(
+            upright_sprite(
+                frame,
+                l,
                 self.assets.icon12(v),
                 strip_x + 1 + 13 * i as i32,
                 y + 1,
@@ -1184,6 +1205,7 @@ impl Scene {
             let glyph = &a.badge_trader;
             self.draw_badge(
                 frame,
+                l,
                 right,
                 glyph_y,
                 set_in,
@@ -1199,6 +1221,7 @@ impl Scene {
             let earned = game.playsheet.roads[r];
             self.draw_badge(
                 frame,
+                l,
                 right,
                 glyph_y,
                 set_in,
@@ -1215,6 +1238,7 @@ impl Scene {
     fn draw_badge(
         &self,
         frame: &mut Image,
+        l: &Layout,
         x: i32,
         y: i32,
         set_in: Option<i32>,
@@ -1227,7 +1251,8 @@ impl Scene {
             let w = self.badge_width(bonus) + 2 * LABEL_PAD;
             frame.fill_argb(x - LABEL_PAD, edge, w, 1, WOOD_DARK);
         }
-        frame.sprite(glyph, x, y, if earned { 255 } else { BADGE_DIM_ALPHA });
+        let alpha = if earned { 255 } else { BADGE_DIM_ALPHA };
+        upright_sprite(frame, l, glyph, x, y, alpha);
         let color = if earned { AMBER } else { WOOD_LIGHT };
         let text = format!("+{bonus}");
         font.draw(
@@ -1283,22 +1308,29 @@ impl Scene {
                 let i = row.first + j;
                 let x = row.origin_x + row.strip.cell_x(j);
                 if i < flags {
-                    self.draw_flag(frame, x, y, game.playsheet.turn_score_of(first + i + 1));
+                    let score = game.playsheet.turn_score_of(first + i + 1);
+                    let cell = Rect::new(x, y, rart::TRACK_FLAG_W, rart::TRACK_H);
+                    upright(frame, l, cell, |f, x, y| self.draw_flag(f, x, y, score));
                 } else if i > cell && (track.flags || i % 2 == 1) {
-                    frame.sprite(buoy, row.origin_x + row.strip.buoy_x(j), y + BUOY_DROP, 255);
+                    let bx = row.origin_x + row.strip.buoy_x(j);
+                    upright_sprite(frame, l, buoy, bx, y + BUOY_DROP, 255);
                 }
             }
         }
         let (r, j) = track.ship_row(cell);
         let row = &track.rows[r];
-        frame.sprite(
+        upright_sprite(
+            frame,
+            l,
             &a.track_ship,
             row.origin_x + row.strip.ship_x(j),
             row.water_y(),
             255,
         );
         let last = &track.rows[track.rows.len() - 1];
-        frame.sprite(
+        upright_sprite(
+            frame,
+            l,
             &a.track_pier,
             last.origin_x + last.strip.pier_x(),
             last.water_y(),
@@ -1356,18 +1388,18 @@ impl Scene {
             } else {
                 None
             };
-            match icon {
+            upright(frame, l, *r, |f, x, y| match icon {
                 Some(icon) => {
                     let face = if game.die_stays(i) {
                         &t.die_face_held
                     } else {
                         &a.die_face
                     };
-                    frame.sprite(face, r.x, r.y, 255);
-                    frame.sprite(icon, r.x + (DIE - 16) / 2, r.y + (DIE - 16) / 2, 255);
+                    f.sprite(face, x, y, 255);
+                    f.sprite(icon, x + (DIE - 16) / 2, y + (DIE - 16) / 2, 255);
                 }
-                None => frame.sprite(&a.die_slot_empty, r.x, r.y, 255),
-            }
+                None => f.sprite(&a.die_slot_empty, x, y, 255),
+            });
         }
         let locked = game.is_roll_locked();
         let down = ui.is_pressed(Button::Roll, now) && !locked;
@@ -1401,7 +1433,7 @@ impl Scene {
             if ui.is_pressed(Button::Undo, now) {
                 frame.plate(u.x, u.y, UNDO_SIZE, UNDO_SIZE, WOOD);
             }
-            frame.sprite(&a.undo_glyph, u.x, u.y, 255);
+            upright_sprite(frame, l, &a.undo_glyph, u.x, u.y, 255);
         }
         locked
     }
@@ -1447,6 +1479,7 @@ impl Scene {
             }
             self.draw_mini_die(
                 frame,
+                l,
                 l.slot_x(n as i32),
                 l.slot_y(n as i32),
                 game.bank_resource(slot),
@@ -1454,10 +1487,13 @@ impl Scene {
         }
     }
 
-    fn draw_mini_die(&self, frame: &mut Image, x: i32, y: i32, v: DiceValue) {
-        frame.plate(x, y, MINI_DIE, MINI_DIE, INK);
-        frame.plate(x + 1, y + 1, MINI_DIE - 2, MINI_DIE - 2, LEGEND_TILE);
-        frame.sprite(self.assets.icon12(v), x + 2, y + 2 + mini_icon_drop(v), 255);
+    fn draw_mini_die(&self, frame: &mut Image, l: &Layout, x: i32, y: i32, v: DiceValue) {
+        let die = Rect::new(x, y, MINI_DIE, MINI_DIE);
+        upright(frame, l, die, |f, x, y| {
+            f.plate(x, y, MINI_DIE, MINI_DIE, INK);
+            f.plate(x + 1, y + 1, MINI_DIE - 2, MINI_DIE - 2, LEGEND_TILE);
+            f.sprite(self.assets.icon12(v), x + 2, y + 2 + mini_icon_drop(v), 255);
+        });
     }
 
     // ------------------------------------------------------------ hiring
@@ -1582,7 +1618,7 @@ impl Scene {
                 let tint = Self::glow_tint(game);
                 draw_hire_glow(frame, None, at.x - 2, at.y - 2 - drop, tint, strength);
             }
-            self.draw_mini_die(frame, at.x - 2, at.y - 2 - drop, v);
+            self.draw_mini_die(frame, l, at.x - 2, at.y - 2 - drop, v);
         }
     }
 
@@ -1671,10 +1707,12 @@ impl Scene {
         };
         let font = &self.assets.font_body;
         let measure = |t: &str| font.ink_width(t);
+        // On the screen's art, since the callout's words are read upright
+        let target = l.ui_rect_to_screen(target);
         let canvas = tutorial_layout::Canvas {
-            w: l.width,
-            top_limit: l.pad_top,
-            bottom_limit: l.height - l.pad_bottom,
+            w: l.fit.width as i32,
+            top_limit: l.screen_pad.0,
+            bottom_limit: l.fit.height as i32 - l.screen_pad.1,
         };
         let Some(p) = tutorial_layout::place(
             target,
@@ -1811,10 +1849,12 @@ impl Scene {
                 game.player_color | 0xFF000000,
             );
         }
+        let (ux, uy) = l.screen_up();
         self.draw_mini_die(
             frame,
-            c.x - MINI_DIE / 2,
-            c.y - MINI_DIE / 2 - DRAG_RAISE,
+            l,
+            c.x - MINI_DIE / 2 + ux * DRAG_RAISE,
+            c.y - MINI_DIE / 2 + uy * DRAG_RAISE,
             game.bank_resource(c.slot),
         );
     }
@@ -1845,10 +1885,11 @@ impl Scene {
     pub fn hit(&self, game: &Game, l: &Layout, ui: &Ui, spot: Spot) -> Hit {
         let (x, y) = (spot.x, spot.y);
         if let Some(p) = &ui.callout {
-            if p.got_it.contains(x, y) {
+            let (cx, cy) = l.ui_to_screen(x, y);
+            if p.got_it.contains(cx, cy) {
                 return Hit::GotIt;
             }
-            if p.skip.contains(x, y) {
+            if p.skip.contains(cx, cy) {
                 return Hit::Skip;
             }
         }
@@ -1920,6 +1961,37 @@ fn draw_hire_glow(
     );
     let glow = Image::from_argb(side as u32, side as u32, &out);
     frame.sprite(&glow, x - HIRE_GLOW_REACH, y - HIRE_GLOW_REACH, 255);
+}
+
+/// Draws something that must read upright whichever way the interface is turned. `r` is the
+/// size it has upright and where its centre goes; `draw` draws it with its corner at (x, y).
+fn upright(frame: &mut Image, l: &Layout, r: Rect, draw: impl FnOnce(&mut Image, i32, i32)) {
+    if l.ui_turn == Rotation::None {
+        draw(frame, r.x, r.y);
+        return;
+    }
+    let mut tile = Image::new(r.w as u32, r.h as u32);
+    draw(&mut tile, 0, 0);
+    let back = l.ui_turn.inverse().apply(tile);
+    frame.sprite(&back, r.x + (r.w - r.h) / 2, r.y + (r.h - r.w) / 2, 255);
+}
+
+/// A sprite that reads upright on the screen, at its usual place.
+fn upright_sprite(frame: &mut Image, l: &Layout, sprite: &Image, x: i32, y: i32, alpha: u8) {
+    let r = Rect::new(x, y, sprite.width as i32, sprite.height as i32);
+    upright(frame, l, r, |f, x, y| f.sprite(sprite, x, y, alpha));
+}
+
+/// Draws a box that fills `r` and reads upright. Turned, `draw` is given `r` with its sides
+/// swapped, since that is the shape `r` has on the screen.
+fn upright_in(frame: &mut Image, l: &Layout, r: Rect, draw: impl FnOnce(&mut Image, Rect)) {
+    if l.ui_turn == Rotation::None {
+        draw(frame, r);
+        return;
+    }
+    let mut tile = Image::new(r.h as u32, r.w as u32);
+    draw(&mut tile, Rect::new(0, 0, r.h, r.w));
+    frame.sprite(&l.ui_turn.inverse().apply(tile), r.x, r.y, 255);
 }
 
 /// The bars' dark wood, with a line of lighter wood and a line of ink along the side that

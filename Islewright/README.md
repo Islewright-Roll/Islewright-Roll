@@ -1,4 +1,4 @@
-# Islewright
+# Islewright: Roll
 
 > **Very early work in progress.** This port has not run on a device and has not been published
 > anywhere, so wording here and in this folder that describes it as published is a draft of the
@@ -7,7 +7,7 @@
 > help, branch from `feature/day-port` and open your pull request against it.
 
 A solitaire dice game: roll, then build roads, villages, castles and traders across a small
-island. Islewright runs on iPhone, Android and the web from one Rust codebase, built with
+island. It runs on iPhone, Android and the web from one Rust codebase, built with
 [Day](https://daybrite.dev), and is being prepared for publication through the [App Fair](https://appfair.org).
 
 It is free, with no ads, no in-app purchases, no tracking and no account, and it works offline.
@@ -23,8 +23,9 @@ resource; traders bank a resource for a later turn.
   reaches the pier.
 - **Dunholm**: a race to ten points in as few turns as you can.
 
-Turn a phone or tablet on its side and the island turns with it, with the dice on the side that
-was the bottom of the screen.
+Turn a phone on its side and the same controls turn with it, with the island and the icons staying
+upright. A tablet on its side moves the score and costs to one side and the dice to the other. The
+dice are always on the side that was the bottom of the screen.
 
 With a keyboard: 1 to 6 keep or release a die, 0 rolls, 9 builds the suggested spot, 7 undoes,
 and 8 dismisses a tutorial tip. Where the platform passes letters to the game, R or Space also

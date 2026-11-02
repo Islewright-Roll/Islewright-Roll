@@ -1,4 +1,4 @@
-# Islewright's website, built by the daybrite/actions workflow from this file, the store listing,
+# The game's website, built by the daybrite/actions workflow from this file, the store listing,
 # and the dayscript screenshots: https://daybrite.dev/docs/how-to/websites
 
 # The site's address. For GitHub Pages: https://<owner>.github.io/<repository>, with the
@@ -11,4 +11,4 @@ accent-color = "#E6A817"
 default-theme = "dark"
 show-store-badges = true
 show-permissions = true
-footer = "Islewright is free software under the GNU GPL v3 or later. Island art from The Battle for Wesnoth. Not affiliated with Catan GmbH."
+footer = "Islewright: Roll is free software under the GNU GPL v3 or later. Island art from The Battle for Wesnoth. Not affiliated with Catan GmbH."

@@ -1,12 +1,12 @@
-# Islewright privacy policy
+# Islewright: Roll privacy policy
 
 Last updated: October 31, 2026
 
-Islewright collects no personal data, sends nothing anywhere, and has no account.
+Islewright: Roll collects no personal data, sends nothing anywhere, and has no account.
 
 ## What the app keeps, and where
 
-Islewright saves three things, and only on your device, in the app's own private storage:
+Islewright: Roll saves three things, and only on your device, in the app's own private storage:
 
 - the game in progress on each island, so you can pick it up where you left off;
 - your top scores for each island;
@@ -18,7 +18,7 @@ device, under that service's terms.
 
 ## The motion sensor
 
-On a phone or tablet held sideways, Islewright reads the device's accelerometer to tell which
+On a phone or tablet held sideways, Islewright: Roll reads the device's accelerometer to tell which
 way it was turned, so the dice stay on the side that was the bottom of the screen. It reads only the
 direction of gravity, while the game is on screen, and keeps no reading: nothing is stored or
 sent anywhere. Reading the accelerometer needs no permission on Android or iOS.
@@ -33,13 +33,13 @@ sent anywhere. Reading the accelerometer needs no permission on Android or iOS.
 
 ## The stores
 
-Islewright is planned for distribution by the App Fair Project through the Apple App Store and Google Play.
+Islewright: Roll is planned for distribution by the App Fair Project through the Apple App Store and Google Play.
 Those stores may collect information about downloads and your device under their own privacy
 policies, which this app does not control.
 
 ## Children
 
-Islewright is suitable for all ages and collects no data from anyone, children included.
+Islewright: Roll is suitable for all ages and collects no data from anyone, children included.
 
 ## Changes and contact
 

@@ -1,4 +1,4 @@
-Islewright {{version}}
+Islewright: Roll {{version}}
 
 Un jeu de dés en solitaire : lancez les dés, puis bâtissez routes, villages, châteaux et marchands sur une petite île.
 
@@ -11,4 +11,4 @@ Effets sonores : de The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2
 
 Créé à l'origine par Ridgeline Apps. Marcus Hoffmann (Bubu) l'a relancé en 2017, avec une traduction allemande de tmaex, et Hellmark a préservé l'archive Google Code. Depuis, par Islewright Team.
 
-Islewright n'est ni affilié à Catan GmbH ni approuvé par elle. CATAN® est une marque déposée de Catan GmbH. Le jeu d'Islewright repose sur des règles et des mécaniques de jeu, que le droit d'auteur américain considère comme des méthodes de jeu non protégeables (17 U.S.C. § 102(b)).
+Islewright: Roll n'est ni affilié à Catan GmbH ni approuvé par elle. CATAN® est une marque déposée de Catan GmbH. Le jeu d'Islewright: Roll repose sur des règles et des mécaniques de jeu, que le droit d'auteur américain considère comme des méthodes de jeu non protégeables (17 U.S.C. § 102(b)).

@@ -8,13 +8,13 @@
 [storefront.submission-info]
 # contact-email = "" # where a store reviewer writes back; left unset in the public repository
 review-notes = """
-Islewright is a single player dice game with no account, no network use and no permissions.
+Islewright: Roll is a single player dice game with no account, no network use and no permissions.
 Tap Roll, tap dice to keep them, roll again up to three times, then tap a highlighted spot on
 the board to build. A tutorial runs on the first game and can be shown again from Settings.
 """
 
 [storefront.metadata]
-name = "Islewright" # ≤30, the App Store name and Play title
+name = "Islewright: Roll" # ≤30, the App Store name and Play title
 subtitle = "A solitaire dice island game"
 short = "Roll dice, then build roads, villages, castles and traders on a small island."
 description = """
@@ -33,13 +33,13 @@ reaches the pier.
 A short tutorial teaches the rules in your first game, and your top scores are kept for each \
 island.
 
-Islewright is free, with no ads, no in-app purchases, no tracking and no account. It works \
+Islewright: Roll is free, with no ads, no in-app purchases, no tracking and no account. It works \
 offline and asks for no permissions. It is open source under the GNU GPL, and its island art \
 comes from The Battle for Wesnoth.
 """
 keywords = ["dice", "solitaire", "board game", "island", "strategy", "puzzle", "offline", "pixel art"] # App Store only; ≤100 characters joined
 release-notes = """
-Islewright's first release on the App Fair: both islands, the tutorial and top scores, now on \
+Islewright: Roll's first release on the App Fair: both islands, the tutorial and top scores, now on \
 iPhone and Android.
 """
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md" # the App Store requires one
@@ -57,7 +57,7 @@ phone = ["island", "dice", "building", "rules"]
 tablet = ["island", "dice", "building", "rules"]
 
 [storefront.metadata.fr]
-name = "Islewright"
+name = "Islewright: Roll"
 subtitle = "Jeu de dés solitaire insulaire"
 short = "Lancez les dés et bâtissez routes, villages, châteaux et marchands sur une île."
 description = """
@@ -77,18 +77,18 @@ navire du roi n'atteigne la jetée.
 Un court tutoriel explique les règles pendant votre première partie, et vos meilleurs scores \
 sont conservés pour chaque île.
 
-Islewright est gratuit, sans publicité, sans achats intégrés, sans pistage et sans compte. Il \
+Islewright: Roll est gratuit, sans publicité, sans achats intégrés, sans pistage et sans compte. Il \
 fonctionne hors ligne et ne demande aucune autorisation. Il est libre, sous licence GNU GPL, \
 et les graphismes de l'île viennent de The Battle for Wesnoth.
 """
 keywords = ["dés", "solitaire", "jeu de plateau", "île", "stratégie", "réflexion", "hors ligne"]
-release-notes = "Première version d'Islewright sur l'App Fair : les deux îles, le tutoriel et les meilleurs scores, désormais sur iPhone et Android."
+release-notes = "Première version d'Islewright: Roll sur l'App Fair : les deux îles, le tutoriel et les meilleurs scores, désormais sur iPhone et Android."
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md"
 support-url = "https://github.com/islewright-roll/islewright/issues"
 marketing-url = "https://islewright-roll.github.io/islewright/"
 
 [storefront.metadata.de]
-name = "Islewright"
+name = "Islewright: Roll"
 subtitle = "Solitär-Würfelspiel auf Inseln"
 short = "Würfeln, dann Straßen, Dörfer, Burgen und Händler auf einer kleinen Insel bauen."
 description = """
@@ -108,18 +108,18 @@ Schiff des Königs den Steg erreicht.
 Ein kurzes Tutorial erklärt die Regeln in deinem ersten Spiel, und deine Bestwerte werden für \
 jede Insel gespeichert.
 
-Islewright ist kostenlos, ohne Werbung, ohne In-App-Käufe, ohne Tracking und ohne Konto. Es \
+Islewright: Roll ist kostenlos, ohne Werbung, ohne In-App-Käufe, ohne Tracking und ohne Konto. Es \
 funktioniert offline und braucht keine Berechtigungen. Es ist Open Source unter der GNU GPL, \
 und die Inselgrafik stammt aus The Battle for Wesnoth.
 """
 keywords = ["Würfel", "Solitär", "Brettspiel", "Insel", "Strategie", "Denkspiel", "offline"]
-release-notes = "Die erste Version von Islewright im App Fair: beide Inseln, das Tutorial und die Bestwerte, jetzt auf iPhone und Android."
+release-notes = "Die erste Version von Islewright: Roll im App Fair: beide Inseln, das Tutorial und die Bestwerte, jetzt auf iPhone und Android."
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md"
 support-url = "https://github.com/islewright-roll/islewright/issues"
 marketing-url = "https://islewright-roll.github.io/islewright/"
 
 [storefront.metadata.es]
-name = "Islewright"
+name = "Islewright: Roll"
 subtitle = "Dados en solitario en una isla"
 short = "Tira los dados y construye caminos, aldeas, castillos y mercaderes en una isla."
 description = """
@@ -139,18 +139,18 @@ que el barco del rey llegue al muelle.
 Un breve tutorial enseña las reglas en tu primera partida, y se guardan tus mejores \
 puntuaciones de cada isla.
 
-Islewright es gratis, sin anuncios, sin compras dentro de la app, sin rastreo y sin cuenta. \
+Islewright: Roll es gratis, sin anuncios, sin compras dentro de la app, sin rastreo y sin cuenta. \
 Funciona sin conexión y no pide ningún permiso. Es de código abierto bajo la GNU GPL, y el arte \
 de la isla procede de The Battle for Wesnoth.
 """
 keywords = ["dados", "solitario", "juego de mesa", "isla", "estrategia", "puzle", "sin conexión"]
-release-notes = "La primera versión de Islewright en App Fair: las dos islas, el tutorial y las mejores puntuaciones, ahora en iPhone y Android."
+release-notes = "La primera versión de Islewright: Roll en App Fair: las dos islas, el tutorial y las mejores puntuaciones, ahora en iPhone y Android."
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md"
 support-url = "https://github.com/islewright-roll/islewright/issues"
 marketing-url = "https://islewright-roll.github.io/islewright/"
 
 [storefront.metadata.id]
-name = "Islewright"
+name = "Islewright: Roll"
 subtitle = "Main dadu soliter di pulau"
 short = "Lempar dadu, lalu bangun jalan, desa, kastel, dan pedagang di pulau kecil."
 description = """
@@ -170,19 +170,19 @@ tiba di dermaga.
 Tutorial singkat mengajarkan aturannya di permainan pertamamu, dan skor tertinggimu disimpan \
 untuk setiap pulau.
 
-Islewright gratis, tanpa iklan, tanpa pembelian dalam aplikasi, tanpa pelacakan, dan tanpa \
-akun. Dapat dimainkan secara offline dan tidak meminta izin apa pun. Islewright adalah \
+Islewright: Roll gratis, tanpa iklan, tanpa pembelian dalam aplikasi, tanpa pelacakan, dan tanpa \
+akun. Dapat dimainkan secara offline dan tidak meminta izin apa pun. Islewright: Roll adalah \
 perangkat lunak sumber terbuka di bawah GNU GPL, dan gambar pulaunya berasal dari The Battle \
 for Wesnoth.
 """
 keywords = ["dadu", "soliter", "permainan papan", "pulau", "strategi", "teka-teki", "offline"]
-release-notes = "Rilis pertama Islewright di App Fair: kedua pulau, tutorial, dan skor tertinggi, kini di iPhone dan Android."
+release-notes = "Rilis pertama Islewright: Roll di App Fair: kedua pulau, tutorial, dan skor tertinggi, kini di iPhone dan Android."
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md"
 support-url = "https://github.com/islewright-roll/islewright/issues"
 marketing-url = "https://islewright-roll.github.io/islewright/"
 
 [storefront.metadata.it]
-name = "Islewright"
+name = "Islewright: Roll"
 subtitle = "Dadi in solitario su un'isola"
 short = "Tira i dadi e costruisci strade, villaggi, castelli e mercanti su un'isola."
 description = """
@@ -202,18 +202,18 @@ raggiunga il molo.
 Un breve tutorial insegna le regole durante la tua prima partita, e i tuoi punteggi migliori \
 vengono conservati per ogni isola.
 
-Islewright è gratuito, senza pubblicità, senza acquisti in-app, senza tracciamento e senza \
+Islewright: Roll è gratuito, senza pubblicità, senza acquisti in-app, senza tracciamento e senza \
 account. Funziona offline e non chiede alcun permesso. È open source con licenza GNU GPL, e la \
 grafica dell'isola viene da The Battle for Wesnoth.
 """
 keywords = ["dadi", "solitario", "gioco da tavolo", "isola", "strategia", "rompicapo", "offline"]
-release-notes = "La prima versione di Islewright su App Fair: entrambe le isole, il tutorial e i punteggi migliori, ora su iPhone e Android."
+release-notes = "La prima versione di Islewright: Roll su App Fair: entrambe le isole, il tutorial e i punteggi migliori, ora su iPhone e Android."
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md"
 support-url = "https://github.com/islewright-roll/islewright/issues"
 marketing-url = "https://islewright-roll.github.io/islewright/"
 
 [storefront.metadata.pt-BR]
-name = "Islewright"
+name = "Islewright: Roll"
 subtitle = "Jogo de dados solo numa ilha"
 short = "Role os dados e construa estradas, vilas, castelos e mercadores numa ilha."
 description = """
@@ -232,12 +232,12 @@ rei chegue ao píer.
 Um tutorial curto ensina as regras na sua primeira partida, e suas melhores pontuações ficam \
 guardadas para cada ilha.
 
-Islewright é grátis, sem anúncios, sem compras no app, sem rastreamento e sem conta. Funciona \
+Islewright: Roll é grátis, sem anúncios, sem compras no app, sem rastreamento e sem conta. Funciona \
 offline e não pede nenhuma permissão. É de código aberto sob a GNU GPL, e a arte da ilha vem \
 de The Battle for Wesnoth.
 """
 keywords = ["dados", "paciência", "jogo de tabuleiro", "ilha", "estratégia", "quebra-cabeça", "offline"]
-release-notes = "A primeira versão do Islewright na App Fair: as duas ilhas, o tutorial e as melhores pontuações, agora no iPhone e no Android."
+release-notes = "A primeira versão do Islewright: Roll na App Fair: as duas ilhas, o tutorial e as melhores pontuações, agora no iPhone e no Android."
 privacy-url = "https://github.com/islewright-roll/islewright/blob/dev/Islewright/PRIVACY.md"
 support-url = "https://github.com/islewright-roll/islewright/issues"
 marketing-url = "https://islewright-roll.github.io/islewright/"

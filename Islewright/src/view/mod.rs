@@ -34,8 +34,8 @@ use crate::ui;
 use layout::{Insets, Layout, Spot};
 use scene::{Button, Carry, Hit, Scene, Strings, Ui};
 
-/// Which side of a landscape screen the dice go on; the HUD takes the other. The island
-/// turns so its north faces the HUD.
+/// Which side of a landscape screen the dice go on; the HUD takes the other. The island stays
+/// upright between them.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum DiceSide {
     Left,
@@ -227,6 +227,9 @@ fn device_scale() -> f64 {
 
 /// How long a tapped button shows pressed.
 const PRESS_MS: u64 = 110;
+/// How long after a dialog closes the board takes the keyboard back: past the dialog's own
+/// button, which shows pressed for a moment before it acts.
+const REFOCUS_MS: u32 = 300;
 
 #[derive(Clone)]
 struct Shown {
@@ -258,6 +261,9 @@ struct Screen {
     /// Questions open: taps wait, and so does the tutorial.
     asking: Cell<u32>,
     revision: Cell<u64>,
+    /// The board has the keyboard. Nothing else on this screen can take it, so it comes back
+    /// here whenever whatever was over the game closes (`refocus`).
+    focused: Signal<bool>,
 }
 
 /// The game screen for the shell to place: it fills what it is given.
@@ -277,6 +283,7 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
         frame_pending: Cell::new(false),
         asking: Cell::new(0),
         revision: Cell::new(revision),
+        focused: Signal::new(false),
     });
 
     // Anything the shell changes from outside, the dice side and the system bars redraw
@@ -290,11 +297,13 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
             if let Some(s) = weak.upgrade() {
                 s.revision.set(s.host.game.borrow().revision());
                 s.request();
+                s.refocus();
             }
         });
     }
 
     let shown = screen.shown;
+    let focused = screen.focused;
     // The canvas's own closures hold the screen, so it lives exactly as long as the canvas
     let draw = screen.clone();
     let tap = screen.clone();
@@ -323,6 +332,7 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
     .on_tap_at(move |p| tap.tap(p))
     .on_key(move |k| keys.key(k))
     .focusable()
+    .focused(focused)
     .on_drag(move |g| drag.drag(g))
     // The label goes on the canvas itself: after `.grow()` it would land on a layout wrapper
     // that has no element of its own, and screen readers would never hear it.
@@ -335,6 +345,22 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
 }
 
 impl Screen {
+    /// Gives the board the keyboard back, unless something is still over the game. A moment
+    /// later, as a dialog's default button does: the tap that closed the dialog is still
+    /// finishing, and its last events would otherwise take the focus to whatever is under them.
+    fn refocus(self: &Rc<Self>) {
+        let weak = Rc::downgrade(self);
+        day::task(async move {
+            day::sleep(REFOCUS_MS).await;
+            if let Some(s) = weak.upgrade()
+                && s.asking.get() == 0
+                && !HELD.with(Cell::get)
+            {
+                s.focused.set(true);
+            }
+        });
+    }
+
     /// A render at the next frame, at most one waiting.
     fn request(self: &Rc<Self>) {
         // Before the canvas has a size there is nothing to draw, and a frame asked for while
@@ -659,6 +685,7 @@ impl Screen {
             question.await;
             s.asking.set(s.asking.get().saturating_sub(1));
             s.request();
+            s.refocus();
         });
     }
 
@@ -823,7 +850,7 @@ mod tests {
             (2560, 1600, DiceSide::Left),
             (1440, 900, DiceSide::Right),
             (1920, 1080, DiceSide::Left),
-            // The island at a larger scale than the interface
+            // The island at another scale than the interface
             (1366, 768, DiceSide::Right),
             (1366, 768, DiceSide::Left),
             (1284, 2778, DiceSide::Right),
@@ -870,13 +897,13 @@ mod tests {
 
     #[test]
     fn taps_go_to_the_region_on_top() {
-        // A small laptop: the interface at 2, the island at 3 under it
+        // A small laptop: the interface at 3, the island at 2 under it
         let mut g = game();
         let mut scene = Scene::new(g.map);
         let mut ui = Ui::new();
         for side in [DiceSide::Right, DiceSide::Left] {
             let l = Layout::new(1366, 768, Insets::default(), g.map, side);
-            assert_eq!((l.fit.scale, l.isle.scale), (2, 3));
+            assert_eq!((l.fit.scale, l.isle.scale), (3, 2));
             render(&mut scene, &mut g, &l, &mut ui);
             // Every screen pixel of a die is that die, to its very edge, though the island's
             // pixels run on under the column at another pitch
@@ -912,7 +939,7 @@ mod tests {
     }
 
     #[test]
-    fn the_tutorial_points_at_a_piece_on_a_larger_island() {
+    fn the_tutorial_points_at_a_piece_on_an_island_at_another_scale() {
         let mut g = game();
         let mut scene = Scene::new(g.map);
         let mut ui = Ui::new();
@@ -930,7 +957,46 @@ mod tests {
         let mut t = Tutorial::new(true, 0);
         let frame = scene.render(&mut g, &l, &mut ui, &mut t, &Strings::default(), 5_000);
         assert!(frame.ui.is_some());
-        assert_eq!(frame.composed(&l).width, 1366);
+        assert_eq!(frame.composed(&l).width, l.screen_size().0);
+    }
+
+    #[test]
+    fn a_turned_callout_reads_upright_and_takes_its_taps() {
+        for side in [DiceSide::Right, DiceSide::Left] {
+            let mut g = game();
+            let mut scene = Scene::new(g.map);
+            let mut ui = Ui::new();
+            let l = Layout::new(2342, 1082, Insets::default(), g.map, side);
+            let mut t = Tutorial::new(true, 0);
+            let s = Strings {
+                got_it: "Got it".into(),
+                skip: "Skip".into(),
+                ..Strings::default()
+            };
+            let frame = scene.render(&mut g, &l, &mut ui, &mut t, &s, 5_000);
+            let p = ui.callout.clone().expect("a callout is due");
+            // On the screen's art, inside it, which is wider than the art is
+            let (w, h) = (l.fit.width as i32, l.fit.height as i32);
+            assert_eq!(w, l.height);
+            assert!(
+                p.panel.x >= 0 && p.panel.x + p.panel.w <= w,
+                "{:?}",
+                p.panel
+            );
+            assert!(
+                p.panel.y >= 0 && p.panel.y + p.panel.h <= h,
+                "{:?}",
+                p.panel
+            );
+            let k = l.ui_scale();
+            let g_it = p.got_it;
+            let spot = l.screen_spot((g_it.x + g_it.w / 2) * k, (g_it.y + g_it.h / 2) * k);
+            assert_eq!(scene.hit(&g, &l, &ui, spot), Hit::GotIt);
+            if let Ok(dir) = std::env::var("SNAPSHOT_DIR") {
+                let png = frame.to_png(&l);
+                std::fs::write(format!("{dir}/callout-{side:?}.png"), png).unwrap();
+            }
+        }
     }
 
     #[test]

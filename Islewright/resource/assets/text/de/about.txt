@@ -1,4 +1,4 @@
-Islewright {{version}}
+Islewright: Roll {{version}}
 
 Ein Würfelspiel für eine Person: würfeln, dann Straßen, Dörfer, Burgen und Händler auf einer kleinen Insel bauen.
 
@@ -11,4 +11,4 @@ Soundeffekte: aus The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 o
 
 Ursprünglich von Ridgeline Apps. Marcus Hoffmann (Bubu) belebte es 2017 neu, mit einer deutschen Übersetzung von tmaex, und Hellmark bewahrte das Google-Code-Archiv. Seitdem von Islewright Team.
 
-Islewright steht in keiner Verbindung zur Catan GmbH und wird nicht von ihr unterstützt. CATAN® ist eine eingetragene Marke der Catan GmbH. Das Spielprinzip von Islewright beruht auf Spielregeln und Spielmechaniken, die das US-amerikanische Urheberrecht als nicht schützbare Spielmethoden ansieht (17 U.S.C. § 102(b)).
+Islewright: Roll steht in keiner Verbindung zur Catan GmbH und wird nicht von ihr unterstützt. CATAN® ist eine eingetragene Marke der Catan GmbH. Das Spielprinzip von Islewright: Roll beruht auf Spielregeln und Spielmechaniken, die das US-amerikanische Urheberrecht als nicht schützbare Spielmethoden ansieht (17 U.S.C. § 102(b)).
