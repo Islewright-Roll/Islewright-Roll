@@ -23,12 +23,17 @@ const BAR_ROOM: f64 = 24.0;
 /// What shows round a page: under Android's navigation bar, what the bar's scrim made of the
 /// panel beneath it in the Java app.
 pub fn surround() -> Color {
-    let (r, g, b) = if palette().dark {
-        (34.0, 24.0, 13.0)
+    let (r, g, b) = surround_rgb();
+    Color::rgb(r as f64 / 255.0, g as f64 / 255.0, b as f64 / 255.0)
+}
+
+/// `surround`'s colour in bytes, for the window bridge to dim it.
+pub fn surround_rgb() -> (u8, u8, u8) {
+    if palette().dark {
+        (34, 24, 13)
     } else {
-        (72.0, 61.0, 45.0)
-    };
-    Color::rgb(r / 255.0, g / 255.0, b / 255.0)
+        (72, 61, 45)
+    }
 }
 
 /// `content` in a vertical scroll view `width` x `height` art pixels. With `thumb` it shows the
@@ -36,6 +41,9 @@ pub fn surround() -> Color {
 pub fn scroller(m: &Metrics, content: W, width: i32, height: i32, thumb: bool) -> W {
     let (wp, hp) = (m.pt(width), m.pt(height));
     let room = if thumb { 0.0 } else { BAR_ROOM };
+    if thumb {
+        super::window::scroll_thumb(palette().dark);
+    }
     let view = scroll(content.piece).frame(wp + room, hp);
     let clip = zstack((view,))
         .align(Alignment::TopLeading)

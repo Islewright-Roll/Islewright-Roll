@@ -18,20 +18,30 @@ fn clip(sfx: Sfx) -> day::AssetName {
 }
 
 /// Plays clips through day-part-sound, which mixes, limits voices and never fails loudly.
-struct DaySound;
+#[derive(Default)]
+struct DaySound {
+    /// A sound the retrigger stopped, which its next play restarts.
+    restart: Option<Sfx>,
+}
 
 impl SoundBackend for DaySound {
     fn play(&mut self, sfx: Sfx) -> u32 {
         if !SOUND_EFFECTS.get() {
             return 0;
         }
-        day_part_sound::play(&clip(sfx));
+        if self.restart.take() == Some(sfx) {
+            day_part_sound::restart(&clip(sfx));
+        } else {
+            day_part_sound::play(&clip(sfx));
+        }
         1
     }
 
-    // Day's clips are fire-and-forget: a playing one cannot be cut short, so the retrigger
-    // simply lets the new one overlap, as the part's own repeat guard already spaces them.
-    fn stop(&mut self, _sfx: Sfx, _stream_id: u32) {}
+    // The retrigger stops a sound and plays it again at once, which the part does in one call:
+    // the next play of it silences what is still sounding and starts it from the top.
+    fn stop(&mut self, sfx: Sfx, _stream_id: u32) {
+        self.restart = Some(sfx);
+    }
 }
 
 type Playback = SoundPlayback<DaySound, fn() -> u64>;
@@ -69,7 +79,7 @@ impl Sounds {
         day_part_sound::preload(&clips);
         let sounds = Sounds(Rc::new(Inner {
             playback: RefCell::new(SoundPlayback::new(
-                DaySound,
+                DaySound::default(),
                 crate::clock::now_ms as fn() -> u64,
             )),
             scheduled: Cell::new(None),

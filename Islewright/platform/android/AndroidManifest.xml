@@ -6,8 +6,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools">
     <application>
-        <!-- For example, an SDK's metadata:
-        <meta-data android:name="com.example.sdk.OPTION" android:value="true" />
-        -->
+        <!-- Under the launcher icon, where "Islewright: Roll" is cut off, the short name, as the
+             Java app had it. The activity's label is what the launcher shows. -->
+        <activity
+            android:name="dev.daybrite.day.bridge.DayActivity"
+            android:label="@string/launcher_name"
+            tools:node="merge" />
     </application>
 </manifest>

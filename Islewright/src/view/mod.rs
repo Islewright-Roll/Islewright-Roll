@@ -27,6 +27,7 @@ use crate::rules::game::Game;
 use crate::rules::map_def::MapDef;
 use crate::rules::sfx::Sfx;
 use crate::rules::sound_sink;
+use crate::rules::tap_slop;
 use crate::rules::tutorial::{Step, Tutorial};
 use crate::rules::view_model::{BuildPrompt, RollPress};
 use crate::ui;
@@ -187,6 +188,12 @@ struct Screen {
     dpr: Cell<f64>,
     /// What the finger now down went down on, on a platform that says so at once.
     touch: Cell<Option<Hit>>,
+    /// Every finger down, where a platform reports each one (`finger`): two dice can be held
+    /// at once, or a die carried while another finger builds.
+    fingers: RefCell<Vec<Finger>>,
+    /// The finger carrying a banked mini die, and the one holding a button down.
+    carry_finger: Cell<Option<u32>>,
+    press_finger: Cell<Option<u32>>,
     /// A frame is being decoded; another render waits for it (`dirty`).
     in_flight: Cell<bool>,
     dirty: Cell<bool>,
@@ -198,6 +205,27 @@ struct Screen {
     /// The board has the keyboard. Nothing else on this screen can take it, so it comes back
     /// here whenever whatever was over the game closes (`refocus`).
     focused: Signal<bool>,
+}
+
+/// One finger down on the board (`Screen::finger`), in canvas points.
+struct Finger {
+    pointer: u32,
+    down: Point,
+    /// Travelled further than a tap allows: its lift builds and presses nothing.
+    strayed: bool,
+    /// What it went down on, once it went down on the board.
+    hit: Option<Hit>,
+}
+
+/// How far a finger may wander, in points, and still tap: the system's 8 dp touch slop
+/// times the board's own factor (`tap_slop::SLOP_FACTOR`), as the Java app had it.
+const FINGER_SLOP: f32 = 8.0 * tap_slop::SLOP_FACTOR;
+
+fn is_button(hit: Hit) -> bool {
+    matches!(
+        hit,
+        Hit::GotIt | Hit::Skip | Hit::Menu | Hit::Undo | Hit::Roll
+    )
 }
 
 /// The game screen for the shell to place: it fills what it is given.
@@ -212,6 +240,9 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
         size: Cell::new((0.0, 0.0)),
         dpr: Cell::new(1.0),
         touch: Cell::new(None),
+        fingers: RefCell::new(Vec::new()),
+        carry_finger: Cell::new(None),
+        press_finger: Cell::new(None),
         in_flight: Cell::new(false),
         dirty: Cell::new(false),
         frame: RefCell::new(None),
@@ -243,6 +274,7 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
     let draw = screen.clone();
     let tap = screen.clone();
     let keys = screen.clone();
+    let fingers = screen.clone();
     let drag = screen;
     canvas(move |d, size| {
         if draw.size.get() != (size.width, size.height) {
@@ -269,6 +301,8 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
     .focusable()
     .focused(focused)
     .on_drag(move |g| drag.drag(g))
+    // Phones and tablets report each finger, in place of the taps and drag above
+    .on_touch(move |t| fingers.finger(t))
     // The label goes on the canvas itself: after `.grow()` it would land on a layout wrapper
     // that has no element of its own, and screen readers would never hear it.
     .a11y(|a| {
@@ -549,8 +583,8 @@ impl Screen {
     /// action has a digit: 1 to 6 keep or release a die, 0 rolls, 7 undoes, 8 dismisses the
     /// tutorial's callout, 9 builds the suggested spot (the one the tutorial would point at).
     /// Where letters arrive, R or Space rolls, U undoes, B builds, Enter dismisses the callout
-    /// and M or Escape opens the menu. The walkthroughs drive the game this way too, the same
-    /// on every screen size.
+    /// and M or Escape opens the menu, as does a phone's Menu key. The walkthroughs drive the
+    /// game this way too, the same on every screen size.
     fn key(self: &Rc<Self>, k: &day::KeyEvent) {
         self.touch.set(None);
         if self.asking.get() > 0 || k.modifiers & (day::KeyEvent::PRIMARY | day::KeyEvent::ALT) != 0
@@ -590,7 +624,8 @@ impl Screen {
                     self.build(p.kind, p.index);
                 }
             }
-            "m" | "M" | "Escape" => {
+            // ContextMenu is a phone's hardware Menu key, which opened the Java app's menu too
+            "m" | "M" | "Escape" | "ContextMenu" => {
                 self.press(Button::Menu);
                 self.request();
                 (self.host.on_menu)();
@@ -704,6 +739,147 @@ impl Screen {
             s.request();
             s.refocus();
         });
+    }
+
+    /// One finger on a phone or tablet, where each is reported on its own, as the Java app
+    /// followed them: each from its own down to its own lift, with its own "strayed too far to
+    /// be a tap". A die holds and a button shows pressed when the finger goes down; a button
+    /// acts and a piece builds when it lifts where it landed. A finger down on a banked mini die
+    /// in classic mode carries it instead, and is nothing else.
+    fn finger(self: &Rc<Self>, t: Touch) {
+        match t.phase {
+            DragPhase::Began => {
+                if self.asking.get() > 0 {
+                    return;
+                }
+                self.fingers.borrow_mut().push(Finger {
+                    pointer: t.pointer,
+                    down: t.location,
+                    strayed: false,
+                    hit: None,
+                });
+                let Some(spot) = self.spot(t.location) else {
+                    return;
+                };
+                if self.carry_finger.get().is_none() && self.ui.borrow().carry.is_none() {
+                    let slot = {
+                        let game = self.host.game.borrow();
+                        let scene = self.scene.borrow();
+                        let layout = self.layout.borrow();
+                        match (scene.as_ref(), layout.as_ref()) {
+                            (Some(sc), Some(l)) => sc
+                                .mini_slot_at(&game, l, spot.x, spot.y)
+                                .filter(|&slot| sc.may_carry(&game, slot)),
+                            _ => None,
+                        }
+                    };
+                    if let Some(slot) = slot {
+                        self.carry_finger.set(Some(t.pointer));
+                        self.ui.borrow_mut().carry = Some(Carry {
+                            slot,
+                            x: spot.x,
+                            y: spot.y,
+                        });
+                        self.haptic(Haptic::Tap);
+                        self.request();
+                        return;
+                    }
+                }
+                let hit = self.hit(spot);
+                self.finger_mut(t.pointer, |f| f.hit = Some(hit));
+                let pressing = self.press_finger.get().is_none();
+                let before = self.ui.borrow().pressed;
+                if pressing || !is_button(hit) {
+                    self.touch_down(spot);
+                }
+                if pressing && self.ui.borrow().pressed != before {
+                    self.press_finger.set(Some(t.pointer));
+                }
+            }
+            DragPhase::Changed => {
+                self.finger_mut(t.pointer, |f| {
+                    if !f.strayed
+                        && !tap_slop::is_tap(
+                            f.down.x as f32,
+                            f.down.y as f32,
+                            t.location.x as f32,
+                            t.location.y as f32,
+                            FINGER_SLOP,
+                        )
+                    {
+                        f.strayed = true;
+                    }
+                });
+                let Some(spot) = self.spot(t.location) else {
+                    return;
+                };
+                if self.carry_finger.get() == Some(t.pointer) {
+                    if let Some(c) = self.ui.borrow_mut().carry.as_mut() {
+                        c.x = spot.x;
+                        c.y = spot.y;
+                    }
+                    self.request();
+                } else if self.press_finger.get() == Some(t.pointer) {
+                    self.touch_moved(spot, false);
+                }
+            }
+            DragPhase::Ended => {
+                let finger = {
+                    let mut fingers = self.fingers.borrow_mut();
+                    let i = fingers.iter().position(|f| f.pointer == t.pointer);
+                    i.map(|i| fingers.remove(i))
+                };
+                let Some(mut finger) = finger else {
+                    return;
+                };
+                // `touch_down` noted what it landed on; the lift says for itself below
+                self.touch.set(None);
+                if !finger.strayed
+                    && !tap_slop::is_tap(
+                        finger.down.x as f32,
+                        finger.down.y as f32,
+                        t.location.x as f32,
+                        t.location.y as f32,
+                        FINGER_SLOP,
+                    )
+                {
+                    finger.strayed = true;
+                }
+                let spot = self.spot(t.location);
+                if self.carry_finger.get() == Some(t.pointer) {
+                    self.carry_finger.set(None);
+                    if let (Some(spot), Some(c)) = (spot, self.ui.borrow_mut().carry.take()) {
+                        self.drop_carry(c.slot, spot.x, spot.y);
+                    }
+                    self.request();
+                    return;
+                }
+                let pressed = self.press_finger.get() == Some(t.pointer);
+                if pressed {
+                    self.press_finger.set(None);
+                    if let Some(spot) = spot {
+                        self.touch_moved(spot, true);
+                    }
+                }
+                // A finger that travelled was crossing the screen, not choosing where it lifted.
+                // A button answers only the finger that pressed it.
+                let Some(hit) = finger.hit else {
+                    return;
+                };
+                if finger.strayed || (is_button(hit) && !pressed) {
+                    return;
+                }
+                self.touch.set(Some(hit));
+                self.tap(t.location);
+                self.touch.set(None);
+            }
+        }
+    }
+
+    /// Changes the finger `pointer`, if it is down.
+    fn finger_mut(&self, pointer: u32, f: impl FnOnce(&mut Finger)) -> Option<()> {
+        let mut fingers = self.fingers.borrow_mut();
+        fingers.iter_mut().find(|x| x.pointer == pointer).map(f)
     }
 
     /// Trader resource classic mode: a banked mini die picked up, carried and dropped on a

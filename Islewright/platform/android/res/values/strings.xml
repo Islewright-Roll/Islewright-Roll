@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Under the launcher icon, where a longer name is cut off. A name, so not translated. -->
+    <string name="launcher_name" translatable="false">Islewright</string>
+</resources>
