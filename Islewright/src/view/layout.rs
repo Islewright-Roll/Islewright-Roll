@@ -9,19 +9,18 @@
 //!
 //! A phone stays upright: the app locks it to portrait.
 //!
-//! Wide canvases (a tablet on its side, a desktop window) put the island in the middle with a
-//! column either side: the HUD (score, menu, costs, the turn track in two rows) on one, the dice, the roll button and the undo button
-//! on the other. On a screen with height to spare the same art is restacked into narrower,
-//! taller columns (`Columns::Tall`: the costs in one column of four, the track in more rows),
-//! which leaves the width for everything to go up a scale. The island stays upright, north at the
-//! top of the screen, in every layout, and the columns take the width it does not need. The dice
-//! go on the side that was the bottom of the screen.
+//! Wide canvases (a tablet on its side, a desktop window) show the island upright in open sea
+//! beside one panel of wood on the side that was the bottom of the screen. The panel hugs what
+//! it holds, as the portrait bars do: from the top the score and the menu, the costs key at
+//! 16 px and the turn track winding back and forth in three rows; from the bottom, under the
+//! thumbs, the roll and undo buttons, the dice and the bank. The island takes all the width the
+//! panel leaves, at the largest scale that keeps sea round its land.
 //!
 //! The screen has two regions, each at its own whole-number scale: the interface (the bars or
 //! columns, the HUD, the dice, the callouts) and the island under it (see `IslandView`). The
 //! interface takes the largest scale its arrangement fits at (see `Layout::new`), and the
-//! island the largest scale at least as large at which its land still fits between the bars
-//! or the columns, so the island also takes whatever room the interface leaves. The rects
+//! island the largest scale at which its land still fits beside the bars or the panel, so the
+//! island also takes whatever room the interface leaves. The rects
 //! below are in interface pixels; the island's are in its own.
 
 use crate::art::{DESIGN_W, Fit, Image, MIN_H};
@@ -64,8 +63,7 @@ pub const BAND_H: i32 = rart::TRACK_H + 2;
 
 // ---------------------------------------------------------------- landscape
 
-/// The columns' panels stand this far in from their sides, and from the screen's top and
-/// bottom: FLOAT of sea round the panel's wood, then PANEL_PAD of wood round what it holds.
+/// The panel's column stands this far in from the screen's side, top and bottom: FLOAT of sea round the panel's wood, then PANEL_PAD of wood round what it holds.
 pub const COL_INSET: i32 = 6;
 pub const FLOAT: i32 = 2;
 pub const PANEL_PAD: i32 = COL_INSET - FLOAT;
@@ -80,34 +78,45 @@ pub const KEY_INSET: i32 = 3;
 pub const fn key_recipe_w(n: i32) -> i32 {
     KEY_ROW_H + 1 + (1 + n * KEY_CELL) + 1
 }
-/// The panels in each column: as wide as the castle's recipe (five resources) in its tray.
+/// What the panel holds: as wide as the castle's recipe (five resources) in its tray.
 pub const PANEL_W: i32 = key_recipe_w(5) + 2 * KEY_INSET;
 pub const KEY_H: i32 = KEY_INSET + 4 * KEY_ROW - 1 + KEY_INSET;
-/// Both columns: a panel and the inset either side.
+/// The panel's column: what it holds and the inset either side.
 pub const COL_W: i32 = PANEL_W + 2 * COL_INSET;
 /// A panel's label on the wood above it: the font's caps and two rows below them.
 pub const LABEL_H: i32 = 9;
-/// The menu button, in the screen's top right corner.
+/// The race bonuses stacked in the landscape score tray: a glyph's 7 rows and the gap.
+pub const BADGE_ROW: i32 = 12;
+/// The menu button, in the panel's top right corner.
 pub const LAND_MENU_W: i32 = 30;
 /// The turn track's three rows, and the rows of water between them where it turns.
 pub const TRACK_ROWS: i32 = 3;
 pub const TRACK_ROW_GAP: i32 = 4;
 pub const TRACK_BLOCK_H: i32 = TRACK_ROWS * BAND_H + (TRACK_ROWS - 1) * TRACK_ROW_GAP;
-/// The wood between the groups in a panel, and the sea between two panels in a column.
+/// The wood between the groups in the panel: at least GROUP_GAP, and up to GAP_MAX where the
+/// panel has rows to spare.
 pub const GROUP_GAP: i32 = 5;
+pub const GAP_MAX: i32 = 12;
 /// The open sea the island keeps round its land in landscape, where it can.
 pub const SEA_ROOM: i32 = 12;
 pub const LAND_MINI_PER_ROW: i32 = 5;
-/// The dice column's groups below the menu: the bank, its mini dice on a tray of two rows,
-/// the dice in two rows of three, the roll button with the undo button at its end.
+/// The panel's lower groups: the bank, its mini dice on a tray of two rows, the dice in two
+/// rows of three, the roll button with the undo button at its end.
 const MINI_TRAY_H: i32 = 2 * MINI_DIE + MINI_GAP + 2 * MINI_PAD + 2;
 const DICE_BLOCK_H: i32 = 2 * DIE + DICE_GAP;
 const ROLL_BLOCK_H: i32 = ROLL_H;
 /// The landscape roll button, leaving room for the undo button beside it.
 const LAND_ROLL_W: i32 = PANEL_W - UNDO_SIZE - 4;
-/// The HUD column's groups: the score, the labelled costs, the labelled track.
-const HUD_GROUPS: [i32; 3] = [BOX_H, LABEL_H + KEY_H, LABEL_H + TRACK_BLOCK_H];
-const DICE_GROUPS: [i32; 3] = [LABEL_H + MINI_TRAY_H, DICE_BLOCK_H, ROLL_BLOCK_H];
+/// The panel's groups, top to bottom: the score, the labelled costs, the labelled track, then
+/// the lower groups.
+const PANEL_GROUPS: [i32; 6] = [
+    BOX_H,
+    LABEL_H + KEY_H,
+    LABEL_H + TRACK_BLOCK_H,
+    LABEL_H + MINI_TRAY_H,
+    DICE_BLOCK_H,
+    ROLL_BLOCK_H,
+];
 /// The clear sea kept round the island's land in landscape.
 pub const LAND_MARGIN: i32 = 4;
 
@@ -116,11 +125,10 @@ fn has_badges(map: &MapDef) -> bool {
     map.target_score > 0 && (map.trader_bonus_at > 0 || map.long_road.is_some())
 }
 
-/// The least height of a column holding these groups in one panel and, above that panel, a
-/// row this tall.
-fn column_h(heights: &[i32], above: i32) -> i32 {
+/// The least height of a column holding these groups in one panel.
+fn column_h(heights: &[i32]) -> i32 {
     let n = heights.len() as i32;
-    above + heights.iter().sum::<i32>() + GROUP_GAP * (n - 1) + 2 * COL_INSET
+    heights.iter().sum::<i32>() + GROUP_GAP * (n - 1) + 2 * COL_INSET
 }
 
 // The sprites the land extent is measured with (their PNGs' sizes; a test checks them)
@@ -565,7 +573,8 @@ pub enum Edge {
 pub enum BadgePlace {
     /// On a wooden sign whose right edge is `right` and top `top`, hung from the bar above it.
     Sign { right: i32, top: i32 },
-    /// In the score's panel, their right edge at `right` and their glyphs' top at `top`.
+    /// In the score's tray, one above the other BADGE_ROW apart, their right edge at `right`
+    /// and the first glyph's top at `top`.
     Panel { right: i32, top: i32 },
 }
 
@@ -574,7 +583,7 @@ pub enum BadgePlace {
 pub enum MiniTab {
     /// On a tab of the bottom bar's wood rising over the sea, the bar's top row given.
     Bar { bar_top: i32 },
-    /// In a tray in the dice column.
+    /// In a tray in the landscape panel.
     Tray,
 }
 
@@ -599,7 +608,7 @@ pub struct Layout {
     /// The part of the frame a tap reaches the island in.
     pub island: Rect,
     pub bars: Vec<Bar>,
-    /// Portrait: the 216 wide HUD's left edge. Landscape: the HUD column's.
+    /// Portrait: the 216 wide HUD's left edge. Landscape: the panel's column.
     pub hud_x: i32,
     /// The tray behind the score: the score's own, or in landscape a panel it shares with
     /// the race bonuses.
@@ -645,11 +654,10 @@ pub fn portrait_scale(w: u32, h: u32, insets: Insets) -> u32 {
 /// upright island between them, and the taller column.
 pub fn landscape_min(map: &'static MapDef) -> (i32, i32) {
     let land = land_core(map);
-    let w = COL_W + land.w + COL_W;
-    // Only the columns: where the upright island is too tall, it goes down a scale on its own
+    let w = COL_W + land.w;
+    // Only the panel: where the upright island is too tall, it goes down a scale on its own
     // (`IslandView::fit`), so the dice stay large enough to tap.
-    let menu_panel = BOX_H + 2 * PANEL_PAD + GROUP_GAP;
-    let h = column_h(&HUD_GROUPS, 0).max(column_h(&DICE_GROUPS, menu_panel));
+    let h = column_h(&PANEL_GROUPS);
     (w, h)
 }
 
@@ -684,9 +692,7 @@ impl Layout {
     /// into whatever room that leaves (`IslandView::fit`).
     ///
     /// The interface does not shrink to let the island grow more: that would only trade one
-    /// region's size for the other's. Neither does the HUD column get a scale apart from the
-    /// dice column: the two share the fonts and the wood, and look of a piece only at one
-    /// scale.
+    /// region's size for the other's.
     pub fn new(w: u32, h: u32, insets: Insets, map: &'static MapDef, side: DiceSide) -> Layout {
         let w = w.max(1);
         let h = h.max(1);
@@ -797,114 +803,95 @@ impl Layout {
         let pad_bottom = ceil_div(insets.bottom, fit.scale);
         let pad_left = ceil_div(insets.left, fit.scale);
         let pad_right = ceil_div(insets.right, fit.scale);
-        let (hud_x, dice_col_x) = match side {
-            DiceSide::Right => (pad_left, width - pad_right - COL_W),
-            DiceSide::Left => (width - pad_right - COL_W, pad_left),
+        // One panel down the dice's side, the island and its sea in all the rest
+        let col_x = match side {
+            DiceSide::Right => width - pad_right - COL_W,
+            DiceSide::Left => pad_left,
         };
-        // The island's part of the screen: between the columns, top to bottom
-        let left_w = hud_x.min(dice_col_x) + COL_W;
-        let right_x = hud_x.max(dice_col_x);
-        let island = Rect::new(
-            left_w,
-            pad_top,
-            right_x - left_w,
-            height - pad_top - pad_bottom,
-        );
+        let hud_x = col_x;
+        let island = match side {
+            DiceSide::Right => Rect::new(
+                pad_left,
+                pad_top,
+                col_x - pad_left,
+                height - pad_top - pad_bottom,
+            ),
+            DiceSide::Left => Rect::new(
+                col_x + COL_W,
+                pad_top,
+                width - pad_right - col_x - COL_W,
+                height - pad_top - pad_bottom,
+            ),
+        };
         // The land centred there with sea round it, at the largest scale it fits
         let isle = IslandView::fit(&fit, island, land_core(map), land_extent(map), None);
 
-        // Each column's panels stand on the sea and hug what they hold, the way the portrait
-        // bars do: the HUD's hangs from the top, the dice's stands on the bottom, under the
-        // thumbs, and the menu takes the top right corner
+        // The panel stands on the sea, the way the portrait bars hug what they hold: from the
+        // top the score with the menu in the corner, the costs and the turns; from the bottom,
+        // under the thumbs, the roll, the dice and the bank. What height is left over parts
+        // the two.
         let top = pad_top + FLOAT;
         let floor = height - pad_bottom - FLOAT;
+        let panel_x = col_x + COL_INSET;
         let menu = Rect::new(
-            right_x + COL_W - COL_INSET - LAND_MENU_W,
+            col_x + COL_W - COL_INSET - LAND_MENU_W,
             top + PANEL_PAD,
             LAND_MENU_W,
             BOX_H,
         );
-        let menu_in_hud = hud_x == right_x;
-
-        // The HUD's panel: the score's row (the menu at its end where they share a column),
-        // the labelled costs, the labelled track
-        let panel_x = hud_x + COL_INSET;
         let score_tray = Rect::new(
             panel_x,
             top + PANEL_PAD,
-            if menu_in_hud {
-                PANEL_W - LAND_MENU_W - BOX_GAP
-            } else {
-                PANEL_W
-            },
+            PANEL_W - LAND_MENU_W - BOX_GAP,
             BOX_H,
         );
-        // The score's words and number on the panel's left, a race's bonuses on its right
+        // The score's words and number on the tray's left, a race's bonuses on its right
         let score_w = if has_badges(map) {
             SCORE_W + 4
         } else {
             score_tray.w
         };
         let score = Rect::new(score_tray.x, score_tray.y, score_w, BOX_H);
+        let stacked = [map.long_road.is_some(), map.trader_bonus_at > 0]
+            .iter()
+            .filter(|&&b| b)
+            .count() as i32;
         let badges = BadgePlace::Panel {
             right: score_tray.x + score_tray.w - 5,
-            top: score_tray.y + (BOX_H - 7) / 2,
+            top: score_tray.y + (BOX_H - 7 - (stacked - 1).max(0) * BADGE_ROW) / 2,
         };
-        let costs_label = Pt::new(panel_x + 1, score_tray.y + BOX_H + GROUP_GAP);
+        // Rows the panel has beyond what it needs go into its gaps alike, up to GAP_MAX each,
+        // and any more between the turns and the bank
+        let room = floor - top - 2 * PANEL_PAD;
+        let need = column_h(&PANEL_GROUPS) - 2 * COL_INSET;
+        let n = PANEL_GROUPS.len() as i32 - 1;
+        let gap = (GROUP_GAP + (room - need).max(0) / n).min(GAP_MAX);
+        let costs_label = Pt::new(panel_x + 1, score_tray.y + BOX_H + gap);
         let costs = Rect::new(panel_x, costs_label.y + LABEL_H, PANEL_W, KEY_H);
-        let turns_label = Pt::new(panel_x + 1, costs.y + KEY_H + GROUP_GAP);
-        let track = Track::back_and_forth(map, hud_x, turns_label.y + LABEL_H);
-        let hud_bottom = turns_label.y + LABEL_H + TRACK_BLOCK_H + PANEL_PAD;
-        let hud_panel = Rect::new(hud_x + FLOAT, top, COL_W - 2 * FLOAT, hud_bottom - top);
+        let turns_label = Pt::new(panel_x + 1, costs.y + KEY_H + gap);
+        let track = Track::back_and_forth(map, col_x, turns_label.y + LABEL_H);
 
-        // The dice's panel, from the bottom up: the roll button with the undo button at its
-        // end, the dice in two rows of three, the labelled bank
-        let panel_x_dice = dice_col_x + COL_INSET;
         let roll_y = floor - PANEL_PAD - ROLL_BLOCK_H;
-        let dice_y = roll_y - GROUP_GAP - DICE_BLOCK_H;
-        let bank_y = dice_y - GROUP_GAP - MINI_TRAY_H;
-        let bank_label = Pt::new(dice_col_x + COL_INSET + 1, bank_y - LABEL_H);
-        let dice_top = bank_label.y - PANEL_PAD;
-        let dice_panel = Rect::new(
-            dice_col_x + FLOAT,
-            dice_top,
-            COL_W - 2 * FLOAT,
-            floor - dice_top,
-        );
+        let dice_y = roll_y - gap - DICE_BLOCK_H;
+        let bank_y = dice_y - gap - MINI_TRAY_H;
+        let bank_label = Pt::new(panel_x + 1, bank_y - LABEL_H);
         let block = 3 * DIE + 2 * DICE_GAP;
-        let dx = dice_col_x + (COL_W - block) / 2;
+        let dx = col_x + (COL_W - block) / 2;
         let dice = std::array::from_fn(|i| {
-            let (col, row) = (i as i32 % 3, i as i32 / 3);
+            let (c, row) = (i as i32 % 3, i as i32 / 3);
             Rect::new(
-                dx + col * (DIE + DICE_GAP),
+                dx + c * (DIE + DICE_GAP),
                 dice_y + row * (DIE + DICE_GAP),
                 DIE,
                 DIE,
             )
         });
         let minis = LAND_MINI_PER_ROW * (MINI_DIE + MINI_GAP) - MINI_GAP;
-        let bank = Rect::new(dice_col_x + COL_INSET, bank_y, PANEL_W, MINI_TRAY_H);
-        let mut bars = vec![
-            Bar {
-                rect: hud_panel,
-                edge: Edge::Around,
-            },
-            Bar {
-                rect: dice_panel,
-                edge: Edge::Around,
-            },
-        ];
-        if !menu_in_hud {
-            bars.push(Bar {
-                rect: Rect::new(
-                    menu.x - PANEL_PAD,
-                    top,
-                    LAND_MENU_W + 2 * PANEL_PAD,
-                    BOX_H + 2 * PANEL_PAD,
-                ),
-                edge: Edge::Around,
-            });
-        }
+        let bank = Rect::new(panel_x, bank_y, PANEL_W, MINI_TRAY_H);
+        let bars = vec![Bar {
+            rect: Rect::new(col_x + FLOAT, top, COL_W - 2 * FLOAT, floor - top),
+            edge: Edge::Around,
+        }];
         Layout {
             fit,
             width,
@@ -931,9 +918,9 @@ impl Layout {
             badges,
             track,
             dice,
-            roll: Rect::new(panel_x_dice, roll_y, LAND_ROLL_W, ROLL_H),
+            roll: Rect::new(panel_x, roll_y, LAND_ROLL_W, ROLL_H),
             undo: Rect::new(
-                panel_x_dice + PANEL_W - UNDO_SIZE,
+                panel_x + PANEL_W - UNDO_SIZE,
                 roll_y + (ROLL_H - UNDO_SIZE) / 2,
                 UNDO_SIZE,
                 UNDO_SIZE,
@@ -1113,31 +1100,29 @@ mod tests {
     fn each_region_takes_the_largest_scale_it_fits() {
         let none = Insets::default();
         // Phones: upright, everything at 5. A phone is locked to portrait, so a canvas of a
-        // phone's shape on its side is a desktop window or a split screen: it gets the columns.
+        // phone's shape on its side is a desktop window or a split screen: it gets the panel.
         assert_eq!(scales(1082, 2342, none), (false, 5, 5));
-        assert_eq!(scales(2342, 1082, none), (true, 5, 4));
-        assert_eq!(scales(2400, 1080, none), (true, 5, 4));
-        assert_eq!(scales(2532, 1170, none), (true, 5, 5));
-        assert_eq!(scales(2778, 1284, none), (true, 6, 5));
+        assert_eq!(scales(2342, 1082, none), (true, 3, 4));
+        assert_eq!(scales(2400, 1080, none), (true, 3, 4));
+        assert_eq!(scales(2532, 1170, none), (true, 3, 4));
+        assert_eq!(scales(2778, 1284, none), (true, 3, 5));
         // A tall phone with room between its bars for the whole island at 6
         assert_eq!(scales(1284, 2778, none), (false, 5, 6));
         // Tablets, on their side and upright
-        assert_eq!(scales(2560, 1600, none), (true, 5, 5));
-        assert_eq!(scales(2048, 1536, none), (true, 4, 4));
+        assert_eq!(scales(2560, 1600, none), (true, 4, 6));
+        assert_eq!(scales(2048, 1536, none), (true, 4, 6));
         assert_eq!(scales(1600, 2560, none), (false, 7, 7));
         assert_eq!(scales(1536, 2048, none), (false, 5, 6));
         // Desktop windows, a small laptop, a very wide screen and a nearly square window
-        assert_eq!(scales(1440, 900, none), (true, 3, 3));
-        assert_eq!(scales(1920, 1080, none), (true, 4, 4));
-        assert_eq!(scales(2560, 1440, none), (true, 5, 5));
-        assert_eq!(scales(3840, 2160, none), (true, 8, 8));
-        assert_eq!(scales(1366, 768, none), (true, 3, 3));
+        assert_eq!(scales(1440, 900, none), (true, 2, 3));
+        assert_eq!(scales(1920, 1080, none), (true, 3, 4));
+        assert_eq!(scales(2560, 1440, none), (true, 4, 5));
+        assert_eq!(scales(3840, 2160, none), (true, 6, 8));
+        assert_eq!(scales(1366, 768, none), (true, 2, 3));
         assert_eq!(scales(1280, 720, none), (true, 2, 2));
-        assert_eq!(scales(1280, 680, none), (true, 2, 2));
-        // Short and wide: the columns' height holds the interface above the island
-        assert_eq!(scales(1440, 680, none), (true, 3, 2));
-        assert_eq!(scales(1000, 900, none), (true, 2, 2));
-        assert_eq!(scales(3440, 1440, none), (true, 6, 6));
+        assert_eq!(scales(1280, 680, none), (true, 1, 2));
+        assert_eq!(scales(1000, 900, none), (true, 2, 3));
+        assert_eq!(scales(3440, 1440, none), (true, 4, 5));
         assert_eq!(scales(900, 500, none), (true, 1, 1));
         // Tiny and degenerate canvases still lay out, at 1
         assert_eq!(scales(300, 300, none), (false, 1, 1));
@@ -1150,11 +1135,11 @@ mod tests {
             ..Insets::default()
         };
         assert_eq!(scales(1920, 1080, bars), (true, 3, 4));
-        assert_eq!(scales(2560, 1600, bars), (true, 5, 5));
+        assert_eq!(scales(2560, 1600, bars), (true, 4, 6));
     }
 
     #[test]
-    fn the_columns_hold_everything_inside_them() {
+    fn the_panel_holds_everything_inside_it() {
         for map in MapDef::all() {
             for (w, h) in [
                 (2560, 1600),
@@ -1169,12 +1154,13 @@ mod tests {
                     let what = format!("{} {w}x{h} {side:?}", map.id);
                     assert_eq!(l.landscape, Some(side), "{what}");
                     assert!(l.key_large);
-                    let (hud, dice) = (l.bars[0].rect, l.bars[1].rect);
+                    assert_eq!(l.bars.len(), 1, "{what}");
+                    let panel = l.bars[0].rect;
+                    let (hud, dice) = (panel, panel);
                     let inside = |r: Rect, c: Rect| {
                         r.x >= c.x && r.y >= c.y && r.x + r.w <= c.x + c.w && r.y + r.h <= c.y + c.h
                     };
-                    // Each column's panel holds its own, clear of the ink and wood round it,
-                    // and the island lies between the columns
+                    // The panel holds it all, clear of the ink and wood round it
                     let shrink = |c: Rect| Rect::new(c.x + 2, c.y + 2, c.w - 4, c.h - 4);
                     for r in [l.score_tray, l.costs, l.track.rect()] {
                         assert!(inside(r, shrink(hud)), "{what}: {r:?} in {hud:?}");
@@ -1189,29 +1175,21 @@ mod tests {
                         assert!(inside(die, minis), "{what}: {die:?}");
                     }
                     assert!(minis.y + minis.h <= l.dice[0].y);
-                    let (left, right) = if side == DiceSide::Right {
-                        (hud, dice)
-                    } else {
-                        (dice, hud)
+                    assert!(l.turns_label.expect("a turns label").y < minis.y);
+                    // On the dice's side, top to bottom, the island and its sea beside it
+                    let col_x = match side {
+                        DiceSide::Right => l.width - l.pad_right - COL_W,
+                        DiceSide::Left => l.pad_left,
                     };
-                    assert_eq!(l.island.x, l.pad_left + COL_W);
-                    assert!(l.island.x >= left.x + left.w && l.island.x + l.island.w <= right.x);
-                    // The panels stand apart on the sea: the HUD's from the top, the dice's on
-                    // the bottom
-                    for (i, a) in l.bars.iter().enumerate() {
-                        assert_eq!(a.edge, Edge::Around);
-                        for b in &l.bars[i + 1..] {
-                            assert!(!a.rect.intersects(&b.rect), "{what}");
-                        }
-                    }
-                    assert_eq!(hud.y, l.pad_top + FLOAT);
-                    assert_eq!(dice.y + dice.h, l.height - l.pad_bottom - FLOAT);
-                    // The menu in the screen's top right corner, on a panel, clear of all else
-                    assert!(
-                        l.bars.iter().any(|b| inside(l.menu, shrink(b.rect))),
-                        "{what}"
-                    );
-                    assert_eq!(l.menu.x + l.menu.w, l.width - l.pad_right - COL_INSET);
+                    assert_eq!(panel.x, col_x + FLOAT, "{what}");
+                    assert!(!l.island.intersects(&panel), "{what}");
+                    assert_eq!(l.island.w, l.width - l.pad_left - l.pad_right - COL_W);
+                    assert_eq!(l.bars[0].edge, Edge::Around);
+                    assert_eq!(panel.y, l.pad_top + FLOAT);
+                    assert_eq!(panel.y + panel.h, l.height - l.pad_bottom - FLOAT);
+                    // The menu in the panel's top right corner, clear of all else
+                    assert!(inside(l.menu, shrink(panel)), "{what}");
+                    assert_eq!(l.menu.x + l.menu.w, panel.x + panel.w - PANEL_PAD);
                     assert_eq!(l.menu.y, l.pad_top + COL_INSET);
                     assert!(!l.roll.intersects(&l.undo), "{what}");
                     for r in [l.score_tray, l.costs, l.track.rect(), minis] {

@@ -1193,7 +1193,30 @@ impl Scene {
                 frame.fill_argb(strip_x, top + 2, strip_w, SIGN_H - 4, INK);
                 (strip_x + 2, top + 3)
             }
-            BadgePlace::Panel { right, top } => (right - inner, top),
+            BadgePlace::Panel { right, top } => {
+                // One above the other, each against the tray's right
+                let mut y = top;
+                if let Some(r) = map.long_road {
+                    let glyph = &self.tinted.as_ref().expect("tinted").badge_road;
+                    let (bonus, earned) = (map.long_road_bonus, game.playsheet.roads[r]);
+                    self.draw_badge(
+                        frame,
+                        right - self.badge_width(bonus),
+                        y,
+                        glyph,
+                        bonus,
+                        earned,
+                    );
+                    y += layout::BADGE_ROW;
+                }
+                if trader {
+                    let earned = game.playsheet.trader_count() >= map.trader_bonus_at;
+                    let bonus = map.trader_bonus;
+                    let x = right - self.badge_width(bonus);
+                    self.draw_badge(frame, x, y, &a.badge_trader, bonus, earned);
+                }
+                return;
+            }
         };
         if let Some(r) = map.long_road {
             let glyph = &self.tinted.as_ref().expect("tinted").badge_road;
@@ -1480,7 +1503,7 @@ impl Scene {
     }
 
     /// The banked resources nobody has used yet, each a mini die, in bank slot order on a tab
-    /// of the bar's wood (portrait) or a tray in the dice column (landscape).
+    /// of the bar's wood (portrait) or a tray in the panel (landscape).
     fn draw_mini_dice(&self, frame: &mut Image, game: &Game, l: &Layout, ui: &Ui) {
         if let Some(b) = l.bank {
             tray(frame, b.x, b.y, b.w, b.h);
