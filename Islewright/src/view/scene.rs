@@ -25,6 +25,7 @@ use crate::rules::hire_anim;
 use crate::rules::map_def::MapDef;
 use crate::rules::pieces::{BoardPieces, Piece};
 use crate::rules::pt::Pt;
+use crate::rules::spend_anim;
 use crate::rules::tutorial::{Step, Tutorial};
 use crate::rules::tutorial_layout::{self, Placement, Rect, Side};
 use crate::rules::view_model::{self, GlowTier, RollLabel};
@@ -308,6 +309,8 @@ pub struct Scene {
     sea: Option<(SeaKey, Rc<Image>)>,
     sail: Sail,
     hires: Vec<Hire>,
+    spends: Vec<(game::SpendEvent, u64)>,
+    rings: Vec<(game::RingEvent, u64)>,
 }
 
 /// What the glow layer was built from: what is built, the player's colour, the offers.
@@ -344,6 +347,33 @@ fn recipe_width(n: usize) -> i32 {
     RECIPE_H + 1 + legend_strip_width(n) + 1
 }
 
+/// The costs tray's recipes in reading order: what each builds and what it costs.
+const RECIPES: [(Kind, &[DiceValue]); 4] = [
+    (Kind::Road, game::RESOURCES_ROAD),
+    (Kind::City, game::RESOURCES_CITY),
+    (Kind::Village, &LEGEND_VILLAGE),
+    (Kind::Knight, game::RESOURCES_KNIGHT),
+];
+
+/// Where the costs tray draws the recipe of `kind`: two rows of two or, in the tall HUD, one
+/// column of four.
+fn recipe_rect(l: &Layout, kind: Kind) -> Rect {
+    let i = RECIPES.iter().position(|(k, _)| *k == kind).unwrap_or(0);
+    let left = l.costs.x + RECIPE_INSET_X;
+    let top = l.costs.y + RECIPE_INSET_Y;
+    let (x, y) = if l.costs_stacked {
+        (left, top + i as i32 * RECIPE_ROW)
+    } else if i % 2 == 0 {
+        (left, top + (i as i32 / 2) * RECIPE_ROW)
+    } else {
+        (
+            left + recipe_width(recipes_before(i)) + RECIPE_GAP,
+            top + RECIPE_ROW * (i as i32 / 2),
+        )
+    };
+    Rect::new(x, y, recipe_width(RECIPES[i].1.len()), RECIPE_H)
+}
+
 /// How many resources the recipe left of the nth one (in two rows of two) shows.
 fn recipes_before(n: usize) -> usize {
     if n == 1 {
@@ -376,6 +406,8 @@ impl Scene {
             sea: None,
             sail: Sail::default(),
             hires: Vec::new(),
+            spends: Vec::new(),
+            rings: Vec::new(),
         }
     }
 
@@ -393,6 +425,8 @@ impl Scene {
         self.sea = None;
         self.sail = Sail::default();
         self.hires.clear();
+        self.spends.clear();
+        self.rings.clear();
     }
 
     // ------------------------------------------------------------ pieces
@@ -688,13 +722,29 @@ impl Scene {
                 place: None,
             });
         }
+        for e in game.take_spend_events() {
+            self.spends
+                .push((e, now.saturating_add_signed(e.delay_ms as i64)));
+        }
+        for e in game.take_ring_events() {
+            self.rings.retain(|(r, _)| r.die != e.die);
+            self.rings.push((e, now));
+        }
         let game: &Game = game;
         let color = game.player_color | 0xFF000000;
         if self.tinted.as_ref().is_none_or(|t| t.color != color) {
             self.tinted = Some(Tinted::new(&self.assets, color));
         }
         self.update_hires(game, l, now);
-        let mut animating = !self.hires.is_empty();
+        let epoch = game.state_epoch;
+        self.spends.retain(|(e, start)| {
+            e.epoch == epoch && (now as i64 - *start as i64) < spend_anim::total() as i64
+        });
+        self.rings.retain(|(e, start)| {
+            e.epoch == epoch && now.saturating_sub(*start) < spend_anim::ring_total() as u64
+        });
+        let mut animating =
+            !self.hires.is_empty() || !self.spends.is_empty() || !self.rings.is_empty();
 
         // The island, upright, in its own layer over the sea
         let v = &l.isle;
@@ -728,6 +778,7 @@ impl Scene {
         self.draw_hud(frame, game, l, ui, s, now);
         animating |= self.draw_controls(frame, game, l, ui, s, now);
         self.draw_hires(frame, game, l, now);
+        self.draw_spends(frame, game, l, now);
         if turned {
             // The callout's words are read, so it goes on after the interface is turned
             self.draw_carry(frame, game, l, ui);
@@ -1015,28 +1066,15 @@ impl Scene {
         let a = &self.assets;
         let r = l.costs;
         tray(frame, r.x, r.y, r.w, r.h);
-        let left = r.x + RECIPE_INSET_X;
-        let top = r.y + RECIPE_INSET_Y;
-        // In reading order, two rows of two or, in the tall HUD, one column of four
-        let recipes: [(&Image, &[DiceValue]); 4] = [
-            (&t.glyph_road, game::RESOURCES_ROAD),
-            (&t.glyph_castle, game::RESOURCES_CITY),
-            (&t.glyph_village, &LEGEND_VILLAGE),
-            (&a.glyph_trader, game::RESOURCES_KNIGHT),
-        ];
-        for (i, (glyph, cost)) in recipes.into_iter().enumerate() {
-            let (x, y) = if l.costs_stacked {
-                (left, top + i as i32 * RECIPE_ROW)
-            } else if i % 2 == 0 {
-                (left, top + (i as i32 / 2) * RECIPE_ROW)
-            } else {
-                let before = recipes_before(i);
-                (
-                    left + recipe_width(before) + RECIPE_GAP,
-                    top + RECIPE_ROW * (i as i32 / 2),
-                )
+        for (kind, cost) in RECIPES {
+            let glyph = match kind {
+                Kind::Road => &t.glyph_road,
+                Kind::City => &t.glyph_castle,
+                Kind::Village => &t.glyph_village,
+                Kind::Knight => &a.glyph_trader,
             };
-            self.draw_recipe(frame, l, x, y, glyph, cost);
+            let at = recipe_rect(l, kind);
+            self.draw_recipe(frame, l, at.x, at.y, glyph, cost);
         }
     }
 
@@ -1296,8 +1334,13 @@ impl Scene {
         let t = self.tinted.as_ref().expect("tinted");
         for (i, r) in l.dice.iter().enumerate() {
             let die = &game.dice[i];
+            let ring = self.rings.iter().find(|(e, _)| e.die == i);
+            let value = match ring {
+                Some((e, start)) if spend_anim::ring_shows_old_face((now - start) as i32) => e.was,
+                _ => die.value,
+            };
             let icon = if die.is_usable() {
-                a.icon16(die.value)
+                a.icon16(value)
             } else {
                 None
             };
@@ -1313,6 +1356,17 @@ impl Scene {
                 }
                 None => f.sprite(&a.die_slot_empty, x, y, 255),
             });
+            if let Some((_, start)) = ring {
+                let elapsed = (now - start) as i32;
+                let (w, h) = (r.w + 2, r.h + 2);
+                let n = (spend_anim::ring_drawn(elapsed) * spend_anim::ring_len(w, h) as f32)
+                    .round() as usize;
+                let alpha = spend_anim::ring_alpha(elapsed).clamp(0, 255) as u32;
+                let argb = (view_model::HIGHLIGHT_KNIGHT & 0xFFFFFF) | alpha << 24;
+                for (px, py) in spend_anim::ring_pixels(w, h, n) {
+                    frame.fill_argb(r.x - 1 + px, r.y - 1 + py, 1, 1, argb);
+                }
+            }
         }
         let locked = game.is_roll_locked();
         let down = ui.is_pressed(Button::Roll, now) && !locked;
@@ -1402,11 +1456,14 @@ impl Scene {
 
     fn draw_mini_die(&self, frame: &mut Image, l: &Layout, x: i32, y: i32, v: DiceValue) {
         let die = Rect::new(x, y, MINI_DIE, MINI_DIE);
-        upright(frame, l, die, |f, x, y| {
-            f.plate(x, y, MINI_DIE, MINI_DIE, INK);
-            f.plate(x + 1, y + 1, MINI_DIE - 2, MINI_DIE - 2, LEGEND_TILE);
-            f.sprite(self.assets.icon12(v), x + 2, y + 2 + mini_icon_drop(v), 255);
-        });
+        upright(frame, l, die, |f, x, y| self.mini_die_face(f, x, y, v));
+    }
+
+    /// A mini die as it reads upright, its top left at (x, y).
+    fn mini_die_face(&self, f: &mut Image, x: i32, y: i32, v: DiceValue) {
+        f.plate(x, y, MINI_DIE, MINI_DIE, INK);
+        f.plate(x + 1, y + 1, MINI_DIE - 2, MINI_DIE - 2, LEGEND_TILE);
+        f.sprite(self.assets.icon12(v), x + 2, y + 2 + mini_icon_drop(v), 255);
     }
 
     // ------------------------------------------------------------ hiring
@@ -1535,6 +1592,58 @@ impl Scene {
         }
     }
 
+    /// Each banked resource a build spent, its mini die flying from where it sat on the tab
+    /// to the middle of the piece it paid for and fading there, in the bank's blue glow.
+    fn draw_spends(&self, frame: &mut Image, game: &Game, l: &Layout, now: u64) {
+        for (e, start) in &self.spends {
+            let elapsed = (now as i64 - *start as i64) as i32;
+            let alpha = spend_anim::alpha(elapsed);
+            if alpha <= 0 {
+                continue;
+            }
+            let Some(p) = self
+                .pieces
+                .all()
+                .find(|p| p.kind == e.kind && p.index == e.index)
+            else {
+                continue;
+            };
+            let target = self.piece_rect(game, l, p);
+            let from = Pt::new(l.slot_x(e.place), l.slot_y(e.place));
+            let to = Pt::new(
+                target.x + (target.w - MINI_DIE) / 2,
+                target.y + (target.h - MINI_DIE) / 2,
+            );
+            let at = spend_anim::die_at(from, to, elapsed);
+            let strength = spend_anim::glow(elapsed);
+            if strength > 0.0 {
+                let tint = view_model::HIGHLIGHT_KNIGHT & 0xFFFFFF;
+                draw_hire_glow(frame, None, at.x, at.y, tint, strength);
+            }
+            let mut tile = Image::new(MINI_DIE as u32, MINI_DIE as u32);
+            self.mini_die_face(&mut tile, 0, 0, e.value);
+            let die = Rect::new(at.x, at.y, MINI_DIE, MINI_DIE);
+            upright(frame, l, die, |f, x, y| {
+                f.sprite(&tile, x, y, alpha.clamp(0, 255) as u8)
+            });
+        }
+    }
+
+    /// Where a piece is drawn, in the interface's pixels.
+    fn piece_rect(&self, game: &Game, l: &Layout, p: &Piece) -> Rect {
+        let o = Self::origin(game, p);
+        let (w, h) = match p.kind {
+            Kind::Road => {
+                let sprite = &self.assets.road[game.board.road_shape[p.index] as usize];
+                (sprite.width as i32, sprite.height as i32)
+            }
+            Kind::Village => (layout::VILLAGE_W, layout::VILLAGE_H),
+            Kind::City => (layout::CASTLE_W, layout::CASTLE_H),
+            Kind::Knight => (layout::TRADER_W, layout::TRADER_H),
+        };
+        l.board_rect_to_ui(Rect::new(o.x, o.y, w, h))
+    }
+
     // ------------------------------------------------------------ the tutorial
 
     /// The rectangle a step's callout describes, or None when it is not on screen.
@@ -1551,20 +1660,14 @@ impl Scene {
                     last.y + last.h - first.y,
                 ))
             }
-            Step::Costs => Some(l.costs),
+            Step::Costs => Some(recipe_rect(l, Kind::Road)),
+            Step::CostVillage => Some(recipe_rect(l, Kind::Village)),
+            Step::CostCastle => Some(recipe_rect(l, Kind::City)),
+            Step::CostTrader => Some(recipe_rect(l, Kind::Knight)),
+            Step::Saved => Some(l.menu),
             Step::Build => {
                 let p = self.pieces.offered_spot(game)?;
-                let o = Self::origin(game, &p);
-                let (w, h) = match p.kind {
-                    Kind::Road => {
-                        let sprite = &self.assets.road[game.board.road_shape[p.index] as usize];
-                        (sprite.width as i32, sprite.height as i32)
-                    }
-                    Kind::Village => (layout::VILLAGE_W, layout::VILLAGE_H),
-                    Kind::City => (layout::CASTLE_W, layout::CASTLE_H),
-                    Kind::Knight => (layout::TRADER_W, layout::TRADER_H),
-                };
-                Some(l.board_rect_to_ui(Rect::new(o.x, o.y, w, h)))
+                Some(self.piece_rect(game, l, &p))
             }
             Step::Undo => Some(l.undo),
             Step::Ship => Some(l.track.rect()),
@@ -1638,7 +1741,7 @@ impl Scene {
             return dirty;
         };
         let o = tutorial_layout::OUTLINE;
-        frame.frame(
+        frame.bevel_frame(
             target.x - o,
             target.y - o,
             target.w + 2 * o,

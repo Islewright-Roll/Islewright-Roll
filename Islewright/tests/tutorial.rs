@@ -94,6 +94,22 @@ impl Table {
     }
 }
 
+/// The tour's steps up to the gold: Roll, Keep, the four costs, Build, Undo, End, Ship and Saved.
+const FIRST: u32 = 0x3C7F;
+
+/// Got it on each of the costs tour's four callouts, which come one after another.
+fn through_costs(t: &mut Table) {
+    for step in [
+        Step::Costs,
+        Step::CostVillage,
+        Step::CostCastle,
+        Step::CostTrader,
+    ] {
+        assert_eq!(Some(step), t.look());
+        t.tutorial.got_it();
+    }
+}
+
 fn fresh() -> Table {
     Table::new(Tutorial::new(true, 0))
 }
@@ -102,7 +118,7 @@ fn reach_build(t: &mut Table) {
     t.look();
     t.roll();
     t.hold();
-    t.tutorial.got_it();
+    through_costs(t);
     t.offered = true;
     assert_eq!(Some(Step::Build), t.look());
 }
@@ -121,17 +137,18 @@ fn the_first_seven_steps_come_in_order() {
     assert_eq!(Some(Step::Keep), t.roll());
     assert_eq!(Some(Step::Costs), t.hold());
     t.offered = true;
-    assert_eq!(Some(Step::Costs), t.look());
-    t.tutorial.got_it();
+    through_costs(&mut t);
     assert_eq!(Some(Step::Build), t.look());
     assert_eq!(Some(Step::Undo), t.build());
     t.tutorial.got_it();
     assert_eq!(Some(Step::End), t.look());
-    // The second turn: the ship
+    // The second turn: the ship, then that the game saves itself
     assert_eq!(Some(Step::Ship), t.end_turn());
     t.tutorial.got_it();
+    assert_eq!(Some(Step::Saved), t.look());
+    t.tutorial.got_it();
     assert_eq!(None, t.look());
-    assert_eq!(0x7F, t.tutorial.seen_mask());
+    assert_eq!(FIRST, t.tutorial.seen_mask());
     assert!(t.tutorial.is_active());
 }
 
@@ -185,14 +202,26 @@ fn costs_ends_on_the_next_roll() {
 }
 
 #[test]
-fn costs_ends_on_got_it() {
+fn the_costs_tour_goes_entry_by_entry_on_got_it() {
     let mut t = fresh();
     t.look();
     t.roll();
-    assert_eq!(Some(Step::Costs), t.hold());
-    t.tutorial.got_it();
+    t.hold();
+    through_costs(&mut t);
     assert_eq!(None, t.look());
-    assert!(t.tutorial.is_seen(Step::Costs));
+    assert!(t.tutorial.is_seen(Step::CostTrader));
+}
+
+#[test]
+fn rolling_during_the_costs_tour_ends_the_rest_of_it() {
+    let mut t = fresh();
+    t.look();
+    t.roll();
+    t.hold();
+    t.tutorial.got_it();
+    assert_eq!(Some(Step::CostVillage), t.look());
+    assert_eq!(None, t.roll());
+    assert!(t.tutorial.is_seen(Step::CostTrader));
 }
 
 #[test]
@@ -214,7 +243,7 @@ fn build_waits_for_something_to_be_on_offer() {
     t.look();
     t.roll();
     t.hold();
-    t.tutorial.got_it();
+    through_costs(&mut t);
     assert_eq!(None, t.look());
     t.offered = true;
     assert_eq!(Some(Step::Build), t.look());
@@ -276,7 +305,7 @@ fn end_shows_when_the_rolls_are_used_up_with_nothing_to_build() {
     t.look();
     t.roll();
     t.roll();
-    t.tutorial.got_it();
+    through_costs(&mut t);
     assert_eq!(Some(Step::End), t.roll());
     assert_eq!(Some(Step::Ship), t.end_turn());
     assert!(t.tutorial.is_seen(Step::End));
@@ -288,7 +317,7 @@ fn end_waits_behind_a_build_callout_when_something_is_on_offer() {
     t.look();
     t.roll();
     t.roll();
-    t.tutorial.got_it();
+    through_costs(&mut t);
     t.offered = true;
     t.roll();
     assert_eq!(Some(Step::Build), t.look());
@@ -313,11 +342,10 @@ fn ship_shows_from_the_second_turn_and_ends_with_got_it_or_the_turn() {
     t.end_turn();
     // Turn one ended after a single roll: nothing was built, nothing held
     assert!(t.tutorial.is_seen(Step::Keep));
-    assert_eq!(Some(Step::Costs), t.look());
-    t.tutorial.got_it();
+    through_costs(&mut t);
     assert_eq!(Some(Step::Ship), t.look());
     t.tutorial.got_it();
-    assert_eq!(None, t.look());
+    assert_eq!(Some(Step::Saved), t.look());
 
     let mut u = fresh();
     reach_build(&mut u);
@@ -329,7 +357,8 @@ fn ship_shows_from_the_second_turn_and_ends_with_got_it_or_the_turn() {
     assert_eq!(Some(Step::Ship), u.roll());
     assert_eq!(Some(Step::Ship), u.roll());
     assert_eq!(Some(Step::Ship), u.roll());
-    assert_eq!(None, u.end_turn());
+    // The turn ending takes the ship away, and that the game saves itself follows
+    assert_eq!(Some(Step::Saved), u.end_turn());
     assert!(u.tutorial.is_seen(Step::Ship));
 }
 
@@ -350,7 +379,7 @@ fn gold_needs_two_gold_dice_and_waits_behind_another_callout() {
 
 #[test]
 fn a_single_gold_shows_nothing() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F));
+    let mut t = Table::new(Tutorial::new(true, FIRST));
     t.turns = 3;
     t.rolls = 1;
     t.gold = 1;
@@ -360,7 +389,7 @@ fn a_single_gold_shows_nothing() {
 
 #[test]
 fn gold_is_done_when_the_gold_is_gone() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F));
+    let mut t = Table::new(Tutorial::new(true, FIRST));
     t.turns = 3;
     t.rolls = 1;
     t.look();
@@ -381,13 +410,13 @@ fn gold_does_not_bump_a_callout_that_is_up() {
     t.gold = 2;
     assert_eq!(Some(Step::Keep), t.look());
     assert_eq!(Some(Step::Costs), t.hold());
-    t.tutorial.got_it();
+    through_costs(&mut t);
     assert_eq!(Some(Step::Gold), t.look());
 }
 
 #[test]
 fn bank_shows_while_a_mini_die_is_waiting_and_ends_on_got_it() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F));
+    let mut t = Table::new(Tutorial::new(true, FIRST));
     t.turns = 4;
     t.look();
     t.mini = 1;
@@ -400,7 +429,7 @@ fn bank_shows_while_a_mini_die_is_waiting_and_ends_on_got_it() {
 
 #[test]
 fn bank_ends_when_the_mini_die_is_spent() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F));
+    let mut t = Table::new(Tutorial::new(true, FIRST));
     t.turns = 4;
     t.look();
     t.mini = 1;
@@ -427,7 +456,7 @@ fn gold_comes_before_bank_and_each_waits_for_the_one_up() {
 
 #[test]
 fn classic_mode_shows_the_drag_callout_instead_and_it_ends_when_the_die_is_dragged() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F));
+    let mut t = Table::new(Tutorial::new(true, FIRST));
     t.turns = 4;
     t.classic = true;
     t.look();
@@ -441,7 +470,7 @@ fn classic_mode_shows_the_drag_callout_instead_and_it_ends_when_the_die_is_dragg
 
 #[test]
 fn a_player_who_learned_the_usual_bank_still_meets_the_drag_once_classic_is_on() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F | Step::Gold.bit()));
+    let mut t = Table::new(Tutorial::new(true, FIRST | Step::Gold.bit()));
     t.turns = 4;
     t.look();
     t.mini = 1;
@@ -459,7 +488,7 @@ fn a_player_who_learned_the_usual_bank_still_meets_the_drag_once_classic_is_on()
 
 #[test]
 fn skipping_the_tour_leaves_the_drag_hint_for_when_classic_mode_banks_a_resource() {
-    let mut t = Table::new(Tutorial::new(true, 0x7F));
+    let mut t = Table::new(Tutorial::new(true, FIRST));
     t.turns = 4;
     t.classic = true;
     t.look();
@@ -557,7 +586,9 @@ fn a_new_game_after_the_end_goes_on_where_it_left_off() {
     t.look();
     t.end_turn();
     t.tutorial.got_it();
-    assert_eq!(0x7F, t.tutorial.seen_mask());
+    assert_eq!(Some(Step::Saved), t.look());
+    t.tutorial.got_it();
+    assert_eq!(FIRST, t.tutorial.seen_mask());
     t.turns = 15;
     t.over = true;
     assert_eq!(None, t.look());
@@ -570,7 +601,7 @@ fn a_new_game_after_the_end_goes_on_where_it_left_off() {
     t.ends_turn = false;
     t.held = false;
     assert_eq!(None, t.look());
-    assert_eq!(0x7F, t.tutorial.seen_mask());
+    assert_eq!(FIRST, t.tutorial.seen_mask());
 }
 
 #[test]
@@ -598,6 +629,8 @@ fn a_saved_mask_resumes_where_it_left_off() {
     ));
     t.turns = 1;
     assert_eq!(Some(Step::Ship), t.look());
+    // A mask saved before the costs tour had four entries: past the build, the rest is done
+    assert!(t.tutorial.is_seen(Step::CostTrader));
 }
 
 #[test]
@@ -629,7 +662,7 @@ fn reopened_with_an_unseen_tutorial_in_the_middle_of_a_game_catches_up() {
     assert_eq!(Some(Step::Costs), t.look());
     assert!(t.tutorial.is_seen(Step::Roll));
     assert!(t.tutorial.is_seen(Step::Keep));
-    t.tutorial.got_it();
+    through_costs(&mut t);
     assert_eq!(Some(Step::End), t.look());
 }
 
@@ -663,7 +696,7 @@ fn progress_is_reported_dirty_only_when_it_changes() {
 #[test]
 fn a_seen_mask_keeps_only_the_bits_for_real_steps() {
     assert_eq!(tutorial::KNOWN, Tutorial::new(true, u32::MAX).seen_mask());
-    assert_eq!(10, Step::ALL.len());
+    assert_eq!(14, Step::ALL.len());
 }
 
 // ---- the events can be spoken directly --------------------------------------------------------

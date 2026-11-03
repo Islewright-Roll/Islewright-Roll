@@ -117,7 +117,7 @@ fn strings(game: &Game) -> Strings {
     let ship = if game.is_race() {
         t::tutorial_ship_race(game.target_score as i64).format()
     } else {
-        t::tutorial_ship_score().format()
+        t::tutorial_ship_score(game.map.turn_cap as i64).format()
     };
     Strings {
         score: t::score().format(),
@@ -135,10 +135,14 @@ fn strings(game: &Game) -> Strings {
             (Step::Roll, t::tutorial_roll().format()),
             (Step::Keep, t::tutorial_keep().format()),
             (Step::Costs, t::tutorial_costs().format()),
+            (Step::CostVillage, t::tutorial_cost_village().format()),
+            (Step::CostCastle, t::tutorial_cost_castle().format()),
+            (Step::CostTrader, t::tutorial_cost_trader().format()),
             (Step::Build, t::tutorial_build().format()),
             (Step::Undo, t::tutorial_undo().format()),
             (Step::End, t::tutorial_end().format()),
             (Step::Ship, ship),
+            (Step::Saved, t::tutorial_saved().format()),
             (Step::Gold, t::tutorial_gold().format()),
             (Step::Bank, t::tutorial_bank().format()),
             (Step::BankClassic, t::tutorial_bank_classic().format()),
@@ -671,15 +675,22 @@ impl Screen {
     /// A tap on a spot on offer: the questions it needs first, one after the other, and the
     /// build if every answer is yes.
     fn build(self: &Rc<Self>, kind: Kind, index: usize) {
-        let (prompts, rev) = {
+        let (prompts, choices, rev) = {
             let game = self.host.game.borrow();
-            (game.build_prompts(kind, index), game.revision())
+            (
+                game.build_prompts(kind, index),
+                game.bank_choices(kind, index),
+                game.revision(),
+            )
         };
         let s = self.clone();
-        let run = move |s: &Rc<Screen>| {
+        let run = move |s: &Rc<Screen>, spend: Option<Vec<DiceValue>>| {
             let built = {
                 let mut game = s.host.game.borrow_mut();
-                game.build(kind, index);
+                match spend {
+                    Some(spend) => game.build_spending(kind, index, spend),
+                    None => game.build(kind, index),
+                }
                 game.is_built(kind, index)
             };
             if built {
@@ -687,8 +698,8 @@ impl Screen {
             }
             s.changed();
         };
-        if prompts.is_empty() {
-            run(&s);
+        if prompts.is_empty() && choices.is_empty() {
+            run(&s, None);
             return;
         }
         self.ask(async move {
@@ -719,9 +730,30 @@ impl Screen {
                     return;
                 }
             }
+            // Which banked resources pay, when gold could stand in for some of them
+            let mut spend = None;
+            if !choices.is_empty() {
+                let mut dialog = ui::Dialog::new(res::str::bank_choose_title().format())
+                    .message(res::str::bank_choose_text().format())
+                    .stacked();
+                for (n, set) in choices.into_iter().enumerate() {
+                    let label = set
+                        .iter()
+                        .map(|&v| resource_label(v).1)
+                        .collect::<Vec<_>>()
+                        .join(" + ");
+                    let icon = resource_label(set[0]).2;
+                    dialog = dialog.icon_button(&format!("spend{n}"), label, icon, set);
+                }
+                spend = ui::ask(dialog.cancel(res::str::settings_cancel().format())).await;
+                if spend.is_none() {
+                    s.request();
+                    return;
+                }
+            }
             // The game may have moved under the questions (the shell can replace it)
             if s.host.game.borrow().revision() == rev {
-                run(&s);
+                run(&s, spend);
             } else {
                 s.request();
             }
@@ -972,16 +1004,10 @@ impl Screen {
         }
         let s = self.clone();
         self.ask(async move {
-            let names = [
-                ("wool", res::str::resource_wool(), ui::Icon::Wool),
-                ("grain", res::str::resource_grain(), ui::Icon::Grain),
-                ("brick", res::str::resource_brick(), ui::Icon::Brick),
-                ("ore", res::str::resource_ore(), ui::Icon::Ore),
-                ("lumber", res::str::resource_lumber(), ui::Icon::Lumber),
-            ];
             let mut dialog = ui::Dialog::new(res::str::trader_choose_title().format()).stacked();
-            for (v, (key, name, icon)) in DiceValue::RESOURCES.into_iter().zip(names) {
-                dialog = dialog.icon_button(key, name.format(), icon, v);
+            for v in DiceValue::RESOURCES {
+                let (key, name, icon) = resource_label(v);
+                dialog = dialog.icon_button(key, name, icon, v);
             }
             // Cancelling leaves the die and the bank as they were
             let choice = ui::ask(dialog.cancel(res::str::settings_cancel().format())).await;
@@ -999,6 +1025,29 @@ impl Screen {
     }
 }
 
+/// A resource's key, name and icon, for a dialog's buttons.
+fn resource_label(v: DiceValue) -> (&'static str, String, ui::Icon) {
+    match v {
+        DiceValue::Wool => ("wool", res::str::resource_wool().format(), ui::Icon::Wool),
+        DiceValue::Grain => (
+            "grain",
+            res::str::resource_grain().format(),
+            ui::Icon::Grain,
+        ),
+        DiceValue::Brick => (
+            "brick",
+            res::str::resource_brick().format(),
+            ui::Icon::Brick,
+        ),
+        DiceValue::Ore => ("ore", res::str::resource_ore().format(), ui::Icon::Ore),
+        _ => (
+            "lumber",
+            res::str::resource_lumber().format(),
+            ui::Icon::Lumber,
+        ),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::scene::{Hit, Scene, Strings, Ui};
@@ -1012,6 +1061,45 @@ mod tests {
     fn render(scene: &mut Scene, game: &mut Game, l: &Layout, ui: &mut Ui) -> scene::Frame {
         let mut t = Tutorial::new(false, 0);
         scene.render(game, l, ui, &mut t, &Strings::default(), 1_000)
+    }
+
+    /// Not a check: writes frames of the bank spend and the classic ring to $CAPTURE_DIR, to
+    /// look at the animation without a device. Run with
+    /// `CAPTURE_DIR=<dir> cargo test --lib capture_bank_spend -- --ignored`.
+    #[test]
+    #[ignore]
+    fn capture_bank_spend() {
+        use crate::rules::scenario::Scenario;
+        let dir = std::env::var("CAPTURE_DIR").expect("CAPTURE_DIR");
+        let doc = include_str!("../../tools/scenarios/dunholm-bank-choice.json");
+        let shot = |classic: bool, name: &str, moments: &[u64]| {
+            let s = Scenario::from_json(doc).unwrap();
+            let mut g = Game::with_rng(s.map, Rng::new(7));
+            g.start_new_game(s.map);
+            s.apply_to(&mut g);
+            g.set_trader_classic(classic);
+            let mut scene = Scene::new(g.map);
+            let mut ui = Ui::new();
+            let mut t = Tutorial::new(false, 0);
+            let l = Layout::new(1080, 2400, Insets::default(), g.map, DiceSide::Right);
+            let strings = Strings::default();
+            scene.render(&mut g, &l, &mut ui, &mut t, &strings, 1_000);
+            if classic {
+                assert!(g.overwrite_die(5, 1, DiceValue::Ore));
+            } else {
+                let i = (0..g.playsheet.cities.len())
+                    .find(|&i| g.can_build_at(Kind::City, i))
+                    .expect("a castle on offer");
+                assert_eq!(2, g.bank_choices(Kind::City, i).len());
+                g.build_spending(Kind::City, i, vec![DiceValue::Grain]);
+            }
+            for &ms in moments {
+                let f = scene.render(&mut g, &l, &mut ui, &mut t, &strings, 2_000 + ms);
+                std::fs::write(format!("{dir}/{name}-{ms:04}.png"), f.to_png(&l)).unwrap();
+            }
+        };
+        shot(false, "spend", &[0, 120, 300, 450, 600, 700, 800]);
+        shot(true, "ring", &[0, 160, 300, 400, 500, 640]);
     }
 
     #[test]

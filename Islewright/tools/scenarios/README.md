@@ -32,3 +32,9 @@ Building and prompts: `tarnholm-build-ready` (third roll, the End Turn question 
 before building), `tarnholm-build-early` (first roll, dice that spend five, so no question),
 `tarnholm-build-prompted` (first roll, dice that spend only two, so the Build Now question) and
 `tarnholm-last-build` (final turn with a road to build, for a finished game that takes a new best).
+
+Choosing what the bank spends: `dunholm-bank-choice` (grain and ore banked, dice Grain, Ore, Ore,
+Gold, Gold on the third roll). The castle is short a grain and an ore; the gold pair pays one and
+the bank the other, so tapping it asks which banked resource to spend, then flies that one from
+the tab to the castle. With trader resource classic mode on, drag a banked resource onto a die to
+see the ring.

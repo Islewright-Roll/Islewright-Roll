@@ -25,7 +25,8 @@ pub enum Step {
     Roll,
     /// Dice tray: after the first roll of the game.
     Keep,
-    /// The costs key in the top bar: after Keep is done.
+    /// The road's entry in the costs key: after Keep is done. Opens the costs tour, which
+    /// goes on through the village, the castle and the trader, one entry at a time.
     Costs,
     /// One spot on offer: the first time anything is, after Costs.
     Build,
@@ -44,17 +45,30 @@ pub enum Step {
     /// does not wait for it, and it still shows after the tour is finished or skipped, because
     /// a player who turns classic mode on later has never been shown the drag.
     BankClassic,
+    /// The village's entry in the costs key, after the road's. These last four come after the
+    /// rest in the enum because the bits are saved; their place in the tour is in ALL.
+    CostVillage,
+    /// The castle's entry, after the village's.
+    CostCastle,
+    /// The trader's entry, after the castle's.
+    CostTrader,
+    /// That the game saves itself: after the ship, early in the second turn.
+    Saved,
 }
 
 impl Step {
-    pub const ALL: [Step; 10] = [
+    pub const ALL: [Step; 14] = [
         Step::Roll,
         Step::Keep,
         Step::Costs,
+        Step::CostVillage,
+        Step::CostCastle,
+        Step::CostTrader,
         Step::Build,
         Step::Undo,
         Step::End,
         Step::Ship,
+        Step::Saved,
         Step::Gold,
         Step::Bank,
         Step::BankClassic,
@@ -182,6 +196,14 @@ impl Tutorial {
             None => self.catch_up(s),
             Some(prev) => self.transitions(&prev, s),
         }
+        // The costs tour is moot once something was built through the callout after it: the
+        // village, castle and trader entries came after the road's in a later version, and a
+        // player already past it is not walked back to them.
+        if self.is_seen(Step::Build) {
+            for step in [Step::CostVillage, Step::CostCastle, Step::CostTrader] {
+                self.mark_seen(step);
+            }
+        }
         self.prev = Some(*s);
 
         if (self.seen & ALL) == ALL {
@@ -220,10 +242,14 @@ impl Tutorial {
             Step::Roll => s.turns_taken == 0 && s.rolls == 0 && !s.built_this_turn,
             Step::Keep => self.is_seen(Step::Roll) && s.rolls >= 1,
             Step::Costs => self.is_seen(Step::Keep),
-            Step::Build => self.is_seen(Step::Costs) && s.offered && !s.built_this_turn,
+            Step::CostVillage => self.is_seen(Step::Costs),
+            Step::CostCastle => self.is_seen(Step::CostVillage),
+            Step::CostTrader => self.is_seen(Step::CostCastle),
+            Step::Build => self.is_seen(Step::CostTrader) && s.offered && !s.built_this_turn,
             Step::Undo => s.can_undo,
             Step::End => s.roll_ends_turn,
             Step::Ship => s.turns_taken >= 1,
+            Step::Saved => self.is_seen(Step::Ship) && s.turns_taken >= 1,
             Step::Gold => s.gold_dice >= 2,
             Step::Bank => s.mini_dice >= 1 && !s.classic_bank,
             Step::BankClassic => s.mini_dice >= 1 && s.classic_bank,
@@ -272,7 +298,7 @@ impl Tutorial {
         if rolls_now >= 2 {
             self.mark_seen(Step::Keep);
         }
-        self.mark_if_current(Step::Costs);
+        self.leave_costs();
     }
 
     /// A die was held.
@@ -286,7 +312,7 @@ impl Tutorial {
         self.mark_seen(Step::Roll);
         self.mark_seen(Step::Keep);
         self.mark_seen(Step::Build);
-        self.mark_if_current(Step::Costs);
+        self.leave_costs();
     }
 
     /// The last build was taken back, or the chance to was lost to a roll or the turn ending.
@@ -299,9 +325,10 @@ impl Tutorial {
         self.mark_seen(Step::Roll);
         self.mark_seen(Step::Keep);
         self.mark_seen(Step::End);
-        self.mark_if_current(Step::Costs);
+        self.leave_costs();
         self.mark_if_current(Step::Undo);
         self.mark_if_current(Step::Ship);
+        self.mark_if_current(Step::Saved);
     }
 
     /// The Got it button: the callout up is done.
@@ -342,6 +369,21 @@ impl Tutorial {
         if self.active {
             self.active = false;
             self.dirty = true;
+        }
+    }
+
+    /// The player went on playing during the costs tour: the rest of it is not shown.
+    fn leave_costs(&mut self) {
+        const TOUR: [Step; 4] = [
+            Step::Costs,
+            Step::CostVillage,
+            Step::CostCastle,
+            Step::CostTrader,
+        ];
+        if self.current.is_some_and(|c| TOUR.contains(&c)) {
+            for step in TOUR {
+                self.mark_seen(step);
+            }
         }
     }
 

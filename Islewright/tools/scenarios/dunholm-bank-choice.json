@@ -1,0 +1,62 @@
+{
+  "map": "dunholm",
+  "turnsTaken": 7,
+  "rolls": 3,
+  "dice": [
+    "Grain",
+    "Ore",
+    "Ore",
+    "Gold",
+    "Gold",
+    "Wool"
+  ],
+  "playsheet": {
+    "roads": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "villages": [
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false
+    ],
+    "cities": [
+      false,
+      false,
+      false,
+      false
+    ],
+    "traders": [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "bankSpent": []
+  }
+}

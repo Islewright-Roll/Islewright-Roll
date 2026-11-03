@@ -510,6 +510,15 @@ impl Image {
         self.fill_argb(x + w - 1, y + 1, 1, h - 2, argb);
     }
 
+    /// A one pixel outline round a box with its corner pixels left out, so it reads as a
+    /// rounded rectangle rather than a square one.
+    pub fn bevel_frame(&mut self, x: i32, y: i32, w: i32, h: i32, argb: u32) {
+        self.fill_argb(x + 1, y, w - 2, 1, argb);
+        self.fill_argb(x + 1, y + h - 1, w - 2, 1, argb);
+        self.fill_argb(x, y + 1, 1, h - 2, argb);
+        self.fill_argb(x + w - 1, y + 1, 1, h - 2, argb);
+    }
+
     /// A one pixel outline round a box.
     pub fn frame(&mut self, x: i32, y: i32, w: i32, h: i32, argb: u32) {
         self.fill_argb(x, y, w, 1, argb);

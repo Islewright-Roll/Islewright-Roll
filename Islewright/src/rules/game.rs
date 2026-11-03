@@ -80,6 +80,30 @@ pub struct HireEvent {
     pub epoch: u32,
 }
 
+/// A build just spent a banked resource by itself: the UI flies its mini die from the tab to
+/// the piece (spend_anim), starting `delay_ms` after the tap, in time with its tick.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SpendEvent {
+    pub slot: usize,
+    /// Where on the tab its mini die sat just before it was spent: how many usable slots
+    /// came before it.
+    pub place: i32,
+    pub value: DiceValue,
+    pub kind: Kind,
+    pub index: usize,
+    pub delay_ms: i32,
+    pub epoch: u32,
+}
+
+/// In trader resource classic mode a banked resource was just dropped onto a die: the UI runs
+/// a ring round it (spend_anim::ring_*), showing `was` until the ring closes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RingEvent {
+    pub die: usize,
+    pub was: DiceValue,
+    pub epoch: u32,
+}
+
 /// Files a result on an island's top scores: (map id, result) to its 1 based rank, or 0 if
 /// it did not make the list. See HighScoresAndSettings::add_score.
 pub type ResultRecorder = Box<dyn FnMut(&str, i32) -> i32>;
@@ -154,6 +178,13 @@ pub struct Game {
     /// Traders hired so far in the build tap in progress, to stagger their animations.
     hires_this_tap: i32,
     hires: Vec<HireEvent>,
+    /// Banked resources spent in the build tap in progress, to stagger their flights.
+    spends_this_tap: i32,
+    spends: Vec<SpendEvent>,
+    rings: Vec<RingEvent>,
+    /// The banked resources the player chose to spend on the build tap in progress, when
+    /// gold could have paid for some of them instead (bank_choices).
+    bank_spend: Option<Vec<DiceValue>>,
 
     /// True while a scenario holds this game (see scenario::Scenario::apply_to): the
     /// tutorial neither watches nor draws over it. Cleared by reset, so a restart ends it.
@@ -222,6 +253,10 @@ impl Game {
             state_epoch: 0,
             hires_this_tap: 0,
             hires: Vec::new(),
+            spends_this_tap: 0,
+            spends: Vec::new(),
+            rings: Vec::new(),
+            bank_spend: None,
             tutorial_paused: false,
             player_color: player_color::DEFAULT,
             early_build_prompt: EARLY_PROMPT_SMART,
@@ -252,6 +287,16 @@ impl Game {
     /// The hires since the last call, for the UI's animations.
     pub fn take_hire_events(&mut self) -> Vec<HireEvent> {
         std::mem::take(&mut self.hires)
+    }
+
+    /// The banked resources builds spent since the last call, for the UI's animations.
+    pub fn take_spend_events(&mut self) -> Vec<SpendEvent> {
+        std::mem::take(&mut self.spends)
+    }
+
+    /// The classic drops since the last call, for the UI's animations.
+    pub fn take_ring_events(&mut self) -> Vec<RingEvent> {
+        std::mem::take(&mut self.rings)
     }
 
     fn now(&self) -> u64 {
@@ -713,7 +758,24 @@ impl Game {
             return;
         }
         let bonuses = self.playsheet.bonus_state();
+        let usable: Vec<bool> = (0..=self.playsheet.bank_size())
+            .map(|s| self.playsheet.can_use_knight_resource(s))
+            .collect();
         let spent = self.use_resources(kind.recipe());
+        for slot in 1..usable.len() {
+            if usable[slot] && !self.playsheet.can_use_knight_resource(slot) {
+                self.spends.push(SpendEvent {
+                    slot,
+                    place: usable[1..slot].iter().filter(|&&u| u).count() as i32,
+                    value: self.map.bank_resource[slot],
+                    kind,
+                    index: i,
+                    delay_ms: self.spends_this_tap * sound_cues::BANKED_GAP_MS,
+                    epoch: self.state_epoch,
+                });
+                self.spends_this_tap += 1;
+            }
+        }
         build_plan::apply_build(kind, i, &mut self.playsheet);
         if kind == Kind::Knight {
             let slot = self.map.trader_bank[i - 1];
@@ -786,6 +848,7 @@ impl Game {
     /// takes the whole tap back.
     pub fn build(&mut self, kind: Kind, index: usize) {
         self.hires_this_tap = 0;
+        self.spends_this_tap = 0;
         let before = if self.is_game_done() {
             None
         } else {
@@ -868,6 +931,11 @@ impl Game {
         }
         self.undo = Some(self.snapshot());
         let die = &mut self.dice[die_index];
+        self.rings.push(RingEvent {
+            die: die_index,
+            was: die.value,
+            epoch: self.state_epoch,
+        });
         die.value = value;
         die.held = true;
         die.locked = true;
@@ -948,12 +1016,29 @@ impl Game {
 
     /// Pays for a recipe from this game's dice and bank.
     pub fn use_resources(&mut self, resources: &[DiceValue]) -> Spent {
-        use_resources(
+        use_resources_spending(
             resources,
             &mut self.dice,
             &mut self.playsheet,
             self.knight_resources.get_mut(),
+            self.bank_spend.as_deref(),
         )
+    }
+
+    /// The choices of banked resources a tap on this position could spend, when there is a
+    /// real one to make (see bank_options); empty otherwise, and for a chain.
+    pub fn bank_choices(&self, kind: Kind, index: usize) -> Vec<Vec<DiceValue>> {
+        if !self.can_build_at(kind, index) {
+            return Vec::new();
+        }
+        bank_options(kind.recipe(), &self.dice, &self.playsheet)
+    }
+
+    /// What a tap does once the player has chosen which banked resources to spend.
+    pub fn build_spending(&mut self, kind: Kind, index: usize, spend: Vec<DiceValue>) {
+        self.bank_spend = Some(spend);
+        self.build(kind, index);
+        self.bank_spend = None;
     }
 
     pub fn can_build(&self, resources_required: &[DiceValue]) -> bool {
@@ -1015,6 +1100,18 @@ pub fn use_resources(
     playsheet: &mut Playsheet,
     knight_resources: &mut Vec<DiceValue>,
 ) -> Spent {
+    use_resources_spending(resources, dice, playsheet, knight_resources, None)
+}
+
+/// use_resources, told which banked resources to spend where gold could stand in for some of
+/// them (`spend`, one of bank_options' answers). None spends the ones the bank lists last.
+pub fn use_resources_spending(
+    resources: &[DiceValue],
+    dice: &mut [Dice],
+    playsheet: &mut Playsheet,
+    knight_resources: &mut Vec<DiceValue>,
+    spend: Option<&[DiceValue]>,
+) -> Spent {
     offered_by_bank(playsheet, knight_resources);
 
     let mut gold = dice
@@ -1062,7 +1159,16 @@ pub fn use_resources(
         gold_used = res_list.len() * 2;
         let mut i = 0;
         while i < pairs - res_list.len() && !res_list_found.is_empty() {
-            res_list_found.remove(0);
+            // Gold pays instead of a banked resource the player chose to keep
+            let at = spend
+                .and_then(|keep| {
+                    res_list_found.iter().position(|v| {
+                        let found = res_list_found.iter().filter(|&w| w == v).count();
+                        found > keep.iter().filter(|&w| w == v).count()
+                    })
+                })
+                .unwrap_or(0);
+            res_list_found.remove(at);
             gold_used += 2;
             i += 1;
         }
@@ -1112,6 +1218,74 @@ pub fn use_resources(
         banked: banked_spent,
         gold_dice: gold_paid,
     }
+}
+
+/// The different sets of banked resources that could pay for a recipe, when the player has
+/// a real choice: gold pairs can stand in for some of the banked resources that match, and
+/// the ones left to spend differ by what they are. Each set is sorted; fewer than two means
+/// there is nothing to ask. A "?" never enters into it, since a resource that matches is
+/// always spent before one.
+pub fn bank_options(
+    resources: &[DiceValue],
+    dice: &[Dice],
+    playsheet: &Playsheet,
+) -> Vec<Vec<DiceValue>> {
+    let mut knight_resources = Vec::new();
+    offered_by_bank(playsheet, &mut knight_resources);
+
+    // What the dice leave short, and which banked resources match it
+    let mut left = dice.to_vec();
+    let mut short: Vec<DiceValue> = resources.to_vec();
+    for &val in resources {
+        if let Some(die) = left.iter_mut().find(|d| d.is_usable() && d.value == val) {
+            die.use_die();
+            remove_first(&mut short, val);
+        }
+    }
+    let mut found: Vec<DiceValue> = Vec::new();
+    let mut matched = vec![false; knight_resources.len()];
+    for &val in &short {
+        for i in (0..knight_resources.len()).rev() {
+            if knight_resources[i] == val && !(playsheet.map.bank_matches_once && matched[i]) {
+                matched[i] = true;
+                found.push(val);
+                break;
+            }
+        }
+    }
+    for &val in &found {
+        remove_first(&mut short, val);
+    }
+    let gold = left
+        .iter()
+        .filter(|d| d.is_usable() && d.value == DiceValue::Gold)
+        .count();
+    let spare = (gold / 2).saturating_sub(short.len());
+    let keep = found.len().saturating_sub(spare);
+    if spare == 0 || keep == 0 {
+        return Vec::new();
+    }
+
+    // Every distinct choice of `keep` of them to spend, gold paying for the rest
+    found.sort_by_key(|v| *v as i32);
+    let n = found.len();
+    let mut sets: Vec<Vec<DiceValue>> = Vec::new();
+    for mask in 0u32..(1 << n) {
+        if mask.count_ones() as usize != keep {
+            continue;
+        }
+        let set: Vec<DiceValue> = (0..n)
+            .filter(|i| mask & (1 << i) != 0)
+            .map(|i| found[i])
+            .collect();
+        if !sets.contains(&set) {
+            sets.push(set);
+        }
+    }
+    if sets.len() < 2 {
+        return Vec::new();
+    }
+    sets
 }
 
 /// Whether a recipe can be paid from these dice and this bank, and whether paying would
