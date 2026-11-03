@@ -1369,8 +1369,10 @@ impl Scene {
         let y0 = upper.water_y() + rart::TRACK_H - 1;
         let y1 = lower.water_y();
         for y in y0..=y1 {
-            // The water's pattern, carried on down from the upper band's
-            let sy = (y - upper.water_y()).rem_euclid(th);
+            // The water's pattern carried on down from the upper band's, from its inner rows
+            // only: its first and last are the band's darker edges, which in the channel
+            // would read as a line across the turn
+            let sy = 1 + (y - upper.water_y() - 1).rem_euclid(th - 2);
             for x in first..first + w {
                 let sx = (x - (b.x + 1)).rem_euclid(tw);
                 frame.sprite_part(water, sx, sy, 1, 1, x, y);
