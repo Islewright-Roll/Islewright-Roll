@@ -96,7 +96,7 @@ pub const TRACK_BLOCK_H: i32 = TRACK_ROWS * BAND_H + (TRACK_ROWS - 1) * TRACK_RO
 /// The wood between the groups in the panel: at least GROUP_GAP, and up to GAP_MAX where the
 /// panel has rows to spare.
 pub const GROUP_GAP: i32 = 5;
-pub const GAP_MAX: i32 = 12;
+pub const GAP_MAX: i32 = 10;
 /// The open sea the island keeps round its land in landscape, where it can.
 pub const SEA_ROOM: i32 = 12;
 pub const LAND_MINI_PER_ROW: i32 = 5;
@@ -123,6 +123,82 @@ pub const LAND_MARGIN: i32 = 4;
 /// Whether the HUD shows race bonuses on this island: a race with a bonus to earn.
 fn has_badges(map: &MapDef) -> bool {
     map.target_score > 0 && (map.trader_bonus_at > 0 || map.long_road.is_some())
+}
+
+/// How the panel spends rows it has beyond what it needs. Like a gas in a larger vessel,
+/// every spacing in it gives a little: the gaps between its groups, the pitch of the key's
+/// rows, the water between the track's rows, the gap between the dice, the score's tray, and
+/// the labels, which take the display font. Each spacing has a cap, and each round every one
+/// that is under its cap and still affordable takes one step more, so the room spreads evenly
+/// and no one spacing swallows it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Give {
+    pub gap: i32,
+    pub key_row: i32,
+    pub track_gap: i32,
+    pub dice_gap: i32,
+    pub box_h: i32,
+    pub label_h: i32,
+    pub label_display: bool,
+}
+
+/// A label in the display font: its caps a row taller than the body font's, and a row more
+/// below them.
+pub const LABEL_DISPLAY_H: i32 = LABEL_H + 2;
+
+impl Give {
+    /// The spacings for a panel with `spare` rows beyond its least height.
+    pub fn for_spare(spare: i32) -> Give {
+        let mut g = Give {
+            gap: GROUP_GAP,
+            key_row: KEY_ROW,
+            track_gap: TRACK_ROW_GAP,
+            dice_gap: DICE_GAP,
+            box_h: BOX_H,
+            label_h: LABEL_H,
+            label_display: false,
+        };
+        let mut left = spare.max(0);
+        // Each spacing: the rows one step costs (it recurs that often down the panel), and
+        // how many steps it may take
+        const STEPS: [(i32, i32); 6] = [
+            (5, GAP_MAX - GROUP_GAP),
+            (3, 2),
+            (2, 4),
+            (1, 4),
+            (1, 6),
+            (6, 1),
+        ];
+        let mut taken = [0; 6];
+        loop {
+            let mut moved = false;
+            for (i, &(cost, cap)) in STEPS.iter().enumerate() {
+                if taken[i] < cap && cost <= left {
+                    taken[i] += 1;
+                    left -= cost;
+                    moved = true;
+                }
+            }
+            if !moved {
+                break;
+            }
+        }
+        g.gap += taken[0];
+        g.key_row += taken[1];
+        g.track_gap += taken[2];
+        g.dice_gap += taken[3];
+        g.box_h += taken[4];
+        if taken[5] > 0 {
+            g.label_display = true;
+            g.label_h = LABEL_DISPLAY_H;
+        }
+        g
+    }
+
+    /// The key's tray for this row pitch.
+    pub fn key_h(&self) -> i32 {
+        KEY_H + 3 * (self.key_row - KEY_ROW)
+    }
 }
 
 /// The least height of a column holding these groups in one panel.
@@ -491,7 +567,7 @@ impl Track {
     /// The landscape strip: the same cells in `n` rows within a column `col_w` wide, the
     /// first rows each holding as many and the last the rest with the pier, at one pitch so
     /// the cells line up.
-    fn rows(map: &MapDef, col_x: i32, col_w: i32, inset: i32, top: i32, n: i32) -> Track {
+    fn rows(map: &MapDef, col_x: i32, col_w: i32, inset: i32, top: i32, n: i32, gap: i32) -> Track {
         let whole = Strip::for_map(map, DESIGN_W as i32);
         let (turns, flags) = (whole.turns, whole.flags);
         let upper = (turns + n - 1) / n;
@@ -511,7 +587,7 @@ impl Track {
         };
         let origin_x = col_x + (col_w - strip.width) / 2;
         let row = |i: i32, first: i32, cells: i32, s: Strip, pier: bool| TrackRow {
-            band: Rect::new(band_x, top + i * (BAND_H + TRACK_ROW_GAP), band_w, BAND_H),
+            band: Rect::new(band_x, top + i * (BAND_H + gap), band_w, BAND_H),
             first,
             cells,
             origin_x,
@@ -534,8 +610,8 @@ impl Track {
 
     /// The landscape track: one stretch of water running back and forth down the HUD in
     /// TRACK_ROWS rows, the last ending at the pier.
-    fn back_and_forth(map: &MapDef, col_x: i32, top: i32) -> Track {
-        Track::rows(map, col_x, COL_W, COL_INSET, top, TRACK_ROWS)
+    fn back_and_forth(map: &MapDef, col_x: i32, top: i32, gap: i32) -> Track {
+        Track::rows(map, col_x, COL_W, COL_INSET, top, TRACK_ROWS, gap)
     }
 }
 
@@ -599,6 +675,8 @@ pub struct Layout {
     /// The costs key at 16 px, its four recipes in one column (landscape), not two rows of
     /// two at 12 px.
     pub key_large: bool,
+    /// The landscape panel's spacings (portrait keeps the least).
+    pub give: Give,
     pub pad_top: i32,
     pub pad_bottom: i32,
     pub pad_left: i32,
@@ -738,6 +816,7 @@ impl Layout {
             height,
             landscape: None,
             key_large: false,
+            give: Give::for_spare(0),
             pad_top,
             pad_bottom,
             pad_left: 0,
@@ -833,17 +912,14 @@ impl Layout {
         let top = pad_top + FLOAT;
         let floor = height - pad_bottom - FLOAT;
         let panel_x = col_x + COL_INSET;
-        let menu = Rect::new(
-            col_x + COL_W - COL_INSET - LAND_MENU_W,
-            top + PANEL_PAD,
-            LAND_MENU_W,
-            BOX_H,
-        );
+        let menu_x = col_x + COL_W - COL_INSET - LAND_MENU_W;
+        let need = column_h(&PANEL_GROUPS) - 2 * COL_INSET;
+        let give = Give::for_spare(floor - top - 2 * PANEL_PAD - need);
         let score_tray = Rect::new(
             panel_x,
             top + PANEL_PAD,
             PANEL_W - LAND_MENU_W - BOX_GAP,
-            BOX_H,
+            give.box_h,
         );
         // The score's words and number on the tray's left, a race's bonuses on its right
         let score_w = if has_badges(map) {
@@ -851,37 +927,34 @@ impl Layout {
         } else {
             score_tray.w
         };
-        let score = Rect::new(score_tray.x, score_tray.y, score_w, BOX_H);
+        let score = Rect::new(score_tray.x, score_tray.y, score_w, give.box_h);
+        let menu = Rect::new(menu_x, score_tray.y, LAND_MENU_W, give.box_h);
         let stacked = [map.long_road.is_some(), map.trader_bonus_at > 0]
             .iter()
             .filter(|&&b| b)
             .count() as i32;
         let badges = BadgePlace::Panel {
             right: score_tray.x + score_tray.w - 5,
-            top: score_tray.y + (BOX_H - 7 - (stacked - 1).max(0) * BADGE_ROW) / 2,
+            top: score_tray.y + (give.box_h - 7 - (stacked - 1).max(0) * BADGE_ROW) / 2,
         };
-        // Rows the panel has beyond what it needs go into its gaps alike, up to GAP_MAX each,
-        // and any more between the turns and the bank
-        let room = floor - top - 2 * PANEL_PAD;
-        let need = column_h(&PANEL_GROUPS) - 2 * COL_INSET;
-        let n = PANEL_GROUPS.len() as i32 - 1;
-        let gap = (GROUP_GAP + (room - need).max(0) / n).min(GAP_MAX);
-        let costs_label = Pt::new(panel_x + 1, score_tray.y + BOX_H + gap);
-        let costs = Rect::new(panel_x, costs_label.y + LABEL_H, PANEL_W, KEY_H);
-        let turns_label = Pt::new(panel_x + 1, costs.y + KEY_H + gap);
-        let track = Track::back_and_forth(map, col_x, turns_label.y + LABEL_H);
+        let gap = give.gap;
+        let label_h = give.label_h;
+        let costs_label = Pt::new(panel_x + 1, score_tray.y + give.box_h + gap);
+        let costs = Rect::new(panel_x, costs_label.y + label_h, PANEL_W, give.key_h());
+        let turns_label = Pt::new(panel_x + 1, costs.y + costs.h + gap);
+        let track = Track::back_and_forth(map, col_x, turns_label.y + label_h, give.track_gap);
 
         let roll_y = floor - PANEL_PAD - ROLL_BLOCK_H;
-        let dice_y = roll_y - gap - DICE_BLOCK_H;
+        let dice_y = roll_y - gap - (2 * DIE + give.dice_gap);
         let bank_y = dice_y - gap - MINI_TRAY_H;
-        let bank_label = Pt::new(panel_x + 1, bank_y - LABEL_H);
-        let block = 3 * DIE + 2 * DICE_GAP;
+        let bank_label = Pt::new(panel_x + 1, bank_y - label_h);
+        let block = 3 * DIE + 2 * give.dice_gap;
         let dx = col_x + (COL_W - block) / 2;
         let dice = std::array::from_fn(|i| {
             let (c, row) = (i as i32 % 3, i as i32 / 3);
             Rect::new(
-                dx + c * (DIE + DICE_GAP),
-                dice_y + row * (DIE + DICE_GAP),
+                dx + c * (DIE + give.dice_gap),
+                dice_y + row * (DIE + give.dice_gap),
                 DIE,
                 DIE,
             )
@@ -898,6 +971,7 @@ impl Layout {
             height,
             landscape: Some(side),
             key_large: true,
+            give,
             pad_top,
             pad_bottom,
             pad_left,
@@ -1200,9 +1274,9 @@ mod tests {
                     let costs_label = l.costs_label.expect("a costs label");
                     let turns_label = l.turns_label.expect("a turns label");
                     assert!(l.score_tray.y + l.score_tray.h <= costs_label.y, "{what}");
-                    assert_eq!(costs_label.y + LABEL_H, l.costs.y);
+                    assert_eq!(costs_label.y + l.give.label_h, l.costs.y);
                     assert!(l.costs.y + l.costs.h <= turns_label.y, "{what}");
-                    assert_eq!(turns_label.y + LABEL_H, l.track.rows[0].band.y);
+                    assert_eq!(turns_label.y + l.give.label_h, l.track.rows[0].band.y);
                     let t = &l.track;
                     assert_eq!(t.rows.len() as i32, TRACK_ROWS, "{what}");
                     assert_eq!(t.rows.iter().map(|r| r.cells).sum::<i32>(), t.turns);
@@ -1345,6 +1419,40 @@ mod tests {
         assert_eq!(layer.argb_at(13, 9), board.argb_at(7, 7));
         assert_eq!(layer.argb_at(14, 9), board.argb_at(6, 7));
         assert!(layer.to_argb().iter().all(|&p| p >> 24 == 0xFF));
+    }
+
+    #[test]
+    fn spare_rows_spread_through_the_panel() {
+        // None to spare: the least of everything
+        assert_eq!(Give::for_spare(0), Give::for_spare(-7));
+        let least = Give::for_spare(0);
+        assert_eq!(
+            (least.gap, least.key_row, least.label_h),
+            (GROUP_GAP, KEY_ROW, LABEL_H)
+        );
+        // Every spare row spent until each spacing reaches its cap, and none spent twice
+        let used = |g: Give| {
+            5 * (g.gap - GROUP_GAP)
+                + 3 * (g.key_row - KEY_ROW)
+                + 2 * (g.track_gap - TRACK_ROW_GAP)
+                + (g.dice_gap - DICE_GAP)
+                + (g.box_h - BOX_H)
+                + (g.label_h - LABEL_H) * 3
+        };
+        let mut last = least;
+        for spare in 0..120 {
+            let g = Give::for_spare(spare);
+            assert!(used(g) <= spare && used(g) >= used(last), "{spare}");
+            if spare < 40 {
+                assert_eq!(used(g), spare, "{spare}");
+            }
+            // Spread, not swallowed: no spacing more than a few steps ahead of the gaps
+            assert!(g.box_h - BOX_H <= g.gap - GROUP_GAP + 2, "{spare}");
+            last = g;
+        }
+        // Lots of room: every spacing at its cap
+        let full = Give::for_spare(1000);
+        assert!(full.label_display && full.gap == GAP_MAX);
     }
 
     #[test]

@@ -63,6 +63,8 @@ const CALLOUT_PLATE_H: i32 = 11;
 const CALLOUT_PLATE_TOP: i32 = 1;
 // Ark Pixel's line box: capitals and digits are rows 4 to 10, an accent starts at row 1
 const FONT_CAP_ROW: i32 = 4;
+/// The display font's first row of ink in its cell.
+const DISPLAY_CAP_ROW: i32 = 0;
 const FONT_CAPS: i32 = 7;
 const FONT_TOP_ROW: i32 = 1;
 // Micro 5's digits are rows 3 to 7 of its line box
@@ -368,7 +370,7 @@ fn recipe_rect(l: &Layout, kind: Kind) -> Rect {
     if l.key_large {
         return Rect::new(
             l.costs.x + layout::KEY_INSET,
-            l.costs.y + layout::KEY_INSET + i as i32 * layout::KEY_ROW,
+            l.costs.y + layout::KEY_INSET + i as i32 * l.give.key_row,
             layout::key_recipe_w(RECIPES[i].1.len() as i32),
             layout::KEY_ROW_H,
         );
@@ -1030,7 +1032,11 @@ impl Scene {
     fn draw_hud(&self, frame: &mut Image, game: &Game, l: &Layout, ui: &Ui, s: &Strings, now: u64) {
         self.draw_score(frame, game, l, s);
         self.draw_costs(frame, l);
-        let font = &self.assets.font_body;
+        let (font, cap_row) = if l.give.label_display {
+            (&self.assets.font_display, DISPLAY_CAP_ROW)
+        } else {
+            (&self.assets.font_body, FONT_CAP_ROW)
+        };
         let labels = [
             (l.costs_label, &s.costs),
             (l.turns_label, &s.turns),
@@ -1038,7 +1044,7 @@ impl Scene {
         ];
         for (at, text) in labels {
             if let Some(at) = at {
-                font.draw(frame, text, at.x, at.y - FONT_CAP_ROW, MUTED);
+                font.draw(frame, text, at.x, at.y - cap_row, MUTED);
             }
         }
         let down = ui.is_pressed(Button::Menu, now);
@@ -1071,7 +1077,7 @@ impl Scene {
             &game.playsheet.score().to_string(),
             r.x,
             r.w,
-            r.y + below + (layout::BOX_H - 1 - below - 8) / 2,
+            r.y + below + (r.h - 1 - below - 8) / 2,
             IVORY,
         );
     }
