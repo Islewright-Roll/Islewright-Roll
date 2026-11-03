@@ -283,7 +283,9 @@ fn area_at(area: Rect, ui: u32, s: u32) -> Rect {
 impl IslandView {
     /// The island's region for the interface's fit: the largest scale, from the interface's
     /// own up, at which all of the land (`land`, in board pixels) shows inside `area` (the
-    /// island's part of the screen, in interface pixels), with the land centred there.
+    /// island's part of the screen, in interface pixels). `show` is the land with what may be
+    /// cropped (the moored ship): it is centred there where it fits, and otherwise moved as
+    /// little as keeps the land whole, so the scale never waits on the ship.
     ///
     /// In portrait the island never goes below the interface's scale, so on a phone, where
     /// nothing larger fits, both share one scale; then `at_ui_scale` (where the portrait layout
@@ -298,6 +300,7 @@ impl IslandView {
         area: Rect,
         rotation: Rotation,
         land: Rect,
+        show: Rect,
         at_ui_scale: Option<Pt>,
     ) -> IslandView {
         let ui = fit.scale;
@@ -331,14 +334,30 @@ impl IslandView {
             Some(at) if scale == ui => (at.x, at.y),
             _ => {
                 let a = area_at(area, ui, scale);
+                let (show_w, show_h) = land_on_screen(show, rotation);
+                // Where the land sits in `show`, as the screen has them
+                let inner = rotation.rect_to_frame(
+                    Rect::new(land.x - show.x, land.y - show.y, land.w, land.h),
+                    show.w,
+                    show.h,
+                );
+                // The land centred, then moved toward a side `show` runs past, as far as the
+                // room on the other side allows, so more of the ship shows
+                let place = |start: i32, room: i32, size: i32, at: i32, len: i32| {
+                    let land = start + (room - len) / 2;
+                    let (before, after) = (land - start, start + room - land - len);
+                    let (past_before, past_after) = (at - before, size - at - len - after);
+                    let shift = past_before.clamp(0, after) - past_after.clamp(0, before);
+                    land - at + shift
+                };
                 let on_screen = Rect::new(
-                    a.x + (a.w - need_w) / 2,
-                    a.y + (a.h - need_h) / 2,
-                    need_w,
-                    need_h,
+                    place(a.x, a.w, show_w, inner.x, inner.w),
+                    place(a.y, a.h, show_h, inner.y, inner.h),
+                    show_w,
+                    show_h,
                 );
                 let in_layer = rotation.rect_to_layer(on_screen, layer_w, layer_h);
-                (in_layer.x - land.x, in_layer.y - land.y)
+                (in_layer.x - show.x, in_layer.y - show.y)
             }
         };
         IslandView {
@@ -438,10 +457,23 @@ pub fn sea_layer(board: &Image, lw: i32, lh: i32, bx: i32, by: i32) -> Image {
 
 // ---------------------------------------------------------------- the island's extent
 
-/// The part of the board that must show in landscape, in board pixels: every land hex, every
-/// building and trader that can stand on it with its label, the moored ship and the row under
-/// the lowest building, with LAND_MARGIN of sea round it.
+/// The part of the board that shows in landscape, in board pixels: the land (`land_core`) and
+/// the ship moored at the pier, with LAND_MARGIN of sea round it. Where the screen is short the
+/// ship may be cropped, never the land.
 pub fn land_extent(map: &'static MapDef) -> Rect {
+    let core = land_core(map);
+    let moored = voyage::ship_origin(voyage::Stage::Moored, voyage::DOCK_MOORING, 0);
+    let x0 = core.x.min(moored.x + rart::SHIP_BOX_X - LAND_MARGIN);
+    let y0 = core.y.min(moored.y + rart::SHIP_BOX_Y - LAND_MARGIN);
+    let x1 = (core.x + core.w).max(moored.x + rart::SHIP_BOX_X + rart::SHIP_BOX_W + LAND_MARGIN);
+    let y1 = (core.y + core.h).max(moored.y + rart::SHIP_BOX_Y + rart::SHIP_BOX_H + LAND_MARGIN);
+    Rect::new(x0, y0, x1 - x0, y1 - y0)
+}
+
+/// The part of the board that must always show in landscape, in board pixels: every land hex,
+/// every building and trader that can stand on it with its label, and the row under the lowest
+/// building, with LAND_MARGIN of sea round it. This decides the island's scale.
+pub fn land_core(map: &'static MapDef) -> Rect {
     let b = board::Board::for_map(map);
     let (mut x0, mut y0, mut x1, mut y1) = (i32::MAX, i32::MAX, i32::MIN, i32::MIN);
     let mut add = |x: i32, y: i32, w: i32, h: i32| {
@@ -478,13 +510,6 @@ pub fn land_extent(map: &'static MapDef) -> Rect {
             TRADER_H.max(rart::TRADER_LABEL_DROP + rart::TRADER_AY + 12),
         );
     }
-    let moored = voyage::ship_origin(voyage::Stage::Moored, voyage::DOCK_MOORING, 0);
-    add(
-        moored.x + rart::SHIP_BOX_X,
-        moored.y + rart::SHIP_BOX_Y,
-        rart::SHIP_BOX_W,
-        rart::SHIP_BOX_H,
-    );
     // Down to the row under the lowest building, whatever the hexes and sprites reach
     let centre_x = map.hex.iter().map(|c| c[0]).min().unwrap_or(0);
     add(centre_x, voyage::ISLAND_FOOT - 1, 1, 1);
@@ -750,7 +775,7 @@ pub fn landscape_min(map: &'static MapDef) -> (i32, i32) {
 
 /// The least art size a landscape layout needs with its columns cut either way.
 pub fn columns_min(map: &'static MapDef, columns: Columns) -> (i32, i32) {
-    let land = land_extent(map);
+    let land = land_core(map);
     let (hud_w, dice_w, _) = columns.widths();
     let hud_h = match columns {
         Columns::Wide => HUD_COL_CONTENT_H,
@@ -781,7 +806,7 @@ pub fn columns_scale(
     let ah = h.saturating_sub(insets.top + insets.bottom);
     // The interface stays within a scale of the island, whose height decides its own: larger
     // and the columns would crowd out the game they frame.
-    let island = (ah / land_extent(map).h as u32).max(1);
+    let island = (ah / land_core(map).h as u32).max(1);
     let scale = (aw / min_w as u32).min(ah / min_h as u32).min(island + 1);
     (scale >= 1).then_some(scale)
 }
@@ -882,7 +907,14 @@ impl Layout {
         l.ui_turn = turn;
         l.screen_pad = (ceil_div(insets.top, scale), ceil_div(insets.bottom, scale));
         let area = turn.rect_to_frame(l.island, l.width, l.height);
-        l.isle = IslandView::fit(&l.fit, area, Rotation::None, land_extent(map), None);
+        l.isle = IslandView::fit(
+            &l.fit,
+            area,
+            Rotation::None,
+            land_core(map),
+            land_extent(map),
+            None,
+        );
         l
     }
 
@@ -919,7 +951,14 @@ impl Layout {
             pad_bottom,
             pad_left: 0,
             pad_right: 0,
-            isle: IslandView::fit(&fit, island, Rotation::None, land_extent(map), Some(at)),
+            isle: IslandView::fit(
+                &fit,
+                island,
+                Rotation::None,
+                land_core(map),
+                land_extent(map),
+                Some(at),
+            ),
             island,
             bars: vec![
                 Bar {
@@ -1014,7 +1053,14 @@ impl Layout {
         };
         let island = Rect::new(island_x, usable_top, island_right - island_x, usable_h);
         // The land centred in the island's part of the screen, at the largest scale it fits
-        let isle = IslandView::fit(&fit, island, Rotation::None, land_extent(map), None);
+        let isle = IslandView::fit(
+            &fit,
+            island,
+            Rotation::None,
+            land_core(map),
+            land_extent(map),
+            None,
+        );
 
         // The HUD column, centred down its height: the score and the menu side by side
         // (stacked they would be no narrower than the costs), then in the tall column the
@@ -1280,7 +1326,7 @@ mod tests {
         assert_eq!(l.columns, None);
         assert_eq!(l.ui_turn, Rotation::Ccw);
         assert_eq!(l.isle.rotation, Rotation::None);
-        assert_eq!((l.fit.scale, l.isle.scale), (5, 3));
+        assert_eq!((l.fit.scale, l.isle.scale), (5, 4));
         // The same art, rect for rect, as the phone held upright
         assert_eq!((l.width, l.height), (upright.width, upright.height));
         assert_eq!(l.dice, upright.dice);
@@ -1300,7 +1346,7 @@ mod tests {
         assert!(l.ui_rect_to_screen(l.score).x < area.x);
         assert!(l.ui_rect_to_screen(l.dice[0]).x >= area.x + area.w);
         // All the upright land lies between the bars, taller than wide
-        let land = l.isle.rect_to_frame(land_extent(tarnholm()));
+        let land = l.isle.rect_to_frame(land_core(tarnholm()));
         let k = l.isle.scale as i32;
         let ui = l.ui_scale();
         assert!(land.x * k >= area.x * ui && (land.x + land.w) * k <= (area.x + area.w) * ui);
@@ -1375,29 +1421,30 @@ mod tests {
         let none = Insets::default();
         let (wide, tall) = (Some(Columns::Wide), Some(Columns::Tall));
         // Phones: upright, everything at 5. On its side the same interface turned keeps its 5,
-        // and the island's height holds it to 3.
+        // and the island's land, without the moored ship's headroom, takes it to 4 or 5.
         assert_eq!(scales(1082, 2342, none), (None, 5, 5));
-        assert_eq!(scales(2342, 1082, none), (None, 5, 3));
-        assert_eq!(scales(2400, 1080, none), (None, 5, 3));
-        assert_eq!(scales(2532, 1170, none), (None, 5, 4));
-        assert_eq!(scales(2778, 1284, none), (None, 5, 4));
+        assert_eq!(scales(2342, 1082, none), (None, 5, 4));
+        assert_eq!(scales(2400, 1080, none), (None, 5, 4));
+        assert_eq!(scales(2532, 1170, none), (None, 5, 5));
+        assert_eq!(scales(2778, 1284, none), (None, 5, 5));
         // A tall phone with room between its bars for the whole island at 6
         assert_eq!(scales(1284, 2778, none), (None, 5, 6));
         // Tablets, on their side and upright
-        assert_eq!(scales(2560, 1600, none), (tall, 6, 5));
-        assert_eq!(scales(2048, 1536, none), (wide, 4, 4));
+        assert_eq!(scales(2560, 1600, none), (tall, 6, 6));
+        assert_eq!(scales(2048, 1536, none), (tall, 5, 5));
         assert_eq!(scales(1600, 2560, none), (None, 7, 7));
-        assert_eq!(scales(1536, 2048, none), (None, 5, 5));
+        assert_eq!(scales(1536, 2048, none), (None, 5, 6));
         // Desktop windows, a small laptop, a very wide screen and a nearly square window
         assert_eq!(scales(1440, 900, none), (wide, 3, 3));
-        assert_eq!(scales(1920, 1080, none), (wide, 4, 3));
-        assert_eq!(scales(2560, 1440, none), (tall, 6, 5));
-        assert_eq!(scales(3840, 2160, none), (wide, 8, 7));
-        assert_eq!(scales(1366, 768, none), (tall, 3, 2));
-        assert_eq!(scales(1280, 720, none), (tall, 3, 2));
+        assert_eq!(scales(1920, 1080, none), (wide, 4, 4));
+        assert_eq!(scales(2560, 1440, none), (tall, 6, 6));
+        assert_eq!(scales(3840, 2160, none), (tall, 9, 9));
+        assert_eq!(scales(1366, 768, none), (tall, 3, 3));
+        assert_eq!(scales(1280, 720, none), (tall, 3, 3));
+        assert_eq!(scales(1280, 680, none), (tall, 3, 2));
         assert_eq!(scales(1000, 900, none), (wide, 2, 2));
-        assert_eq!(scales(3440, 1440, none), (None, 6, 5));
-        assert_eq!(scales(900, 500, none), (tall, 2, 1));
+        assert_eq!(scales(3440, 1440, none), (None, 6, 6));
+        assert_eq!(scales(900, 500, none), (tall, 2, 2));
         // Tiny and degenerate canvases still lay out, at 1
         assert_eq!(scales(300, 300, none), (None, 1, 1));
         assert_eq!(scales(1, 1, none), (None, 1, 1));
@@ -1408,8 +1455,8 @@ mod tests {
             right: 120,
             ..Insets::default()
         };
-        assert_eq!(scales(1920, 1080, bars), (tall, 4, 3));
-        assert_eq!(scales(2560, 1600, bars), (tall, 5, 5));
+        assert_eq!(scales(1920, 1080, bars), (tall, 4, 4));
+        assert_eq!(scales(2560, 1600, bars), (wide, 5, 5));
     }
 
     #[test]
@@ -1497,7 +1544,7 @@ mod tests {
         ] {
             for side in [DiceSide::Right, DiceSide::Left] {
                 let l = Layout::new(w, h, Insets::default(), tarnholm(), side);
-                let land = land_extent(tarnholm());
+                let land = land_core(tarnholm());
                 let ui = l.board_rect_to_ui(land);
                 assert!(
                     ui.x >= l.island.x
@@ -1508,14 +1555,16 @@ mod tests {
                     l.island
                 );
                 // Centred across, to within the rounding of an island pixel at each end, in
-                // screen pixels
+                // screen pixels, unless moved aside to show more of the moored ship
                 let f = l.isle.rect_to_frame(land);
                 let (k, u) = (l.isle.scale as i32, l.ui_scale());
                 let left = f.x * k - l.island.x * u;
                 let right = (l.island.x + l.island.w) * u - (f.x + f.w) * k;
+                let full = land_extent(tarnholm());
+                let ship = (land.x - full.x).max(full.x + full.w - land.x - land.w);
                 assert!(left >= 0 && right >= 0);
                 assert!(
-                    (left - right).abs() <= 2 * k,
+                    (left - right).abs() <= 2 * k + 2 * ship * k,
                     "{w}x{h} {side:?}: {left} {right}"
                 );
                 // The island's image covers the whole screen, so the sea reaches every edge

@@ -926,12 +926,12 @@ mod tests {
 
     #[test]
     fn taps_go_to_the_region_on_top() {
-        // A small laptop: the interface at 3, the island at 2 under it
+        // A short laptop window: the interface at 3, the island at 2 under it
         let mut g = game();
         let mut scene = Scene::new(g.map);
         let mut ui = Ui::new();
         for side in [DiceSide::Right, DiceSide::Left] {
-            let l = Layout::new(1366, 768, Insets::default(), g.map, side);
+            let l = Layout::new(1280, 680, Insets::default(), g.map, side);
             assert_eq!((l.fit.scale, l.isle.scale), (3, 2));
             render(&mut scene, &mut g, &l, &mut ui);
             // Every screen pixel of a die is that die, to its very edge, though the island's
@@ -972,7 +972,7 @@ mod tests {
         let mut g = game();
         let mut scene = Scene::new(g.map);
         let mut ui = Ui::new();
-        let l = Layout::new(1366, 768, Insets::default(), g.map, DiceSide::Right);
+        let l = Layout::new(1280, 680, Insets::default(), g.map, DiceSide::Right);
         g.press_roll_button();
         let p = scene.pieces.offered_spot(&g).expect("a spot on offer");
         // The outline's rectangle, in interface pixels, covers the piece's island pixels
