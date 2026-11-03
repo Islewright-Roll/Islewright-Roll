@@ -83,6 +83,8 @@ const BADGE_GAP: i32 = 5;
 const BADGE_DIM_ALPHA: u8 = 140;
 const TRADER_NUMBER_DROP: i32 = 3;
 const ROLL_CORNER: i32 = 6;
+/// The landscape undo button while there is nothing to take back.
+const UNDO_IDLE_ALPHA: u8 = 70;
 const ROLL_LABEL: u32 = 0xFF1E140A;
 const ROLL_LABEL_DISABLED: u32 = 0xFF4A463E;
 /// The dragged die is drawn this far above the finger, so the fingertip does not hide it.
@@ -1470,6 +1472,9 @@ impl Scene {
                 frame.plate(u.x, u.y, UNDO_SIZE, UNDO_SIZE, WOOD);
             }
             frame.sprite(&a.undo_glyph, u.x, u.y, 255);
+        } else if l.landscape.is_some() {
+            // Its place beside the roll button kept, faint until there is a build to take back
+            frame.sprite(&a.undo_glyph, l.undo.x, l.undo.y, UNDO_IDLE_ALPHA);
         }
         locked
     }
@@ -2037,8 +2042,15 @@ fn draw_hire_glow(
 /// The bars' dark wood, with a line of lighter wood and a line of ink along the side that
 /// meets the island.
 fn draw_bar(frame: &mut Image, r: Rect, edge: Edge) {
-    frame.fill_argb(r.x, r.y, r.w, r.h, WOOD_DARK);
+    if edge != Edge::Around {
+        frame.fill_argb(r.x, r.y, r.w, r.h, WOOD_DARK);
+    }
     match edge {
+        Edge::Around => {
+            frame.plate(r.x, r.y, r.w, r.h, INK);
+            frame.plate(r.x + 1, r.y + 1, r.w - 2, r.h - 2, WOOD);
+            frame.fill_argb(r.x + 2, r.y + 2, r.w - 4, r.h - 4, WOOD_DARK);
+        }
         Edge::Bottom => {
             frame.fill_argb(r.x, r.y + r.h - 2, r.w, 1, WOOD);
             frame.fill_argb(r.x, r.y + r.h - 1, r.w, 1, INK);
