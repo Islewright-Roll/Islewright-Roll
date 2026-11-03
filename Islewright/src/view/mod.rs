@@ -177,17 +177,18 @@ const PRESS_MS: u64 = 110;
 /// button, which shows pressed for a moment before it acts.
 const REFOCUS_MS: u32 = 300;
 
-#[derive(Clone)]
+/// The frame on the canvas: the island's image and, where the interface has a scale of its
+/// own, the interface's over it, each at one pixel per art pixel and blown up on the canvas
+/// without smoothing. Small images are what make a moving sea cheap: a water step re-encodes
+/// and decodes the island at its own size, not a whole screen of device pixels.
+#[derive(Clone, PartialEq)]
 struct Shown {
-    bitmap: day::Bitmap,
-    rect: Rect,
+    island: day::Bitmap,
+    island_rect: Rect,
+    ui: Option<(day::Bitmap, Rect)>,
+    /// The screen's part of the canvas, which the island's last blocks may overhang.
+    clip: Rect,
     sea: u32,
-}
-
-impl PartialEq for Shown {
-    fn eq(&self, other: &Self) -> bool {
-        self.bitmap == other.bitmap && self.rect == other.rect && self.sea == other.sea
-    }
 }
 
 struct Screen {
@@ -209,6 +210,9 @@ struct Screen {
     press_finger: Cell<Option<u32>>,
     /// A frame is being decoded; another render waits for it (`dirty`).
     in_flight: Cell<bool>,
+    /// The interface image last decoded, by a checksum of its pixels: the interface changes
+    /// far less often than the island, and is not decoded again until it does.
+    ui_shown: RefCell<Option<(u32, day::Bitmap)>>,
     dirty: Cell<bool>,
     frame: RefCell<Option<day::frame::FrameHandle>>,
     frame_pending: Cell<bool>,
@@ -259,6 +263,7 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
         carry_finger: Cell::new(None),
         press_finger: Cell::new(None),
         in_flight: Cell::new(false),
+        ui_shown: RefCell::new(None),
         dirty: Cell::new(false),
         frame: RefCell::new(None),
         frame_pending: Cell::new(false),
@@ -309,7 +314,12 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
             color,
         );
         if let Some(c) = current {
-            d.image(&c.bitmap, c.rect);
+            d.clipped(Shape::Rect(c.clip), |d| {
+                d.image_pixelated(&c.island, c.island_rect);
+                if let Some((ui, rect)) = &c.ui {
+                    d.image_pixelated(ui, *rect);
+                }
+            });
         }
     })
     .on_tap_at(move |p| tap.tap(p))
@@ -422,13 +432,26 @@ impl Screen {
             (self.host.on_changed)();
         }
         let (ox, oy, rw, rh) = layout.device_rect();
-        let rect = Rect::new(
-            ox as f64 / dpr,
-            oy as f64 / dpr,
-            rw as f64 / dpr,
-            rh as f64 / dpr,
-        );
-        let png = frame.to_png(&layout);
+        // Each image's art pixels as whole blocks of device pixels from the screen's corner
+        let at = |w: u32, h: u32, k: u32| {
+            Rect::new(
+                ox as f64 / dpr,
+                oy as f64 / dpr,
+                (w * k) as f64 / dpr,
+                (h * k) as f64 / dpr,
+            )
+        };
+        let clip = at(rw, rh, 1);
+        let island_rect = at(frame.island.width, frame.island.height, layout.isle.scale);
+        let island_png = frame.island.to_png_scaled(1);
+        // The interface: its rect, and its PNG only where its pixels changed since the last
+        // one decoded
+        let ui = frame.ui.as_ref().map(|ui| {
+            let sum = crc32fast::hash(&ui.rgba);
+            let rect = at(ui.width, ui.height, layout.fit.scale);
+            let same = matches!(&*self.ui_shown.borrow(), Some((had, _)) if *had == sum);
+            (sum, rect, (!same).then(|| ui.to_png_scaled(1)))
+        });
         *self.layout.borrow_mut() = Some(layout);
         self.in_flight.set(true);
         if frame.animating {
@@ -448,18 +471,56 @@ impl Screen {
             });
         }
         let weak = Rc::downgrade(self);
-        let shown = self.shown;
-        day::decode_image_async(Arc::new(png), move |r| {
-            if let Ok(bitmap) = r {
-                shown.set(Some(Shown { bitmap, rect, sea }));
-            }
-            if let Some(s) = weak.upgrade() {
-                s.in_flight.set(false);
-                if s.dirty.replace(false) {
-                    s.request();
+        day::decode_image_async(Arc::new(island_png), move |r| {
+            let Some(s) = weak.upgrade() else {
+                return;
+            };
+            let Ok(island) = r else {
+                s.frame_done();
+                return;
+            };
+            let show = move |s: &Screen, ui: Option<(day::Bitmap, Rect)>| {
+                s.shown.set(Some(Shown {
+                    island,
+                    island_rect,
+                    ui,
+                    clip,
+                    sea,
+                }));
+            };
+            match ui {
+                None => {
+                    show(&s, None);
+                    s.frame_done();
+                }
+                Some((_, rect, None)) => {
+                    let had = s.ui_shown.borrow().as_ref().map(|(_, b)| b.clone());
+                    show(&s, had.map(|b| (b, rect)));
+                    s.frame_done();
+                }
+                Some((sum, rect, Some(png))) => {
+                    let weak = Rc::downgrade(&s);
+                    day::decode_image_async(Arc::new(png), move |r| {
+                        let Some(s) = weak.upgrade() else {
+                            return;
+                        };
+                        if let Ok(ui) = r {
+                            *s.ui_shown.borrow_mut() = Some((sum, ui.clone()));
+                            show(&s, Some((ui, rect)));
+                        }
+                        s.frame_done();
+                    });
                 }
             }
         });
+    }
+
+    /// A frame is on the canvas, or failed to decode: the next render may start.
+    fn frame_done(self: &Rc<Self>) {
+        self.in_flight.set(false);
+        if self.dirty.replace(false) {
+            self.request();
+        }
     }
 
     /// The spot under a point of the canvas.
@@ -1512,13 +1573,16 @@ mod tests {
         }
     }
 
-    /// What a whole frame costs at a few canvas sizes, the scene drawn and the PNG made, as
-    /// `render` does it: `cargo test --release -- --ignored frame_cost_by_size --nocapture`.
+    /// What a frame costs at a few canvas sizes while the sea moves, a water step a frame: the
+    /// scene drawn and the island's PNG made at its own size, as `render` does it (the
+    /// interface's PNG only when it changed, which here is never):
+    /// `cargo test --release -- --ignored frame_cost_by_size --nocapture`.
     #[test]
     #[ignore]
     fn frame_cost_by_size() {
         let mut g = game();
         let mut scene = Scene::new(g.map);
+        scene.animate_water = std::env::var("STILL").is_err();
         let mut ui = Ui::new();
         g.press_roll_button();
         for (w, h) in [
@@ -1542,11 +1606,11 @@ mod tests {
                     &mut ui,
                     &mut tut,
                     &Strings::default(),
-                    1_000 + i,
+                    1_000 + i * assets::WATER_STEP_MS,
                 );
                 draw += t.elapsed();
                 let t = std::time::Instant::now();
-                let png = f.to_png(&l);
+                let png = f.island.to_png_scaled(1);
                 encode += t.elapsed();
                 assert!(png.len() > 1000);
             }

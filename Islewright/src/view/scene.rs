@@ -9,8 +9,6 @@
 //!
 //! Also here: which thing a tap means (`Scene::hit`), since that depends on what was drawn.
 
-use std::rc::Rc;
-
 use crate::art::{self, Image, Layer, Mask};
 use crate::rules::art as rart;
 use crate::rules::board::RoadShape;
@@ -316,7 +314,9 @@ pub struct Scene {
     glow: Option<(GlowKey, Image)>,
     offer_key: Option<(Vec<bool>, Vec<u32>)>,
     offers: OfferLayers,
-    sea: Option<(SeaKey, Rc<Image>)>,
+    /// The sea layer at each step of the water's loop, as each is first needed; the still sea
+    /// is step 0, the loop's first step being the still board.
+    sea: Option<(SeaKey, Vec<Option<Image>>)>,
     /// Whether the sea moves (the Animate water setting); the view sets it before each render.
     pub animate_water: bool,
     sail: Sail,
@@ -327,8 +327,8 @@ pub struct Scene {
 
 /// What the glow layer was built from: what is built, the player's colour, the offers.
 type GlowKey = (Vec<bool>, u32, Vec<u32>);
-/// What the sea layer was built for: the layer's size, the board's place in it, the island.
-type SeaKey = (i32, i32, i32, i32, String, usize);
+/// What the sea layers were built for: the layer's size, the board's place in it, the island.
+type SeaKey = (i32, i32, i32, i32, String);
 
 /// Which positions are built, one entry each: the footprints and offers depend on it.
 fn built_key(game: &Game) -> Vec<bool> {
@@ -779,18 +779,24 @@ impl Scene {
             v.board_x,
             v.board_y,
             game.map.id.clone(),
-            step,
         );
         if self.sea.as_ref().is_none_or(|(k, _)| *k != sea_key) {
-            let board = if self.animate_water {
-                Rc::new(self.assets.water(&game.map.id)[step].clone())
-            } else {
-                self.assets.board(&game.map.id)
-            };
-            let sea = layout::sea_layer(&board, v.frame_w, v.frame_h, v.board_x, v.board_y);
-            self.sea = Some((sea_key, Rc::new(sea)));
+            self.sea = Some((sea_key, vec![None; WATER_STEPS]));
         }
-        let mut layer = (*self.sea.as_ref().expect("sea layer").1).clone();
+        let built = self.sea.as_ref().is_some_and(|(_, seas)| seas[step].is_some());
+        if !built {
+            let sea = if self.animate_water {
+                let steps = self.assets.water(&game.map.id);
+                layout::sea_layer(&steps[step], v.frame_w, v.frame_h, v.board_x, v.board_y)
+            } else {
+                let board = self.assets.board(&game.map.id);
+                layout::sea_layer(&board, v.frame_w, v.frame_h, v.board_x, v.board_y)
+            };
+            self.sea.as_mut().expect("sea layers").1[step] = Some(sea);
+        }
+        let mut layer = self.sea.as_ref().expect("sea layers").1[step]
+            .clone()
+            .expect("sea layer");
         animating |= self.draw_island(&mut layer, game, l, now);
         let mut island = layer;
         self.draw_island_marks(&mut island, game, l);
