@@ -4,12 +4,15 @@
 //! (`rules::game_state_store`, `rules::high_scores`); this module only reads and writes them.
 
 use crate::rules::game::Game;
+use crate::rules::game_log::{GameLog, PlayedGame};
 use crate::rules::game_state_store::{self, Persist};
 use crate::rules::high_scores::HighScoresAndSettings;
 use crate::rules::map_def::MapDef;
 
 /// The key the top scores live under.
 const SCORES_KEY: &str = "islewright.scores.json";
+/// The key the played games live under.
+const GAMES_KEY: &str = "islewright.games.json";
 
 /// The preferences key for an island's game in progress.
 fn game_key(map: &MapDef) -> String {
@@ -79,4 +82,25 @@ pub fn record(map_id: &str, result: i32) -> i32 {
     };
     save_scores(&scores);
     rank
+}
+
+/// The played games, oldest first. A document that does not read is kept aside, as the top
+/// scores' is.
+pub fn load_games() -> GameLog {
+    match day::prefs::get(GAMES_KEY) {
+        None => GameLog::default(),
+        Some(json) => GameLog::from_json(&json).unwrap_or_else(|e| {
+            eprintln!("islewright: unreadable played games, kept aside: {e}");
+            day::prefs::set(&format!("{GAMES_KEY}.unreadable"), &json);
+            GameLog::default()
+        }),
+    }
+}
+
+/// Adds a game that has just ended to the played games, dated now.
+pub fn log_game(mut game: PlayedGame) {
+    game.date = crate::clock::now_ms() as i64;
+    let mut log = load_games();
+    log.add(game);
+    day::prefs::set(GAMES_KEY, &log.to_json());
 }

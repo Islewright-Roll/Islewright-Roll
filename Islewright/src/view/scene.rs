@@ -132,6 +132,9 @@ pub struct Strings {
     pub skip: String,
     /// The tutorial's text for each step, the ship's for this game's kind of island.
     pub tutorial: Vec<(Step, String)>,
+    /// A played game is on the board, not the one in progress: the roll button reads this
+    /// and takes the player back.
+    pub viewing: Option<String>,
 }
 
 impl Strings {
@@ -1311,7 +1314,10 @@ impl Scene {
 
     /// The roll button as drawn: widened for a long label, centred where the layout put it.
     pub fn roll_bounds(&self, game: &Game, l: &Layout, s: &Strings) -> Rect {
-        let text = s.roll(game.roll_label());
+        let text = s
+            .viewing
+            .as_deref()
+            .unwrap_or_else(|| s.roll(game.roll_label()));
         let w = l
             .roll
             .w
@@ -1368,9 +1374,12 @@ impl Scene {
                 }
             }
         }
-        let locked = game.is_roll_locked();
+        let locked = game.is_roll_locked() && s.viewing.is_none();
         let down = ui.is_pressed(Button::Roll, now) && !locked;
-        let text = s.roll(game.roll_label());
+        let text = s
+            .viewing
+            .as_deref()
+            .unwrap_or_else(|| s.roll(game.roll_label()));
         let b = self.roll_bounds(game, l, s);
         let skin = if locked {
             &a.button_disabled

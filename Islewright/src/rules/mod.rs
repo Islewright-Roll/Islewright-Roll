@@ -14,6 +14,7 @@ pub mod board_layers;
 pub mod build_plan;
 pub mod dice;
 pub mod game;
+pub mod game_log;
 pub mod game_state_store;
 pub mod glow_fade;
 pub mod high_scores;

@@ -391,6 +391,91 @@ fn score_rows(m: &Metrics, map_id: &str, width: i32, row_h: i32) -> W {
     widget::vstack(m, items, 0)
 }
 
+/// Played games: every finished game, newest first, as its island, turns, score and date.
+/// Tapping one puts its end on the board (`show`).
+pub fn games(m: &Metrics, width: i32, show: Rc<dyn Fn(Game)>) -> W {
+    use res::str as s;
+    let locale = day::locale().get_untracked();
+    // 4 art pixels stay clear at the right for the scroll thumb
+    let width = width - 4;
+    let log = super::store::load_games();
+    if log.games.is_empty() {
+        return widget::text(
+            m,
+            None,
+            width,
+            &s::games_none().format(),
+            Style::BODY.centered(),
+        );
+    }
+    let col = |n: i32| width * n / 20;
+    let columns = |island: String, turns: String, score: String, date: String, tone, face| {
+        vec![
+            (island, 0, col(7), Align::Start, tone, face),
+            (turns, col(7), col(4), Align::End, tone, face),
+            (score, col(11), col(4), Align::End, tone, face),
+            (date, col(15), width - col(15), Align::End, tone, Face::Body),
+        ]
+    };
+    let mut items = vec![
+        widget::cells(
+            m,
+            None,
+            width,
+            columns(
+                s::games_island().format(),
+                s::games_turns().format(),
+                s::games_score().format(),
+                s::games_date().format(),
+                Tone::Secondary,
+                Face::Body,
+            ),
+            "",
+        ),
+        widget::gap(m, width, 2),
+        widget::rule(m, width),
+    ];
+    let count = log.games.len();
+    for (n, played) in log.games.into_iter().rev().enumerate() {
+        let Some(map) = MapDef::find(&played.map) else {
+            continue;
+        };
+        let island = island_name(map);
+        let date = short_date(played.date, &locale);
+        let spoken = s::games_row_spoken(s::GamesRowSpoken {
+            arg1: island.clone(),
+            arg2: played.turns as i64,
+            arg3: played.score as i64,
+            arg4: date.clone(),
+        })
+        .format();
+        let row = columns(
+            island,
+            played.turns.to_string(),
+            played.score.to_string(),
+            date,
+            Tone::Ink,
+            Face::Display,
+        );
+        let show = show.clone();
+        items.push(widget::row_button(
+            m,
+            day::id!(game_row, (count - n).to_string()),
+            width,
+            SCORE_ROW_BELOW,
+            row,
+            &spoken,
+            move || {
+                if let Some(game) = played.restore() {
+                    show(game);
+                }
+            },
+        ));
+        items.push(widget::rule(m, width));
+    }
+    widget::vstack(m, items, 0)
+}
+
 /// Selected and not, as a radio button's value is read.
 fn radio_states() -> States {
     States {

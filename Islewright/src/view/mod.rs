@@ -57,6 +57,9 @@ pub enum Haptic {
 
 pub struct ScreenHost {
     pub game: Rc<RefCell<Game>>,
+    /// A played game the Played Games page put on the board: drawn in place of `game` until
+    /// the player goes back, and never played.
+    pub viewing: Rc<RefCell<Option<Game>>>,
     /// Bumped by the shell after it replaces or changes the game from outside (load, new
     /// game, island switch, settings).
     pub refresh: Signal<u64>,
@@ -131,6 +134,7 @@ fn strings(game: &Game) -> Strings {
         next_turn: t::next_turn().format(),
         got_it: t::tutorial_got_it().format(),
         skip: t::tutorial_skip().format(),
+        viewing: None,
         tutorial: vec![
             (Step::Roll, t::tutorial_roll().format()),
             (Step::Keep, t::tutorial_keep().format()),
@@ -374,20 +378,29 @@ impl Screen {
         };
         let now = crate::clock::now_ms();
         let (frame, layout, sea) = {
-            let mut game = self.host.game.borrow_mut();
+            let mut viewing = self.host.viewing.borrow_mut();
+            let mut live = self.host.game.borrow_mut();
+            let viewing_now = viewing.is_some();
+            let game: &mut Game = match viewing.as_mut() {
+                Some(played) => played,
+                None => &mut live,
+            };
             if game.clock.is_none() {
                 // The roll button's lockout after the game ends reads it
                 game.clock = Some(Box::new(crate::clock::now_ms));
             }
             let side = self.host.dice_side.get_untracked();
             let layout = Layout::new(dw, dh, insets, game.map, side);
-            let s = strings(&game);
+            let mut s = strings(game);
+            if viewing_now {
+                s.viewing = Some(res::str::games_back().format());
+            }
             let mut scene = self.scene.borrow_mut();
             let scene = scene.get_or_insert_with(|| Scene::new(game.map));
             let mut ui = self.ui.borrow_mut();
             ui.tutorial_held = self.asking.get() > 0 || HELD.with(Cell::get);
             let frame = TUTORIAL
-                .with(|t| scene.render(&mut game, &layout, &mut ui, &mut t.borrow_mut(), &s, now));
+                .with(|t| scene.render(game, &layout, &mut ui, &mut t.borrow_mut(), &s, now));
             // The rows left over below a portrait layout's bottom bar are of a piece with it
             let backdrop = if layout.landscape.is_none() {
                 scene::WOOD_DARK
@@ -440,17 +453,49 @@ impl Screen {
         (self.host.haptic)(h);
     }
 
+    /// Whether a played game is on the board in place of the one in progress.
+    fn viewing(&self) -> bool {
+        self.host.viewing.borrow().is_some()
+    }
+
+    /// Back from a played game to the one in progress.
+    fn leave_view(self: &Rc<Self>) {
+        self.press(Button::Roll);
+        *self.host.viewing.borrow_mut() = None;
+        self.request();
+    }
+
+    /// What a played game on the board answers: its Back button and the menu, nothing else.
+    fn act_viewing(self: &Rc<Self>, hit: Hit) {
+        match hit {
+            Hit::Roll => self.leave_view(),
+            Hit::Menu => {
+                *self.host.viewing.borrow_mut() = None;
+                self.press(Button::Menu);
+                self.request();
+                (self.host.on_menu)();
+            }
+            _ => {}
+        }
+    }
+
     /// The finger went down at `spot`, on a platform that says so at once. As on the Java app, a
     /// die holds now, and a button shows pressed until the lift with its click said now; what
     /// the button does waits for the lift (`tap`).
     fn touch_down(self: &Rc<Self>, spot: Spot) {
         let hit = self.hit(spot);
+        if self.viewing() && !matches!(hit, Hit::Roll | Hit::Menu) {
+            self.touch.set(Some(hit));
+            return;
+        }
         let button = match hit {
             Hit::GotIt => Some(Button::GotIt),
             Hit::Skip => Some(Button::Skip),
             Hit::Menu => Some(Button::Menu),
             Hit::Undo => Some(Button::Undo),
-            Hit::Roll if self.host.game.borrow().roll_press() != RollPress::Locked => {
+            Hit::Roll
+                if self.viewing() || self.host.game.borrow().roll_press() != RollPress::Locked =>
+            {
                 Some(Button::Roll)
             }
             _ => None,
@@ -549,6 +594,10 @@ impl Screen {
     }
 
     fn act(self: &Rc<Self>, hit: Hit) {
+        if self.viewing() {
+            self.act_viewing(hit);
+            return;
+        }
         match hit {
             Hit::GotIt | Hit::Skip => {
                 let got_it = hit == Hit::GotIt;
@@ -593,6 +642,14 @@ impl Screen {
         self.touch.set(None);
         if self.asking.get() > 0 || k.modifiers & (day::KeyEvent::PRIMARY | day::KeyEvent::ALT) != 0
         {
+            return;
+        }
+        if self.viewing() {
+            match k.key.as_str() {
+                "0" | "r" | "R" | " " | "Enter" | "Escape" | "Backspace" => self.leave_view(),
+                "m" | "M" | "ContextMenu" => self.act_viewing(Hit::Menu),
+                _ => {}
+            }
             return;
         }
         match k.key.as_str() {
@@ -793,7 +850,10 @@ impl Screen {
                 let Some(spot) = self.spot(t.location) else {
                     return;
                 };
-                if self.carry_finger.get().is_none() && self.ui.borrow().carry.is_none() {
+                if self.carry_finger.get().is_none()
+                    && self.ui.borrow().carry.is_none()
+                    && !self.viewing()
+                {
                     let slot = {
                         let game = self.host.game.borrow();
                         let scene = self.scene.borrow();
@@ -924,7 +984,7 @@ impl Screen {
         match g.phase {
             DragPhase::Began => {
                 self.touch.set(None);
-                if self.asking.get() > 0 || self.ui.borrow().carry.is_some() {
+                if self.asking.get() > 0 || self.ui.borrow().carry.is_some() || self.viewing() {
                     return;
                 }
                 let press = Point::new(
@@ -1100,6 +1160,32 @@ mod tests {
         };
         shot(false, "spend", &[0, 120, 300, 450, 600, 700, 800]);
         shot(true, "ring", &[0, 160, 300, 400, 500, 640]);
+    }
+
+    /// Not a check: writes a played game's end, as the Played Games page puts it on the board,
+    /// to $CAPTURE_DIR/played.png. Run as capture_bank_spend is.
+    #[test]
+    #[ignore]
+    fn capture_played_game() {
+        use crate::rules::game_log::PlayedGame;
+        let dir = std::env::var("CAPTURE_DIR").expect("CAPTURE_DIR");
+        let doc = include_str!("../../tools/scenarios/dunholm-midgame.json");
+        let s = crate::rules::scenario::Scenario::from_json(doc).unwrap();
+        let mut g = Game::with_rng(s.map, Rng::new(7));
+        g.start_new_game(s.map);
+        s.apply_to(&mut g);
+        let mut back = PlayedGame::of(&g, 0).restore().unwrap();
+        back.target_score = back.playsheet.score();
+        let mut scene = Scene::new(back.map);
+        let mut ui = Ui::new();
+        let mut t = Tutorial::new(true, 0);
+        let l = Layout::new(1080, 2400, Insets::default(), back.map, DiceSide::Right);
+        let strings = Strings {
+            viewing: Some("Back to my game".into()),
+            ..Strings::default()
+        };
+        let f = scene.render(&mut back, &l, &mut ui, &mut t, &strings, 60_000);
+        std::fs::write(format!("{dir}/played.png"), f.to_png(&l)).unwrap();
     }
 
     #[test]

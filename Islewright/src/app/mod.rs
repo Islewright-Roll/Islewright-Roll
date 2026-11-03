@@ -35,6 +35,7 @@ day::routes! {
     pub(crate) enum Page {
         Rules => "rules",
         Scores => "scores",
+        Games => "games",
         About => "about",
     }
 }
@@ -93,6 +94,7 @@ enum Choice {
     Settings,
     Rules,
     Scores,
+    Games,
     About,
     #[cfg(debug_assertions)]
     Debug,
@@ -104,6 +106,8 @@ struct Shell {
     game: Rc<RefCell<Game>>,
     refresh: Signal<u64>,
     page: Signal<Option<Page>>,
+    /// A played game shown on the board in place of the one in progress (`ScreenHost`).
+    viewing: Rc<RefCell<Option<Game>>>,
 }
 
 impl Shell {
@@ -132,6 +136,7 @@ impl Shell {
                 res::str::high_scores_menu().format(),
                 Choice::Scores,
             ),
+            ("games", res::str::games_menu().format(), Choice::Games),
             ("about", res::str::about_menu().format(), Choice::About),
             #[cfg(debug_assertions)]
             (
@@ -247,6 +252,7 @@ impl Shell {
             Choice::Settings => self.settings(),
             Choice::Rules => self.page.set(Some(Page::Rules)),
             Choice::Scores => self.page.set(Some(Page::Scores)),
+            Choice::Games => self.page.set(Some(Page::Games)),
             Choice::About => self.page.set(Some(Page::About)),
             #[cfg(debug_assertions)]
             Choice::Debug => {
@@ -261,6 +267,7 @@ impl Shell {
     fn page_view(&self, page: &Page) -> AnyPiece {
         let page = *page;
         let open = self.page;
+        let (viewing, refresh) = (self.viewing.clone(), self.refresh);
         switch(
             move || (ui::metrics(), day::locale().get()),
             move |(m, _)| {
@@ -286,6 +293,23 @@ impl Shell {
                         ui::page::Fill::Exact,
                         |w, h| pages::scores(&m, w, h),
                     ),
+                    Page::Games => {
+                        let viewing = viewing.clone();
+                        let show: Rc<dyn Fn(Game)> = Rc::new(move |game| {
+                            *viewing.borrow_mut() = Some(game);
+                            open.set(None);
+                            refresh.update(|n| *n += 1);
+                        });
+                        ui::page::page(
+                            &m,
+                            day::id!(games_page),
+                            &res::str::games_title().format(),
+                            &ok,
+                            done,
+                            ui::page::Fill::Scroll { thumb: true },
+                            |w, _| pages::games(&m, w, show),
+                        )
+                    }
                     Page::About => ui::page::page(
                         &m,
                         day::id!(about_screen),
@@ -434,6 +458,9 @@ fn build_root() -> impl Piece {
             if rank > 0 {
                 announce_rank(rank);
             }
+            if let Some(done) = game.borrow_mut().take_finished() {
+                store::log_game(done);
+            }
             store::save_game(&game.borrow());
             let (on, seen) = view::tutorial_progress();
             if TUTORIAL.get() != on {
@@ -445,10 +472,12 @@ fn build_root() -> impl Piece {
         })
     };
 
+    let viewing: Rc<RefCell<Option<Game>>> = Rc::new(RefCell::new(None));
     let shell = Shell {
         game: game.clone(),
         refresh,
         page,
+        viewing: viewing.clone(),
     };
     let on_menu: Rc<dyn Fn()> = {
         let shell = shell.clone();
@@ -475,6 +504,7 @@ fn build_root() -> impl Piece {
 
     let screen = view::game_screen(ScreenHost {
         game,
+        viewing,
         refresh,
         dice_side,
         on_menu,

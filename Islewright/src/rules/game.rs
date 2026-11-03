@@ -17,6 +17,7 @@ use std::rc::Rc;
 use super::board::Board;
 use super::build_plan::{self, BuildPlan, Chain, Kind};
 use super::dice::{Dice, DiceValue};
+use super::game_log::PlayedGame;
 use super::high_scores::{EARLY_PROMPT_SMART, RACE_TARGET_DEFAULT};
 use super::hire_anim;
 use super::map_def::MapDef;
@@ -185,6 +186,10 @@ pub struct Game {
     /// The banked resources the player chose to spend on the build tap in progress, when
     /// gold could have paid for some of them instead (bank_choices).
     bank_spend: Option<Vec<DiceValue>>,
+    /// The record of this game, once it has ended, until the shell takes it for the played
+    /// games (take_finished). `logged` keeps a game from being recorded twice.
+    finished: Option<PlayedGame>,
+    logged: bool,
 
     /// True while a scenario holds this game (see scenario::Scenario::apply_to): the
     /// tutorial neither watches nor draws over it. Cleared by reset, so a restart ends it.
@@ -257,6 +262,8 @@ impl Game {
             spends: Vec::new(),
             rings: Vec::new(),
             bank_spend: None,
+            finished: None,
+            logged: false,
             tutorial_paused: false,
             player_color: player_color::DEFAULT,
             early_build_prompt: EARLY_PROMPT_SMART,
@@ -331,6 +338,8 @@ impl Game {
     pub fn reset(&mut self) {
         self.state_epoch += 1;
         self.tutorial_paused = false;
+        self.finished = None;
+        self.logged = false;
         self.undo = None;
         self.turns_taken = 0;
         self.playsheet.reset();
@@ -418,6 +427,7 @@ impl Game {
             self.playsheet.score_turn(self.turns_taken);
             if self.is_game_done() {
                 self.game_over_at = self.now();
+                self.log_finished();
                 // A race that reaches its target ends in finish_if_target_reached, so a race
                 // that is done here ran out of turns and has no result to record. Nothing is
                 // written for it, and `scored` stays false. A race with no turn cap (Dunholm)
@@ -532,7 +542,22 @@ impl Game {
         self.playsheet.score_turn(self.turns_taken);
         self.game_over_at = self.now();
         self.scored = true;
+        self.log_finished();
         self.record_result()
+    }
+
+    /// Notes the game's record for the played games, once.
+    fn log_finished(&mut self) {
+        if !self.logged {
+            self.logged = true;
+            self.finished = Some(PlayedGame::of(self, 0));
+        }
+    }
+
+    /// The record of a game that has just ended, for the played games; None otherwise. The
+    /// date is the caller's to fill in.
+    pub fn take_finished(&mut self) -> Option<PlayedGame> {
+        self.finished.take()
     }
 
     /// Whether running this chain of builds would end a race. The early build prompts ask

@@ -1273,6 +1273,71 @@ pub fn cells(m: &Metrics, id: Option<ElementId>, width: i32, cells: Vec<Column>,
     W::framed(m, with_id(piece, id), width, h)
 }
 
+/// A `cells` row that opens what it describes when tapped, `pad` art pixels taller above and
+/// below so a finger finds it: shaded while pressed, ringed when the keyboard focuses it, and
+/// read as a button labelled `label`.
+pub fn row_button(
+    m: &Metrics,
+    id: ElementId,
+    width: i32,
+    pad: i32,
+    cells: Vec<Column>,
+    label: &str,
+    action: impl Fn() + 'static,
+) -> W {
+    let kit = kit();
+    let t = m.t;
+    let blocks: Vec<(Block, i32, Tone)> = cells
+        .into_iter()
+        .map(|(s, x, w, align, color, face)| {
+            let block = Block::new(kit.font(face), face, t, &s, w, align);
+            (block, x, color)
+        })
+        .collect();
+    let line = blocks
+        .iter()
+        .map(|(b, ..)| b.height)
+        .max()
+        .unwrap_or(1)
+        .max(1);
+    let h = line + 2 * pad;
+    let paint = move |img: &mut Image, look: Look| {
+        if look.pressed {
+            img.fill_argb(0, 0, width, h, (Tone::Ink.argb() & 0xFFFFFF) | 0x30 << 24);
+        }
+        if look.focused {
+            paint::row_focus(img, 0, 0, width, h);
+            paint::focus_ring(img, 0, 0, width, h);
+        }
+        for (block, x, color) in &blocks {
+            let font = kit.font(block.face);
+            let y = pad
+                + match block.face {
+                    Face::Display => (line - block.height).min(3 * t),
+                    Face::Body => 0,
+                };
+            block.draw(font, img, *x, y, color.argb());
+        }
+    };
+    let pressed = Signal::new(false);
+    let focused = Signal::new(false);
+    let act = press_action(pressed, Rc::new(action));
+    let tap = act.clone();
+    let label = label.to_string();
+    let piece = sprite(m, width, h, paint, move || Look {
+        pressed: pressed.get(),
+        focused: focused.get() && keyboard().get(),
+        disabled: false,
+    })
+    .on_tap(move || tap())
+    .on_key(keys(act, false))
+    .focusable()
+    .focused(focused)
+    .a11y(move |a| a.role(Role::Button).label(label))
+    .id(id);
+    W::framed(m, piece, width, h)
+}
+
 // ---------------------------------------------------------------- stacking
 
 /// Widgets one above the other, `gap` art pixels apart, left aligned.
