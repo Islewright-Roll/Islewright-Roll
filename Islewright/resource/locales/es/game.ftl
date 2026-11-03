@@ -76,6 +76,7 @@ settings_trader_classic_description = Los recursos guardados no se gastan solos.
 settings_haptic_feedback_label = Vibración
 settings_haptic_feedback_on = Activada
 settings_haptic_feedback_off = Desactivada
+settings_animate_water_label = Animar el agua
 settings_music_volume_label = Volumen de la música
 settings_race_target_label = Línea de meta de { $arg1 }
 settings_race_target_description = Puntos para ganar la carrera. Súbelo para una partida más larga; los Récords solo guardan carreras a { $arg1 }.

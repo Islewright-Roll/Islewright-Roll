@@ -28,7 +28,7 @@ use crate::rules::tutorial_layout::{self, Placement, Rect, Side};
 use crate::rules::view_model::{self, GlowTier, RollLabel};
 use crate::rules::voyage::{self, Stage};
 
-use super::assets::{Assets, Tinted};
+use super::assets::{Assets, Tinted, WATER_STEP_MS, WATER_STEPS};
 use super::layout::{
     self, BadgePlace, DIE, Edge, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab, Spot, TrackRow,
     UNDO_SIZE,
@@ -269,6 +269,8 @@ pub struct Frame {
     pub ui: Option<Image>,
     /// Something is moving: render again next frame.
     pub animating: bool,
+    /// The sea is moving: render again at this time (ms), when the water takes its next step.
+    pub water_due: Option<u64>,
     /// The tutorial's progress changed: save it.
     pub tutorial_dirty: bool,
 }
@@ -315,6 +317,8 @@ pub struct Scene {
     offer_key: Option<(Vec<bool>, Vec<u32>)>,
     offers: OfferLayers,
     sea: Option<(SeaKey, Rc<Image>)>,
+    /// Whether the sea moves (the Animate water setting); the view sets it before each render.
+    pub animate_water: bool,
     sail: Sail,
     hires: Vec<Hire>,
     spends: Vec<(game::SpendEvent, u64)>,
@@ -324,7 +328,7 @@ pub struct Scene {
 /// What the glow layer was built from: what is built, the player's colour, the offers.
 type GlowKey = (Vec<bool>, u32, Vec<u32>);
 /// What the sea layer was built for: the layer's size, the board's place in it, the island.
-type SeaKey = (i32, i32, i32, i32, String);
+type SeaKey = (i32, i32, i32, i32, String, usize);
 
 /// Which positions are built, one entry each: the footprints and offers depend on it.
 fn built_key(game: &Game) -> Vec<bool> {
@@ -418,6 +422,7 @@ impl Scene {
             offer_key: None,
             offers: OfferLayers::default(),
             sea: None,
+            animate_water: false,
             sail: Sail::default(),
             hires: Vec::new(),
             spends: Vec::new(),
@@ -760,7 +765,13 @@ impl Scene {
         let mut animating =
             !self.hires.is_empty() || !self.spends.is_empty() || !self.rings.is_empty();
 
-        // The island, upright, in its own layer over the sea
+        // The island, upright, in its own layer over the sea; the sea at its step of the
+        // water's loop where it moves, else the still board (the loop's first step)
+        let step = if self.animate_water {
+            ((now / WATER_STEP_MS) % WATER_STEPS as u64) as usize
+        } else {
+            0
+        };
         let v = &l.isle;
         let sea_key = (
             v.frame_w,
@@ -768,9 +779,14 @@ impl Scene {
             v.board_x,
             v.board_y,
             game.map.id.clone(),
+            step,
         );
         if self.sea.as_ref().is_none_or(|(k, _)| *k != sea_key) {
-            let board = self.assets.board(&game.map.id);
+            let board = if self.animate_water {
+                Rc::new(self.assets.water(&game.map.id)[step].clone())
+            } else {
+                self.assets.board(&game.map.id)
+            };
             let sea = layout::sea_layer(&board, v.frame_w, v.frame_h, v.board_x, v.board_y);
             self.sea = Some((sea_key, Rc::new(sea)));
         }
@@ -798,6 +814,9 @@ impl Scene {
             island,
             ui: own,
             animating,
+            water_due: self
+                .animate_water
+                .then(|| (now / WATER_STEP_MS + 1) * WATER_STEP_MS),
             tutorial_dirty,
         }
     }

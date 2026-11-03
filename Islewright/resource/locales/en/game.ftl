@@ -76,6 +76,7 @@ settings_trader_classic_description = Banked resources are not spent by themselv
 settings_haptic_feedback_label = Haptic feedback
 settings_haptic_feedback_on = On
 settings_haptic_feedback_off = Off
+settings_animate_water_label = Animate water
 settings_music_volume_label = Music volume
 settings_race_target_label = { $arg1 } finish line
 settings_race_target_description = Points to win the race. Raise it for a longer game; Top Scores keep only races to { $arg1 }.

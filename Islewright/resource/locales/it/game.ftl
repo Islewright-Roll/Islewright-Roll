@@ -76,6 +76,7 @@ settings_trader_classic_description = Le risorse messe da parte non si spendono 
 settings_haptic_feedback_label = Vibrazione
 settings_haptic_feedback_on = Attivata
 settings_haptic_feedback_off = Disattivata
+settings_animate_water_label = Anima l'acqua
 settings_music_volume_label = Volume della musica
 settings_race_target_label = Traguardo di { $arg1 }
 settings_race_target_description = Punti per vincere la corsa. Alzalo per una partita più lunga; i record contano solo le corse a { $arg1 }.

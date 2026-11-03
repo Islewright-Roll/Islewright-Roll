@@ -566,6 +566,7 @@ pub struct Draft {
     end_turn: Signal<bool>,
     trader: Signal<bool>,
     haptics: Signal<bool>,
+    water: Signal<bool>,
     music: Signal<i64>,
     sound: Signal<bool>,
     theme: Signal<String>,
@@ -582,6 +583,7 @@ impl Draft {
             end_turn: Signal::global(END_TURN_PROMPT.get()),
             trader: Signal::global(TRADER_CLASSIC.get()),
             haptics: Signal::global(HAPTICS.get()),
+            water: Signal::global(ANIMATE_WATER.get()),
             music: Signal::global(MUSIC_VOLUME.get()),
             sound: Signal::global(SOUND_EFFECTS.get()),
             theme: Signal::global(THEME.get()),
@@ -597,6 +599,7 @@ impl Draft {
         END_TURN_PROMPT.set(self.end_turn.get_untracked());
         TRADER_CLASSIC.set(self.trader.get_untracked());
         HAPTICS.set(self.haptics.get_untracked());
+        ANIMATE_WATER.set(self.water.get_untracked());
         MUSIC_VOLUME.set(self.music.get_untracked());
         SOUND_EFFECTS.set(self.sound.get_untracked());
         THEME.set(self.theme.get_untracked());
@@ -712,6 +715,21 @@ pub fn settings(m: &Metrics, width: i32, d: Draft, on_color: Rc<dyn Fn()>) -> W 
             ),
         ],
     ));
+
+    // Animate water
+    gap(&mut items, 8);
+    {
+        let water = d.water;
+        items.push(widget::check(
+            m,
+            day::id!(settings_animate_water),
+            width,
+            &s::settings_animate_water_label().format(),
+            switch_states(),
+            move || water.get(),
+            move |v| water.set(v),
+        ));
+    }
 
     // Music volume
     let music = s::settings_music_volume_label().format();

@@ -71,6 +71,8 @@ pub struct ScreenHost {
     pub on_changed: Rc<dyn Fn()>,
     /// Haptic feedback for a tap, a build, a roll; the shell maps it to day-part-haptics.
     pub haptic: Rc<dyn Fn(Haptic)>,
+    /// Whether the sea moves (the Animate water setting); read at each render.
+    pub animate_water: Rc<dyn Fn() -> bool>,
 }
 
 // ---------------------------------------------------------------- the tutorial's progress
@@ -210,6 +212,8 @@ struct Screen {
     dirty: Cell<bool>,
     frame: RefCell<Option<day::frame::FrameHandle>>,
     frame_pending: Cell<bool>,
+    /// A render is booked for the water's next step.
+    water_waiting: Cell<bool>,
     /// Questions open: taps wait, and so does the tutorial.
     asking: Cell<u32>,
     revision: Cell<u64>,
@@ -258,6 +262,7 @@ pub fn game_screen(host: ScreenHost) -> impl Piece {
         dirty: Cell::new(false),
         frame: RefCell::new(None),
         frame_pending: Cell::new(false),
+        water_waiting: Cell::new(false),
         asking: Cell::new(0),
         revision: Cell::new(revision),
         focused: Signal::new(false),
@@ -400,6 +405,7 @@ impl Screen {
             }
             let mut scene = self.scene.borrow_mut();
             let scene = scene.get_or_insert_with(|| Scene::new(game.map));
+            scene.animate_water = (self.host.animate_water)();
             let mut ui = self.ui.borrow_mut();
             ui.tutorial_held = self.asking.get() > 0 || HELD.with(Cell::get);
             let frame = TUTORIAL
@@ -427,6 +433,19 @@ impl Screen {
         self.in_flight.set(true);
         if frame.animating {
             self.dirty.set(true);
+        } else if let Some(due) = frame.water_due
+            && !self.water_waiting.replace(true)
+        {
+            // Nothing else moving: wake for the water's next step, not every frame
+            let wait = due.saturating_sub(now).max(1) as u32;
+            let weak = Rc::downgrade(self);
+            day::task(async move {
+                day::sleep(wait).await;
+                if let Some(s) = weak.upgrade() {
+                    s.water_waiting.set(false);
+                    s.request();
+                }
+            });
         }
         let weak = Rc::downgrade(self);
         let shown = self.shown;
@@ -1250,6 +1269,18 @@ mod tests {
                 let ship = if moored { "ship" } else { "none" };
                 let path = format!("{dir}/harbour-{tag}-{island}-{ship}.png");
                 std::fs::write(path, f.to_png(&l)).unwrap();
+                // CAPTURE_WATER=n: the first n steps of the moving sea as well
+                let steps: u64 = size("CAPTURE_WATER", 0).into();
+                if !moored && steps > 0 {
+                    scene.animate_water = true;
+                    for step in 0..steps {
+                        let now = step * crate::view::assets::WATER_STEP_MS;
+                        let f = scene.render(&mut g, &l, &mut ui, &mut t, &words, now);
+                        assert_eq!(f.water_due, Some(now + crate::view::assets::WATER_STEP_MS));
+                        let path = format!("{dir}/harbour-{tag}-{island}-water{step:02}.png");
+                        std::fs::write(path, f.to_png(&l)).unwrap();
+                    }
+                }
             }
         }
     }

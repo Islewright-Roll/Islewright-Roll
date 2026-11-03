@@ -12,6 +12,8 @@ use crate::rules::player_color;
 pub static SOUND_EFFECTS: Pref<bool> = Pref::new("islewright.sound_effects", || true);
 /// Haptic feedback on or off.
 pub static HAPTICS: Pref<bool> = Pref::new("islewright.haptics", || true);
+/// The sea moves, as Wesnoth's does.
+pub static ANIMATE_WATER: Pref<bool> = Pref::new("islewright.animate_water", || true);
 /// When to warn before a build that forfeits unused rolls: off, smart or conservative
 /// (`high_scores::EARLY_PROMPT_*`).
 pub static EARLY_BUILD_PROMPT: Pref<i64> = Pref::new("islewright.early_build_prompt", || {

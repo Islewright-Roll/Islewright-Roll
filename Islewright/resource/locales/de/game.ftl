@@ -76,6 +76,7 @@ settings_trader_classic_description = Eingelagerte Rohstoffe werden nicht von se
 settings_haptic_feedback_label = Haptisches Feedback
 settings_haptic_feedback_on = Ein
 settings_haptic_feedback_off = Aus
+settings_animate_water_label = Wasser animieren
 settings_music_volume_label = Musiklautstärke
 settings_race_target_label = Ziellinie auf { $arg1 }
 settings_race_target_description = Punkte zum Sieg im Wettlauf. Höher heißt ein längeres Spiel; der Highscore zählt nur Wettläufe auf { $arg1 }.

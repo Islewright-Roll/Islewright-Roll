@@ -58,6 +58,37 @@ pub fn board_png(map_id: &str) -> &'static [u8] {
     }
 }
 
+/// An island's animated sea: its board at every step of the water's loop, packed by
+/// tools/bake_sea.py (row y of step s at row y * WATER_STEPS + s).
+pub fn sea_png(map_id: &str) -> &'static [u8] {
+    match map_id {
+        "dunholm" => art!("sea_dunholm"),
+        _ => art!("sea_tarnholm"),
+    }
+}
+
+/// The steps of the water's loop, each WATER_STEP_MS long: Wesnoth's deep ocean, frame for
+/// frame, with its shallow water and beach waves carried along.
+pub const WATER_STEPS: usize = 21;
+pub const WATER_STEP_MS: u64 = 125;
+
+/// The boards packed in a sea image, taken back apart.
+pub fn split_steps(packed: &Image) -> Vec<Image> {
+    let w = packed.width as usize;
+    let h = packed.height as usize / WATER_STEPS;
+    let row = w * 4;
+    (0..WATER_STEPS)
+        .map(|s| {
+            let mut board = Image::new(w as u32, h as u32);
+            for y in 0..h {
+                let from = (y * WATER_STEPS + s) * row;
+                board.rgba[y * row..(y + 1) * row].copy_from_slice(&packed.rgba[from..from + row]);
+            }
+            board
+        })
+        .collect()
+}
+
 fn load(bytes: &[u8]) -> Image {
     // The art is part of the build, so a PNG that does not decode is a broken build
     Image::from_png(bytes).expect("bundled art decodes")
@@ -129,6 +160,9 @@ pub struct Assets {
     pub button_pressed: Image,
     pub button_disabled: Image,
     boards: HashMap<String, Rc<Image>>,
+    /// One island's boards at every step of the water's loop: only the island in play, since
+    /// each island's are a score of megabytes decoded.
+    water: Option<(String, Rc<Vec<Image>>)>,
 }
 
 impl Assets {
@@ -228,6 +262,7 @@ impl Assets {
             button_pressed: load(art!("ui_button_pressed")),
             button_disabled: load(art!("ui_button_disabled")),
             boards: HashMap::new(),
+            water: None,
         }
     }
 
@@ -246,6 +281,19 @@ impl Assets {
 
     pub fn road_index(shape: RoadShape) -> usize {
         shape as usize
+    }
+
+    /// An island's boards at each step of the water's loop, decoded the first time they are
+    /// asked for; the island before it is let go.
+    pub fn water(&mut self, map_id: &str) -> Rc<Vec<Image>> {
+        if let Some((id, steps)) = &self.water
+            && id == map_id
+        {
+            return steps.clone();
+        }
+        let steps = Rc::new(split_steps(&load(sea_png(map_id))));
+        self.water = Some((map_id.to_owned(), steps.clone()));
+        steps
     }
 
     /// An island's board, decoded the first time it is asked for.
@@ -306,6 +354,27 @@ impl Tinted {
             track_ship_back: recolored(&a.track_ship, color).mirrored(),
             track_pier: recolored(&a.track_pier, color),
             king_ship: recolored(&a.king_ship, color),
+        }
+    }
+}
+
+#[cfg(test)]
+mod sea_tests {
+    use super::*;
+
+    #[test]
+    fn the_seas_first_step_is_the_still_board() {
+        for id in ["tarnholm", "dunholm"] {
+            let steps = split_steps(&load(sea_png(id)));
+            let still = load(board_png(id));
+            assert_eq!(steps.len(), WATER_STEPS);
+            assert_eq!(
+                (steps[0].width, steps[0].height),
+                (still.width, still.height)
+            );
+            assert!(steps[0].rgba == still.rgba, "{id}");
+            // And the water moves: a later step differs
+            assert!(steps[WATER_STEPS / 2].rgba != still.rgba, "{id}");
         }
     }
 }

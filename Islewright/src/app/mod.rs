@@ -510,6 +510,7 @@ fn build_root() -> impl Piece {
         on_menu,
         on_changed,
         haptic,
+        animate_water: Rc::new(|| prefs::ANIMATE_WATER.get()),
     });
     // The game has the whole screen, as the Android app's fullscreen window did
     ui::host(

@@ -76,6 +76,7 @@ settings_trader_classic_description = Sumber daya simpanan tidak terpakai sendir
 settings_haptic_feedback_label = Getaran
 settings_haptic_feedback_on = Nyala
 settings_haptic_feedback_off = Mati
+settings_animate_water_label = Animasikan air
 settings_music_volume_label = Volume musik
 settings_race_target_label = Garis finis { $arg1 }
 settings_race_target_description = Poin untuk memenangkan balapan. Naikkan untuk permainan lebih panjang; skor tertinggi hanya mencatat balapan menuju { $arg1 }.

@@ -21,7 +21,7 @@ Islewright: Roll is free software under the GNU GPL version 3 or later (see `LIC
 ## Terrain and the King's ship: The Battle for Wesnoth
 
 The island (mountain, dry hills, summer deciduous forest on leaf litter, pasture, farmland,
-desert and sea, and the transitions that blend them) is made from 111 terrain images from
+desert and sea, and the transitions that blend them, and the sea's animation) is made from 171 terrain images from
 [The Battle for Wesnoth](https://www.wesnoth.org) 1.16.11, and the King's ship is one
 Wesnoth unit sprite. Source: <https://github.com/wesnoth/wesnoth>, tag `1.16.11`, commit
 `83d4b397f1de466c721e4e393b361c71fc4f5b6c`. The files were read from the Debian package
