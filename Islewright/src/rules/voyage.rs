@@ -64,12 +64,11 @@ pub const MAX_STEP: i32 = 24;
 pub const DOCK_FOOT: Pt = Pt::new(216, 180);
 pub const DOCK_MOORING: Pt = Pt::new(214, 152);
 pub const DOCK_SPRITE: Pt = Pt::new(210, 134);
-/// The board row that has to show under the top bar for the moored ship to be seen whole
-/// (its masthead flag is one row below), and the row just under the island's lowest building.
-pub const HARBOUR_TOP: i32 = 94;
+/// The first board row of land (the top of the dock's beach) and the first row of sea under the
+/// island's shore, in both islands' art; and the row just under the island's lowest building.
+pub const LAND_TOP: i32 = 131;
+pub const LAND_FOOT: i32 = 381;
 pub const ISLAND_FOOT: i32 = 366;
-/// How far above the exact middle the map sits: the eye weighs the island, not the masthead.
-pub const MAP_RAISE: i32 = 15;
 
 // ---------------------------------------------------------------- where the ship is
 
@@ -203,14 +202,15 @@ pub(crate) fn java_round(v: f64) -> i32 {
     (v + 0.5).floor() as i32
 }
 
-/// Where the board's top left goes on the art canvas. Across, the board is centred. Down, what
-/// the map shows at its fullest, from the moored ship's masthead to the island's foot, is centred
-/// between the top bar (ending at bar_bottom) and the bottom bar (starting at tray_top), then
-/// raised by MAP_RAISE, as far as the masthead stays under the top bar. A screen too short to
-/// show all of it keeps the island's foot above the bottom bar.
+/// Where the board's top left goes on the art canvas. Across, the board is centred. Down, the
+/// land, from the top of the dock's beach to the shore under the island, is centred between the
+/// top bar (ending at bar_bottom) and the bottom bar (starting at tray_top). The King's ship is
+/// left out of it: it shows only in a game's last turns, and the sea kept for it the rest of the
+/// time pushed the island low. A screen too short to show all the land keeps its top under the
+/// top bar and, before that, the island's lowest building above the bottom bar.
 pub fn board_origin(art_width: i32, bar_bottom: i32, tray_top: i32) -> Pt {
-    let y = (bar_bottom + tray_top - HARBOUR_TOP - ISLAND_FOOT) / 2 - MAP_RAISE;
-    let y = y.max(bar_bottom - HARBOUR_TOP);
+    let y = (bar_bottom + tray_top - LAND_TOP - LAND_FOOT) / 2;
+    let y = y.max(bar_bottom - LAND_TOP);
     Pt::new(
         art_width / 2 - board::CENTRE_X,
         y.min(tray_top - ISLAND_FOOT),
