@@ -690,6 +690,20 @@ impl Image {
         out
     }
 
+    /// The image mirrored left to right.
+    pub fn mirrored(&self) -> Image {
+        let (w, h) = (self.width, self.height);
+        let mut out = Image::new(w, h);
+        for y in 0..h {
+            for x in 0..w {
+                let s = ((y * w + x) * 4) as usize;
+                let d = ((y * w + (w - 1 - x)) * 4) as usize;
+                out.rgba[d..d + 4].copy_from_slice(&self.rgba[s..s + 4]);
+            }
+        }
+        out
+    }
+
     /// How many rows at the bottom hold nothing at least half solid.
     pub fn clear_rows_below(&self) -> i32 {
         for y in (0..self.height as i32).rev() {

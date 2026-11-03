@@ -30,7 +30,8 @@ use crate::rules::voyage::{self, Stage};
 
 use super::assets::{Assets, Tinted};
 use super::layout::{
-    self, BadgePlace, DIE, Edge, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab, Spot, UNDO_SIZE,
+    self, BadgePlace, DIE, Edge, Layout, MINI_DIE, MINI_GAP, MINI_PAD, MiniTab, Spot, TrackRow,
+    UNDO_SIZE,
 };
 
 // The UI kit's palette (tools/make_ui.py), ARGB
@@ -117,6 +118,10 @@ const LEGEND_VILLAGE: [DiceValue; 4] = [
 pub struct Strings {
     pub score: String,
     pub bonuses: String,
+    /// The landscape HUD's labels over the costs and the turn track.
+    pub costs: String,
+    pub turns: String,
+    pub bank: String,
     pub first_roll: String,
     pub second_roll: String,
     pub third_roll: String,
@@ -354,15 +359,21 @@ const RECIPES: [(Kind, &[DiceValue]); 4] = [
     (Kind::Knight, game::RESOURCES_KNIGHT),
 ];
 
-/// Where the costs tray draws the recipe of `kind`: two rows of two or, in the tall HUD, one
-/// column of four.
+/// Where the costs tray draws the recipe of `kind`: two rows of two or, in landscape, one
+/// column of four at 16 px.
 fn recipe_rect(l: &Layout, kind: Kind) -> Rect {
     let i = RECIPES.iter().position(|(k, _)| *k == kind).unwrap_or(0);
+    if l.key_large {
+        return Rect::new(
+            l.costs.x + layout::KEY_INSET,
+            l.costs.y + layout::KEY_INSET + i as i32 * layout::KEY_ROW,
+            layout::key_recipe_w(RECIPES[i].1.len() as i32),
+            layout::KEY_ROW_H,
+        );
+    }
     let left = l.costs.x + RECIPE_INSET_X;
     let top = l.costs.y + RECIPE_INSET_Y;
-    let (x, y) = if l.costs_stacked {
-        (left, top + i as i32 * RECIPE_ROW)
-    } else if i % 2 == 0 {
+    let (x, y) = if i % 2 == 0 {
         (left, top + (i as i32 / 2) * RECIPE_ROW)
     } else {
         (
@@ -1015,8 +1026,19 @@ impl Scene {
     // ------------------------------------------------------------ the HUD
 
     fn draw_hud(&self, frame: &mut Image, game: &Game, l: &Layout, ui: &Ui, s: &Strings, now: u64) {
-        self.draw_score(frame, game, l.score, s);
+        self.draw_score(frame, game, l, s);
         self.draw_costs(frame, l);
+        let font = &self.assets.font_body;
+        let labels = [
+            (l.costs_label, &s.costs),
+            (l.turns_label, &s.turns),
+            (l.bank_label, &s.bank),
+        ];
+        for (at, text) in labels {
+            if let Some(at) = at {
+                font.draw(frame, text, at.x, at.y - FONT_CAP_ROW, MUTED);
+            }
+        }
         let down = ui.is_pressed(Button::Menu, now);
         draw_menu(frame, l.menu, down);
         self.draw_voyage(frame, game, l);
@@ -1025,9 +1047,11 @@ impl Scene {
         }
     }
 
-    fn draw_score(&self, frame: &mut Image, game: &Game, r: Rect, s: &Strings) {
+    fn draw_score(&self, frame: &mut Image, game: &Game, l: &Layout, s: &Strings) {
         let a = &self.assets;
-        tray(frame, r.x, r.y, r.w, r.h);
+        let t = l.score_tray;
+        tray(frame, t.x, t.y, t.w, t.h);
+        let r = l.score;
         centred(
             &a.font_body,
             frame,
@@ -1056,14 +1080,42 @@ impl Scene {
         let r = l.costs;
         tray(frame, r.x, r.y, r.w, r.h);
         for (kind, cost) in RECIPES {
+            let at = recipe_rect(l, kind);
+            if l.key_large {
+                let glyph = match kind {
+                    Kind::Road => &t.glyph16_road,
+                    Kind::City => &t.glyph16_castle,
+                    Kind::Village => &t.glyph16_village,
+                    Kind::Knight => &a.glyph16_trader,
+                };
+                self.draw_recipe16(frame, at, glyph, cost);
+                continue;
+            }
             let glyph = match kind {
                 Kind::Road => &t.glyph_road,
                 Kind::City => &t.glyph_castle,
                 Kind::Village => &t.glyph_village,
                 Kind::Knight => &a.glyph_trader,
             };
-            let at = recipe_rect(l, kind);
             self.draw_recipe(frame, at.x, at.y, glyph, cost);
+        }
+    }
+
+    /// A recipe of the landscape key: the 16 px glyph on its tile, then a dark strip with a
+    /// 16 px icon in each cell.
+    fn draw_recipe16(&self, frame: &mut Image, at: Rect, glyph: &Image, cost: &[DiceValue]) {
+        let h = layout::KEY_ROW_H;
+        frame.plate(at.x, at.y, at.w, h, WOOD);
+        frame.plate(at.x, at.y, h, h, LEGEND_TILE);
+        frame.sprite(glyph, at.x + 1, at.y + 1, 255);
+        let strip_x = at.x + h + 1;
+        let strip_w = 1 + cost.len() as i32 * layout::KEY_CELL;
+        frame.fill_argb(strip_x, at.y + 1, strip_w, h - 2, INK);
+        for (i, &v) in cost.iter().enumerate() {
+            let x = strip_x + 1 + layout::KEY_CELL * i as i32;
+            if let Some(icon) = self.assets.icon16(v) {
+                frame.sprite(icon, x, at.y + 1, 255);
+            }
         }
     }
 
@@ -1139,12 +1191,7 @@ impl Scene {
                 frame.fill_argb(strip_x, top + 2, strip_w, SIGN_H - 4, INK);
                 (strip_x + 2, top + 3)
             }
-            BadgePlace::Tray { right, top, h } => {
-                let tray_w = inner + 6;
-                let tray_x = right - tray_w;
-                tray(frame, tray_x, top, tray_w, h);
-                (tray_x + 3, top + 1)
-            }
+            BadgePlace::Panel { right, top } => (right - inner, top),
         };
         if let Some(r) = map.long_road {
             let glyph = &self.tinted.as_ref().expect("tinted").badge_road;
@@ -1231,23 +1278,34 @@ impl Scene {
             ] {
                 frame.fill_argb(cx, cy, 1, 1, INK);
             }
+        }
+        for pair in track.rows.windows(2) {
+            self.draw_bend(frame, &pair[0], &pair[1]);
+        }
+        for row in &track.rows {
+            let y = row.water_y();
             for j in 0..row.cells {
                 let i = row.first + j;
-                let x = row.origin_x + row.strip.cell_x(j);
                 if i < flags {
+                    let x = row.place(row.strip.cell_x(j), rart::TRACK_FLAG_W);
                     let score = game.playsheet.turn_score_of(first + i + 1);
                     self.draw_flag(frame, x, y, score);
                 } else if i > cell && (track.flags || i % 2 == 1) {
-                    let bx = row.origin_x + row.strip.buoy_x(j);
+                    let bx = row.place(row.strip.buoy_x(j), rart::TRACK_BUOY_W);
                     frame.sprite(buoy, bx, y + BUOY_DROP, 255);
                 }
             }
         }
         let (r, j) = track.ship_row(cell);
         let row = &track.rows[r];
+        let ship = if row.reverse {
+            &tinted.track_ship_back
+        } else {
+            &tinted.track_ship
+        };
         frame.sprite(
-            &tinted.track_ship,
-            row.origin_x + row.strip.ship_x(j),
+            ship,
+            row.place(row.strip.ship_x(j), rart::TRACK_SHIP_W),
             row.water_y(),
             255,
         );
@@ -1255,10 +1313,42 @@ impl Scene {
         frame.sprite(
             // Over the ship lying at it, so its tower is whole
             &tinted.track_pier,
-            last.origin_x + last.strip.pier_x(),
+            last.place(last.strip.pier_x(), rart::TRACK_PIER_W),
             last.water_y(),
             255,
         );
+    }
+
+    /// Where the track turns from one row down into the next: at the end the upper row sails
+    /// towards, the water runs on down through both bands' frames and the gap between them,
+    /// a channel as wide as the water is tall, walled in ink on either side.
+    fn draw_bend(&self, frame: &mut Image, upper: &TrackRow, lower: &TrackRow) {
+        let water = &self.assets.track_water;
+        let (tw, th) = (water.width as i32, water.height as i32);
+        let b = upper.band;
+        let w = rart::TRACK_H;
+        let (outer, inner) = if upper.reverse {
+            (b.x, b.x + w + 1)
+        } else {
+            let outer = b.x + b.w - 1;
+            (outer, outer - w - 1)
+        };
+        let first = inner.min(outer) + 1;
+        // From the upper band's last water row to the lower band's first
+        let y0 = upper.water_y() + rart::TRACK_H - 1;
+        let y1 = lower.water_y();
+        for y in y0..=y1 {
+            // The water's pattern, carried on down from the upper band's
+            let sy = (y - upper.water_y()).rem_euclid(th);
+            for x in first..first + w {
+                let sx = (x - (b.x + 1)).rem_euclid(tw);
+                frame.sprite_part(water, sx, sy, 1, 1, x, y);
+            }
+        }
+        // The channel's walls: the outer one straight down, the inner one through the gap
+        frame.fill_argb(outer, y0, 1, y1 - y0 + 1, INK);
+        let gap_top = b.y + b.h - 1;
+        frame.fill_argb(inner, gap_top, 1, lower.band.y - gap_top + 1, INK);
     }
 
     fn draw_flag(&self, frame: &mut Image, x: i32, y: i32, turn_score: i32) {
@@ -1387,6 +1477,9 @@ impl Scene {
     /// The banked resources nobody has used yet, each a mini die, in bank slot order on a tab
     /// of the bar's wood (portrait) or a tray in the dice column (landscape).
     fn draw_mini_dice(&self, frame: &mut Image, game: &Game, l: &Layout, ui: &Ui) {
+        if let Some(b) = l.bank {
+            tray(frame, b.x, b.y, b.w, b.h);
+        }
         let slots = game.banked_slots();
         if slots.is_empty() {
             return;
@@ -1408,15 +1501,8 @@ impl Scene {
                     frame.fill_argb(left + 2, top, w - 2, 1, WOOD_DARK);
                     frame.fill_argb(left + 1, top + 1, w, h - 2, WOOD_DARK);
                 }
-                MiniTab::Tray => {
-                    // One tray for every row, drawn with the first
-                    if row == 0 {
-                        let widest = per.min(count) * pitch - MINI_GAP + 2 * MINI_PAD;
-                        let tray_top = l.mini_y - (rows - 1) * pitch - MINI_PAD - 1;
-                        let tray_h = l.mini_y + MINI_DIE + MINI_PAD + 1 - tray_top;
-                        tray(frame, left, tray_top, widest + 2, tray_h);
-                    }
-                }
+                // The tray is drawn whole, above
+                MiniTab::Tray => {}
             }
         }
         for (n, &slot) in slots.iter().enumerate() {
@@ -1656,7 +1742,7 @@ impl Scene {
                 let in_row = l.mini_per_row.min(count);
                 Some(Rect::new(
                     l.mini_x,
-                    l.mini_y - (rows - 1) * pitch,
+                    l.slot_y(0).min(l.slot_y(count - 1)),
                     in_row * pitch - MINI_GAP,
                     rows * pitch - MINI_GAP,
                 ))
@@ -2031,7 +2117,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_stacked_costs_tray_fits_its_recipes() {
+    fn the_landscape_key_fits_its_recipes() {
         let widest = [
             game::RESOURCES_ROAD.len(),
             game::RESOURCES_CITY.len(),
@@ -2039,15 +2125,9 @@ mod tests {
             game::RESOURCES_KNIGHT.len(),
         ]
         .into_iter()
-        .map(recipe_width)
+        .map(|n| layout::key_recipe_w(n as i32))
         .max()
         .unwrap_or(0);
-        assert_eq!(layout::STACKED_COSTS_W, widest + 2 * RECIPE_INSET_X);
-        // Four rows with the margins the two rows have above and below them
-        let below = layout::BOX_H - (RECIPE_INSET_Y + RECIPE_ROW + RECIPE_H);
-        assert_eq!(
-            layout::STACKED_COSTS_H,
-            RECIPE_INSET_Y + 3 * RECIPE_ROW + RECIPE_H + below
-        );
+        assert_eq!(layout::PANEL_W, widest + 2 * layout::KEY_INSET);
     }
 }

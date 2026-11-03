@@ -125,6 +125,9 @@ fn strings(game: &Game) -> Strings {
     Strings {
         score: t::score().format(),
         bonuses: t::strip_bonuses().format(),
+        costs: t::hud_costs().format(),
+        turns: t::hud_turns().format(),
+        bank: t::hud_bank().format(),
         first_roll: t::first_roll().format(),
         second_roll: t::second_roll().format(),
         third_roll: t::third_roll().format(),
@@ -1197,6 +1200,17 @@ mod tests {
         use crate::rules::scenario::Scenario;
         let dir = std::env::var("CAPTURE_DIR").expect("CAPTURE_DIR");
         let tag = std::env::var("CAPTURE_TAG").unwrap_or_else(|_| "now".into());
+        // The real words, not the keys a test sees without its catalog
+        let english = concat!(
+            include_str!("../../resource/locales/en/app.ftl"),
+            "\n",
+            include_str!("../../resource/locales/en/game.ftl")
+        );
+        day::install_locales("en", &[("en", english)]);
+        let side = match std::env::var("CAPTURE_SIDE").as_deref() {
+            Ok("left") => DiceSide::Left,
+            _ => DiceSide::Right,
+        };
         for (island, doc) in [
             (
                 "tarnholm",
@@ -1230,7 +1244,7 @@ mod tests {
                         .unwrap_or(d)
                 };
                 let (w, h) = (size("CAPTURE_W", 1080), size("CAPTURE_H", 2400));
-                let l = Layout::new(w, h, Insets::default(), g.map, DiceSide::Right);
+                let l = Layout::new(w, h, Insets::default(), g.map, side);
                 let words = strings(&g);
                 let f = scene.render(&mut g, &l, &mut ui, &mut t, &words, 60_000);
                 let ship = if moored { "ship" } else { "none" };
@@ -1328,12 +1342,12 @@ mod tests {
 
     #[test]
     fn taps_go_to_the_region_on_top() {
-        // A short laptop window: the interface at 3, the island at 2 under it
+        // A short, wide window: the interface at 3, the island at 2 under it
         let mut g = game();
         let mut scene = Scene::new(g.map);
         let mut ui = Ui::new();
         for side in [DiceSide::Right, DiceSide::Left] {
-            let l = Layout::new(1280, 680, Insets::default(), g.map, side);
+            let l = Layout::new(1440, 680, Insets::default(), g.map, side);
             assert_eq!((l.fit.scale, l.isle.scale), (3, 2));
             render(&mut scene, &mut g, &l, &mut ui);
             // Every screen pixel of a die is that die, to its very edge, though the island's
@@ -1374,7 +1388,7 @@ mod tests {
         let mut g = game();
         let mut scene = Scene::new(g.map);
         let mut ui = Ui::new();
-        let l = Layout::new(1280, 680, Insets::default(), g.map, DiceSide::Right);
+        let l = Layout::new(1440, 680, Insets::default(), g.map, DiceSide::Right);
         g.press_roll_button();
         let p = scene.pieces.offered_spot(&g).expect("a spot on offer");
         // The outline's rectangle, in interface pixels, covers the piece's island pixels
