@@ -403,7 +403,7 @@ impl Plan {
 
     /// The panel widths to try, narrowest first: the design width (the whole window for large
     /// text), then wider ones a short, wide window has room for, so a dialog that would scroll
-    /// on a turned phone takes the width instead.
+    /// in a short, wide window takes the width instead.
     pub fn widths(m: &Metrics) -> Vec<i32> {
         let avail_w = m.width - m.safe.left - m.safe.right - 2 * MARGIN;
         // Even, so a centered button lands on a whole art pixel (PixelUi.dialogWidth)
@@ -769,7 +769,7 @@ mod tests {
     }
 
     #[test]
-    fn a_turned_phone_offers_wider_panels_and_spreads_the_buttons() {
+    fn a_short_wide_window_offers_wider_panels_and_spreads_the_buttons() {
         let wide = Metrics::new(892.0, 412.0, 2.625, Insets::ZERO, 1.0);
         let widths = Plan::widths(&wide);
         assert_eq!(widths[0], MAX_W);

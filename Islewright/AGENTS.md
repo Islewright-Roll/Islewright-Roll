@@ -17,9 +17,9 @@ version has.
   tutorial's logic, saved games and top scores. Everything here is unit tested.
 - `src/view/`: the game screen. It draws the whole screen into an art-resolution framebuffer
   (`src/art.rs`) and shows it at an integer scale, one image pixel per device pixel, so the
-  pixel art stays sharp. Portrait and landscape layouts. A phone on its side keeps the portrait
-  layout turned with the device, with the island and the icons upright; wider screens with height
-  to spare use columns. The dice always sit on the side that was the bottom of the screen.
+  pixel art stays sharp. Portrait and landscape layouts. A phone is locked to portrait (the
+  Android manifest and the iOS Info.plist); a tablet on its side or a desktop window uses columns
+  either side of the upright island. The dice sit on the side that was the bottom of the screen.
 - `src/app/`: the app around the screen: settings (`prefs.rs`, one Day `Pref` each), saved games
   and scores (`store.rs`), sound (`audio.rs`), the accelerometer (`orientation.rs`), the menu,
   and the How to play, Top Scores, Settings and About pages.

@@ -44,6 +44,10 @@
 	<string>$(DAY_WINDOW_MIN_HEIGHT)</string>
 	<key>DayWindowMinWidth</key>
 	<string>$(DAY_WINDOW_MIN_WIDTH)</string>
+	<key>UISupportedInterfaceOrientations~iphone</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

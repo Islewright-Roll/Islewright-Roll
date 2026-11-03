@@ -1188,6 +1188,58 @@ mod tests {
         std::fs::write(format!("{dir}/played.png"), f.to_png(&l)).unwrap();
     }
 
+    /// Not a check: writes each island midgame and with the King's ship moored (a game played
+    /// to its end) to $CAPTURE_DIR/harbour-<tag>-<island>-<ship|none>.png, with $CAPTURE_TAG
+    /// telling one layout from another. Run as capture_bank_spend is.
+    #[test]
+    #[ignore]
+    fn capture_harbour() {
+        use crate::rules::scenario::Scenario;
+        let dir = std::env::var("CAPTURE_DIR").expect("CAPTURE_DIR");
+        let tag = std::env::var("CAPTURE_TAG").unwrap_or_else(|_| "now".into());
+        for (island, doc) in [
+            (
+                "tarnholm",
+                include_str!("../../tools/scenarios/tarnholm-midgame.json"),
+            ),
+            (
+                "dunholm",
+                include_str!("../../tools/scenarios/dunholm-midgame.json"),
+            ),
+        ] {
+            for moored in [false, true] {
+                let s = Scenario::from_json(doc).unwrap();
+                let mut g = Game::with_rng(s.map, Rng::new(7));
+                g.start_new_game(s.map);
+                s.apply_to(&mut g);
+                if moored {
+                    if g.map.turn_cap > 0 {
+                        g.turns_taken = g.map.turn_cap;
+                    } else {
+                        g.target_score = g.playsheet.score();
+                    }
+                    assert!(g.is_game_done());
+                }
+                let mut scene = Scene::new(g.map);
+                let mut ui = Ui::new();
+                let mut t = Tutorial::new(false, 0);
+                let size = |k: &str, d: u32| {
+                    std::env::var(k)
+                        .ok()
+                        .and_then(|v| v.parse().ok())
+                        .unwrap_or(d)
+                };
+                let (w, h) = (size("CAPTURE_W", 1080), size("CAPTURE_H", 2400));
+                let l = Layout::new(w, h, Insets::default(), g.map, DiceSide::Right);
+                let words = strings(&g);
+                let f = scene.render(&mut g, &l, &mut ui, &mut t, &words, 60_000);
+                let ship = if moored { "ship" } else { "none" };
+                let path = format!("{dir}/harbour-{tag}-{island}-{ship}.png");
+                std::fs::write(path, f.to_png(&l)).unwrap();
+            }
+        }
+    }
+
     #[test]
     fn renders_every_layout_at_its_size() {
         let mut g = game();
@@ -1340,7 +1392,7 @@ mod tests {
     }
 
     #[test]
-    fn a_turned_callout_reads_upright_and_takes_its_taps() {
+    fn a_callout_in_a_long_wide_window_stays_on_screen_and_takes_its_taps() {
         for side in [DiceSide::Right, DiceSide::Left] {
             let mut g = game();
             let mut scene = Scene::new(g.map);
@@ -1354,9 +1406,7 @@ mod tests {
             };
             let frame = scene.render(&mut g, &l, &mut ui, &mut t, &s, 5_000);
             let p = ui.callout.clone().expect("a callout is due");
-            // On the screen's art, inside it, which is wider than the art is
             let (w, h) = (l.fit.width as i32, l.fit.height as i32);
-            assert_eq!(w, l.height);
             assert!(
                 p.panel.x >= 0 && p.panel.x + p.panel.w <= w,
                 "{:?}",

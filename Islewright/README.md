@@ -23,9 +23,9 @@ resource; traders bank a resource for a later turn.
   reaches the pier.
 - **Dunholm**: a race to ten points in as few turns as you can.
 
-Turn a phone on its side and the same controls turn with it, with the island and the icons staying
-upright. A tablet on its side moves the score and costs to one side and the dice to the other. The
-dice are always on the side that was the bottom of the screen.
+On a phone the game stays upright. A tablet on its side, or a wide window on a computer, moves the
+score and costs to one side and the dice to the other, with the island upright between them. The
+dice go on the side that was the bottom of the screen.
 
 With a keyboard: 1 to 6 keep or release a die, 0 rolls, 9 builds the suggested spot, 7 undoes,
 and 8 dismisses a tutorial tip. Where the platform passes letters to the game, R or Space also
