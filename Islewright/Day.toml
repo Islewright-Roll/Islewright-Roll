@@ -1,0 +1,26 @@
+# The Day project manifest: https://daybrite.dev/docs/reference/cli#the-conventional-project
+# `name` and `version` come from Cargo.toml.
+schema = 1
+
+[app]
+# Development builds use their own id, so they install beside the App Fair copy. The published
+# identity is the appfair flavor's (Day-appfair.toml).
+id = "io.github.islewrightroll.islewright.dev"
+title = "Islewright: Roll"
+artifact = "islewright-roll"
+build = 34
+targets = ["ios-uikit", "android-material", "web-dom"]
+
+# The window's size and minimum size in points, for every platform with resizable windows.
+[window]
+width = 960
+height = 640
+min_width = 320
+min_height = 400
+
+# Report which element ids the dayscripts reach: https://daybrite.dev/docs/how-to/dayscript
+[dayscript.coverage]
+enabled = true
+
+[android]
+resource-overlays = ["platform/android/res"]

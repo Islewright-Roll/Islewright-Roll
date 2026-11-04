@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Android-only additions Day merges into its generated manifest; delete the file to use the
+    defaults. https://daybrite.dev/docs/reference/platforms/android-material#manifest-customization
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <!-- Under the launcher icon, where "Islewright: Roll" is cut off, the short name, as the
+             Java app had it. The activity's label is what the launcher shows.
+             Portrait on a phone. From target SDK 36 Android ignores the lock on a large screen
+             (smallest width 600dp and up), so a tablet or a desktop window still turns and gets
+             the landscape layout with its columns. -->
+        <activity
+            android:name="dev.daybrite.day.bridge.DayActivity"
+            android:label="@string/launcher_name"
+            android:screenOrientation="portrait"
+            tools:node="merge" />
+    </application>
+</manifest>

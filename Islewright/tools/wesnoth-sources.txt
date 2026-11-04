@@ -1,0 +1,117 @@
+# Wesnoth files read by tools/bake_board.py (paths relative to data/core/images/terrain/)
+# Read from the installed 1.16 data directory: wesnoth-1.16-data 1:1.16.11-1build3
+# which is Wesnoth tag 1.16.11, commit 83d4b397f1de466c721e4e393b361c71fc4f5b6c
+# Licence and author are Wesnoth's own record for the file: its row in copyrights.csv at
+# revision d4b2d151ce3 (the last to list images), checked by the bake against the MD5.
+# path | licence | author | MD5
+alphamask.png | GNU GPL v2+ | Philippe Plantier(Ayin) | 350228f29384f9f9c7b239f092d4b5e8
+embellishments/farm-veg-spring-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 45a47dbb019d0aba2f826332df90f402
+embellishments/farm-veg-spring-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | e8c94de8156fda51f1e372583d8841b6
+embellishments/farm-veg-spring-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 32d681aaf021d7db0650aed61f4c15f3
+embellishments/farm-veg-spring3.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | b4d0d187e3dc8996bf5fc673010a40ca
+flat/bank-ne.png | GNU GPL v2+ | unknown | 28299037a4b662c6abe892ba3ff939bd
+flat/bank-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ec9dfb6d60298da4e93cbd4cb4ad06fb
+flat/bank-s.png | GNU GPL v2+ | unknown | 3a345cfb4174359114bbc0db00adafaf
+flat/bank-se.png | GNU GPL v2+ | unknown | e59a15f25f81e28f06743c4aeec4f821
+flat/bank-sw.png | GNU GPL v2+ | unknown | 4950d3db926ca94515281d4c08b1f4ee
+flat/bank-to-ice-n-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 830a33a8b5e2cf33b8e2745812e476ef
+flat/bank-to-ice-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 646eb5b1c2403f9fd0990d8b825cf44c
+flat/bank-to-ice-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 6cd542d8c2d453cc78ebb5500e0b4c61
+flat/bank-to-ice-nw-n.png | GNU GPL v2+ | unknown | d5a392b24d703b5e5ea26e352e90c1ca
+flat/bank-to-ice-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 83aed34491273dab2d5a4f7fd4ebecde
+flat/bank-to-ice-se-s.png | GNU GPL v2+ | unknown | 9b37714941486844d4c998ef9078cd6a
+flat/bank-to-ice-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | d1d77b190658698a8544ceca8c21463b
+flat/bank-to-ice-sw.png | GNU GPL v2+ | unknown | a6fee90fa4bd07e26d090edcba51e96b
+flat/dirt-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | a9765d6e917e8bacb11489c75bb1f607
+flat/dirt-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 777cd06acd9b49e8a3815cc145bda4a5
+flat/dirt-s-sw-nw.png | GNU GPL v2+ | Richard Kettering(Jetrel);J.W. Bjerk(Eleazar) | 114d5e7212a39a0e575920b84a8f184c
+flat/dirt-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ea4053721683d75c21a51030681a244b
+flat/dirt-sw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 63dd7660c45b034e12aac31fae84d8cf
+flat/dirt3.png | GNU GPL v2+ | Richard Kettering(Jetrel);J.W. Bjerk(Eleazar) | 13c79d8edbbdb42af70699677e70992a
+forest/deciduous-summer-small.png | GNU GPL v2+ | Richard Kettering(Jetrel) | e550d92e3ecf1688167b6bb5ed8242eb
+grass/green-abrupt-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | c169feac153a81ba0cf5e81e327ea29c
+grass/green-abrupt-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | f106b8612543813730d6a70e7ec0cde7
+grass/green-abrupt-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 09bb51acaad520c4f751835b47e7d7e6
+grass/green-abrupt-s.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | e45f27954233f3fe153dd24db683b8f0
+grass/green-long-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 8a21d52fb8625ab5eb79a96e9209cba3
+grass/green-long-sw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | adc9261ba6df3112d71ead6bc99bab52
+grass/green-medium-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ceac6d97b00c9e31828c9c9dce467571
+grass/green-medium-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | db5cd115c4107e262cdf768a118da9a2
+grass/green-medium-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 2561f95609b9d51d71fc58ad262603e6
+grass/green-medium-s.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ac8148a48499b0f2c421acf77121692b
+grass/green-medium-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | fdd5f1937f941ba4d8273c8db9de1c84
+grass/green5.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 39a6962f707cca0bfd7ffadba55827ad
+grass/leaf-litter-long-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 4d337e0e4122f0dc16305d3038ec2150
+grass/leaf-litter-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ebc68a3bb377fa4daad0674f8a08b197
+grass/leaf-litter-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 834ce611ab7751f40765ac412e448360
+grass/leaf-litter-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 867b5b08d2812adfc3112f35462dec71
+grass/leaf-litter-sw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 9e5af0ea4a0034b28a85f554709bf0cd
+grass/leaf-litter6.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 235b7b8829e20ea4d09cd5da4da34d49
+hills/dry-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 40b64c0f51b17ff655a956edbb592562
+hills/dry-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | eff52e160d1c8f8b4f6a7ed701df7021
+hills/dry-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 0f4b898550ee93c76535a6fbd0399e5e
+hills/dry-s.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | e7b3e6ddcdbecb8cfe7c0ad912bd20d8
+hills/dry-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 97f88429cfd1affca532d0781008c779
+hills/dry-sw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | bdda266bed0e3ee158644010b37ca607
+hills/dry-to-water-ne.png | GNU GPL v2+ | unknown | 9311d9909766033de79077326dceae6e
+hills/dry-to-water-nw.png | GNU GPL v2+ | unknown | 0dece52a169e154675221944df9d2eea
+hills/dry-to-water-s.png | GNU GPL v2+ | unknown | 08d7890f0d292e635c9a5f50a10ee8b6
+hills/dry-to-water-sw.png | GNU GPL v2+ | unknown | 34f6b1b01897d98d659f9b7715a9c992
+hills/dry2.png | GNU GPL v2+ | unknown | 1e2a85f1c296b3d6c7be35852400ae39
+hills/dry3.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | c9573c1293adb06cece8344145dd82bf
+hills/regular-to-water-ne.png | GNU GPL v2+ | unknown | 5858670a29c7a49b39adab31a805e2d0
+hills/regular-to-water-nw.png | GNU GPL v2+ | unknown | f089f4779c5a9d50dbfb508da885a321
+hills/regular-to-water-s.png | GNU GPL v2+ | unknown | d08221539c6319222a1b312f82e89321
+hills/regular-to-water-se.png | GNU GPL v2+ | unknown | 810ce33fb18219283c88967d01f74e50
+hills/regular2.png | GNU GPL v2+ | unknown | 18feabda4f6dcaf7ae41e49058b52c3e
+masks/7hex-bl-l.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 7d475dc4f10d7c82f449421a8ba5e3c8
+masks/7hex-bl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 22cbae6c024136545b6f2286521eae3a
+masks/7hex-br-r.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 92b606ccc71153e8176ef5b102813a0b
+masks/7hex-br.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | b01825b11c663b86722560a0aa999772
+masks/7hex-l.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 9e3e23e951f44e47fa9c8ecf395cf8c4
+masks/7hex-r.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | c3e6d51155c1d762f9cc70b099920d6f
+masks/7hex-tl-tr.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 473a2352731fd08489c3b85495f253fe
+masks/7hex-tl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 7fcf0928556a7c84109dbefe43645152
+masks/7hex-tr-tl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 95c9d04a47a6a97d50d299bd10a1f1b9
+masks/7hex-tr.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 341151b6063a949a126f2281ed0bddb2
+masks/long-concave-2-bl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 8fbaf6d938fe97dcbdd3cb13e3eb2167
+masks/long-concave-2-br.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | daf7e745d78fc68c31a08ed09cff3a10
+masks/long-concave-2-l.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 8e5af4cdbf4a30b4225d7fdeb36b69ad
+masks/long-concave-2-r.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | d19bb635ebf6b38a443d6e8713774487
+masks/long-concave-2-tl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | e67ded35acef826557cee7252a6aef16
+masks/long-concave-2-tr.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 86094790d479378cc6bfee0a9df3bd59
+masks/long-convex-bl-br.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | db43b6339266ab031ffd4e2923efabeb
+masks/long-convex-bl-l.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 536e5f84206adc267984483ad75b915b
+masks/long-convex-br-bl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 222dea69073249b9f597922a4512e294
+masks/long-convex-br-r.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 18752b3c53c22db061256fb76df8458a
+masks/long-convex-l-bl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | a242da53680b70c535a8dad4dbde03ef
+masks/long-convex-l-tl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 5b6d32fea2184aa78d194ce53c445b85
+masks/long-convex-r-br.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 89c399922324f013e68d47926568bb67
+masks/long-convex-r-tr.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 5daadb7806188e60d3b16c90953115e9
+masks/long-convex-tl-l.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 03c2840cadfe35280ea071d91221271e
+masks/long-convex-tl-tr.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | fe765214ac3c592e6bc08e021e0ea015
+masks/long-convex-tr-r.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 3a09492e9c3bd0cd3913034c12c296e8
+masks/long-convex-tr-tl.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 7f67ecbc84909727f50908256808be8f
+mountains/basic-castle-ne.png | GNU GPL v2+ | Hogne Håskjold(freim) | 0a1503c7579218da246ab4f81a6a3242
+mountains/blend-from-dry-s.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | d95d02b959cf0935381b726cb147fd3b
+mountains/blend-from-dry-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 1fc88be020695e5075f3dfe15594047a
+mountains/dry-castle-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ce879ae4f8f2436efdff996a6c9b510d
+sand/desert-n-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 8ff49442e16c95d5cbc8c7529fbf03d4
+sand/desert-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | f5f713c2a4a71ff0f89f6dd009ebfa8b
+sand/desert-ne-se-s-sw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 163e1b738a80053bf33960c5730434fb
+sand/desert-ne-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 5242e5aaeef2fc00c92b0c9e689a2027
+sand/desert-ne.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 9acc4413eb45d0597c9fbbd9c9ef30e1
+sand/desert-nw-n.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | ae2e05358b36015a2ebac03cf5a18c91
+sand/desert-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | d1c564a05358455709834fcf9c92e7d7
+sand/desert-s.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 3ef00b6a38e7033481610c0d6002707d
+sand/desert-se.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 0866911d82e8c1162ae39024f10407ed
+sand/desert-sw-nw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 078da853ba31b82c4239043edeeaca3a
+sand/desert-sw.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 907a2b19c78b3f3a08545c91bbd6498a
+sand/desert2.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | 503e9920f012bfaeb21d28f7ba6868fb
+sand/desert4.png | GNU GPL v2+ | Richard Kettering(Jetrel) | 3cb8cbecd6855503363faf2abb034964
+water/bottom.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 2a00254927aa64ce50188ad141400e7c
+water/ocean01.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | aca7e46d882696fbcda8d74e7ac96d7c
+water/reef2.png | GNU GPL v2+ | J.W. Bjerk(Eleazar) | a360baaf050d192da20a3c8db0826cf4
+water/water01.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 366f4290d7f0f558bd0dd88501bdb9f7
+water/waves-concave-A01.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | d29168a464a7f3ad2c9ac24a6d90c1b7
+water/waves-convex-A01.png | GNU GPL v2+ | Lari Nieminen(zookeeper) | 3dac898262edbcd86b6131f96e880838

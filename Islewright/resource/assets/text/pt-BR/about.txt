@@ -1,0 +1,14 @@
+Islewright: Roll {{version}}
+
+Um jogo de dados para um jogador: role os dados e construa estradas, vilas, castelos e mercadores em uma pequena ilha.
+
+Código aberto sob a GNU GPL v3:
+https://github.com/islewright-roll/islewright-roll
+
+O terreno e o navio do rei vêm de The Battle for Wesnoth (https://www.wesnoth.org), usados sob a GNU GPL v2 ou posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier e outros artistas de Wesnoth; o navio vem do projeto FreeCol. Fontes: Press Start 2P, Ark Pixel e Micro 5 (apenas os números), SIL Open Font License 1.1. Veja CREDITS.md no repositório.
+
+Efeitos sonoros: de The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 ou posterior, de Lari Nieminen, J.W. Bjerk e Leonardo Magno Sampaio, e seu clique de botão de Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); de Kenney (https://kenney.nl), CC0; e uma fanfarra de MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Alguns foram cortados, filtrados ou tiveram o volume alterado.
+
+Criado originalmente pela Ridgeline Apps. Marcus Hoffmann (Bubu) o reviveu em 2017, com uma tradução alemã de tmaex, e Hellmark preservou o arquivo do Google Code. Desde então, por Islewright Team.
+
+Islewright: Roll não é afiliado à Catan GmbH nem endossado por ela. CATAN® é uma marca registrada da Catan GmbH.

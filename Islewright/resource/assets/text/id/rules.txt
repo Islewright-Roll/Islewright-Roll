@@ -1,0 +1,61 @@
+# Tujuan
+
+Di Tarnholm, lihat seberapa tinggi skor yang bisa kamu raih dalam 15 giliran.
+
+Di Dunholm, raih 10 poin dengan giliran sesedikit mungkin.
+
+# Giliranmu
+
+Kamu punya tiga lemparan tiap giliran. Ketuk dadu yang mau kamu tahan, lalu lempar sisanya.
+
+Ketuk tempat yang disorot untuk membangun di sana. Begitu kamu membangun, lemparan untuk giliran itu selesai, tapi kamu masih bisa terus membangun dengan dadu yang tersisa.
+
+Salah membangun? Panah di samping tombol lempar mengurungkan bangunan terakhirmu, sampai lemparan berikutnya.
+
+# Membangun
+
+Jalan baru dibangun untuk menyambung jalan yang sudah kamu punya.
+
+Tempat untuk desa dan kastel tetap terkunci sampai ada jalan yang mencapainya.
+
+Di Tarnholm, desa, kastel, dan pedagang masing-masing dibangun sesuai urutan nomornya.
+
+# Emas
+
+[icon_gold_12] Emas ditukar berpasangan: dua emas menjadi satu sumber daya apa pun yang kurang. Satu emas saja tidak bisa dipakai.
+
+# Pedagang
+
+[glyph_trader_12] Rekrut seorang pedagang, dan dia akan menyimpan satu sumber daya untukmu. Sumber daya itu bisa dipakai kapan saja, tapi hanya sekali.
+
+Sebelum kamu merekrut seorang pedagang, sumber dayanya ada di gerobaknya. Setelah dia direkrut, sumber daya itu pindah ke kiri bawah layar dan tetap di sana sampai kamu memakainya.
+
+[icon_any_12] Tanda ? bisa menjadi sumber daya apa pun. Di Dunholm, tiap gurun punya dua pedagang yang berbagi satu ?. Rekrut keduanya untuk mendapatkannya.
+
+# Simpanan atau klasik
+
+Biasanya sumber daya simpanan terpakai sendiri saat ada bangunan yang butuh, jadi fungsinya seperti dadu ketujuh.
+
+Kalau mode klasik sumber daya pedagang dinyalakan di Pengaturan, itu bukan dadu tambahan. Seret dari bagian bawah layar ke salah satu dadumu yang sudah dilempar. Dadu itu lalu menunjukkan sumber daya tersebut dan tetap begitu sampai giliran selesai. Kalau kamu menyeret ?, kamu memilih sumber dayanya.
+
+# Sorotan
+
+![rules_highlight_now]
+
+Hijau: bisa kamu bangun sekarang.
+
+![rules_highlight_chain]
+
+Hijau pucat: juga terjangkau di giliran ini. Ketuk, dan semua yang ada di jalur ke sana dibangun untukmu.
+
+![rules_highlight_bank]
+
+Biru: membangun di sini memakai sumber daya yang disimpan salah satu pedagangmu.
+
+Biru pucat: sama, setelah ada hal lain yang dibangun lebih dulu. Ketuk, dan semua yang ada di jalur ke sana dibangun untukmu.
+
+# Penilaian
+
+Di Tarnholm, angka di tiap tempat adalah nilainya. Giliran tanpa membangun apa pun mengurangi skormu 2 poin.
+
+Di Dunholm, desa bernilai 1 poin dan kastel 2 poin. Jalan yang ditandai dan pedagang ketigamu masing-masing menambah 2 poin.

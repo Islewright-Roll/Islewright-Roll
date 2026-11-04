@@ -1,0 +1,50 @@
+Sources of the soundtrack (see CREDITS.md and tools/encode_music.sh).
+
+Artist: Vindsvept (https://vindsvept.se).
+Licence: Creative Commons Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/
+Fetched (pages read): 2026-10-09.
+
+The artist's statement of the licence, https://vindsvept.se/licensing/ :
+  "My music found on Bandcamp, YouTube or any other platform is made available under the
+  Creative Commons (CC BY 4.0) License. This only encompasses my original music, not covers.
+  You can use it in your videos commercially. You can cut it up, remix, and transform it as
+  long as you follow the guidelines and give appropriate credit."
+Each track page below also shows the licence ("some rights reserved", linking to
+https://creativecommons.org/licenses/by/4.0/). The YouTube description of each track says:
+"This track is available under Creative Commons Attribution (CC-BY 4.0)".
+
+For game developers: https://vindsvept.se/for-video-game-developers/ asks to be told the
+product title before release, so it can be excluded from his content ID matching.
+
+WHERE THE FILES COME FROM, AND WHY THEY ARE NOT HERE YET
+The licence permits redistribution, but none of these ten tracks has a free file download:
+  * vindsvept.se offers free MP3 downloads for three tracks only (Night of the Fae, Onward,
+    Enigma), none of them among these ten.
+  * Bandcamp is the artist's own download store ("High-quality downloads" in his YouTube
+    descriptions): each track page offers MP3, FLAC and more as a PAID digital track,
+    USD 1 minimum (USD 1.50 for The Old Way). Bandcamp's own player streams 128 kbps MP3,
+    which is a stream and not a download, and was not taken.
+So the originals have to be bought (about USD 10.50 for the ten) and passed to
+tools/encode_music.sh. Fill the last two columns when that is done.
+
+Columns: slug | official title | track page | format and bitrate of the original | sha256 of the original
+Durations are those Bandcamp lists for the track.
+
+deep_sleep_of_the_elven_king | Deep Sleep of the Elven King | https://vindsvept.bandcamp.com/track/deep-sleep-of-the-elven-king | 531.9 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+deeper_into_the_woods | Deeper into the Woods | https://vindsvept.bandcamp.com/track/deeper-into-the-woods | 205.9 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+wanderlust | Wanderlust | https://vindsvept.bandcamp.com/track/wanderlust | 230.7 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+lady_of_the_lake | Lady of the Lake | https://vindsvept.bandcamp.com/track/lady-of-the-lake | 225.7 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+what_lies_beyond | What Lies Beyond | https://vindsvept.bandcamp.com/track/what-lies-beyond | 204.8 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+into_the_minds_eye | Into the Mind's Eye, part one | https://vindsvept.bandcamp.com/track/into-the-minds-eye-part-one | 279.7 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+breath_of_life | Breath of Life | https://vindsvept.bandcamp.com/track/breath-of-life | 221.2 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+to_the_skies | To the Skies | https://vindsvept.bandcamp.com/track/to-the-skies | 194.8 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+winters_night | Winter's Night | https://vindsvept.bandcamp.com/track/winters-night | 197.0 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+the_old_way | The Old Way | https://vindsvept.bandcamp.com/track/the-old-way | 204.0 s | CC BY 4.0 | original: NOT YET FETCHED | sha256: -
+
+All ten are on the album https://vindsvept.bandcamp.com/album/the-youtube-collection
+(The Youtube Collection, released 2016 and updated continuously).
+
+# Credit paragraph for resource/assets/text/en/about.txt. It was held back because no audio
+# ships yet: paste it in, as its own paragraph above the final legal paragraph, in the same
+# commit that adds the encoded tracks.
+Music by Vindsvept (https://vindsvept.se), used under the Creative Commons Attribution 4.0 licence (https://creativecommons.org/licenses/by/4.0/): Deep Sleep of the Elven King, Deeper into the Woods, Wanderlust, Lady of the Lake, What Lies Beyond, Into the Mind’s Eye (part one), Breath of Life, To the Skies, Winter’s Night and The Old Way. The tracks were re-encoded from the artist’s originals to Opus for this app.

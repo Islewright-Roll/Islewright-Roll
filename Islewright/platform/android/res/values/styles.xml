@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The game fills the window, so the bars take the wood colour of the tray beside them rather
+         than the platform's surface, in light mode and dark alike. -->
+    <style name="AppTheme" parent="Theme.Material3Expressive.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/islewright_wood</item>
+        <item name="android:statusBarColor">@color/islewright_wood</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <!-- Every scroll view shows the kit's scroll thumb: 2 art pixels at the phones' scale of
+             5, always there, and no overscroll glow. A view that wants none clips it off. -->
+        <item name="android:scrollViewStyle">@style/KitScroll</item>
+    </style>
+    <style name="KitScroll" parent="@android:style/Widget.Material.ScrollView">
+        <item name="android:scrollbarSize">10px</item>
+        <item name="android:scrollbarThumbVertical">@color/islewright_thumb</item>
+        <item name="android:scrollbarTrackVertical">@null</item>
+        <item name="android:fadeScrollbars">false</item>
+        <item name="android:overScrollMode">never</item>
+    </style>
+    <color name="islewright_thumb">#FF5A3C14</color>
+    <color name="islewright_wood">#FF22180D</color>
+</resources>

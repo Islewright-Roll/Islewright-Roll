@@ -1,5 +1,18 @@
 # tools
 
+## bake_sea.py
+
+Bakes the moving sea: runs `bake_board.py` once for each of the 21 steps of the water's loop
+(`BAKE_LOOP_FRAME`: Wesnoth's deep ocean frame for frame, its shallow water and beach waves each
+at the frame their own loops would be on) and packs each island's 21 boards into
+`Islewright/resource/assets/art/sea_<ID>.png`, row by row so PNG's Up filter compresses each
+step against the one before. Step 1 must equal the still board. It also adds every frame it
+read to `wesnoth-sources.txt`. `--frames DIR` packs boards already baked there.
+
+```
+python3 -I tools/bake_sea.py [tarnholm|dunholm] [--frames DIR]
+```
+
 ## bake_board.py
 
 Bakes the island boards (504x504) out of terrain tiles from Battle for Wesnoth, blending
@@ -110,7 +123,7 @@ never touches the shipped board.
 | `FIELD_GRASS_VERGE` | off | On: a dry grass verge on the field's sea side. Not a Wesnoth rule. |
 | `BOTTOM_OPACITY` | 100 | `water/bottom` opacity in percent. Wesnoth: 100. |
 | `WAVES_THREE_WAY_CONCAVE` | on | The two concave sand/water/other beach wave rules. Wesnoth: on. |
-| `WATER_FRAME`, `WAVES_FRAME` | 1 | Animation frame. The board is a still image; the 1.16 screenshot also shows frame 1. |
+| `LOOP_FRAME` | 1 | The step of the water's loop, 1 to 21: the deep ocean's frame, with the shallow water's and the beach waves' frames for that moment (`bake_sea.py` bakes every step). Step 1 is frame 1 of all three, the still board, as the 1.16 screenshot shows. |
 | `WESNOTH_VARIANT_NOISE` | on | Wesnoth's own variant choice. Off: `random.Random(1)`. |
 | `DRAW_ORDER` | `wesnoth` | `layer` sorts by layer only. |
 

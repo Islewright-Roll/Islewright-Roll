@@ -1,0 +1,2 @@
+pixels differing by more than 16 (largest channel): 17095 of 254016 = 6.730%
+mean largest-channel difference: 3.271

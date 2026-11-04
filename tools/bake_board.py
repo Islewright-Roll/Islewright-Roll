@@ -107,10 +107,17 @@ FIELD_GRASS_VERGE = _opt("FIELD_GRASS_VERGE", False)
 BOTTOM_OPACITY = _opt("BOTTOM_OPACITY", 100)
 # NEW:WAVES draws the two concave sand/water/other corner rules. Wesnoth: on.
 WAVES_THREE_WAY_CONCAVE = _opt("WAVES_THREE_WAY_CONCAVE", True)
-# KEPT: the board is a still image, so the animated water and waves are frame 1. The 1.16
-# screenshot also shows frame 1 (the water matches pixel for pixel).
-WATER_FRAME = _opt("WATER_FRAME", 1)   # 1..17 (water01..17), 1..21 for deep ocean
-WAVES_FRAME = _opt("WAVES_FRAME", 1)   # 1..13
+# The step of the water's animation loop, 1..21 (the game plays the boards baked at each).
+# Wesnoth runs the deep ocean's 21 frames at 125 ms, the shallow water's 17 at 125 ms and the
+# beach waves' 13 at 200 ms: about 2.6 s for the ocean and the waves alike. One loop of 21 steps
+# at 125 ms carries all three, the shallow water and the waves each at the frame its own loop
+# would be on. Step 1 is frame 1 of all three, as the 1.16 screenshot shows (the water matches it
+# pixel for pixel), and is the still board.
+LOOP_STEPS = 21
+LOOP_FRAME = _opt("LOOP_FRAME", 1)
+WATER_FRAME = LOOP_FRAME                                    # ocean01..21
+SHALLOW_FRAME = 1 + (LOOP_FRAME - 1) * 17 // LOOP_STEPS   # water01..17
+WAVES_FRAME = 1 + (LOOP_FRAME - 1) * 13 // LOOP_STEPS     # A01..A13
 # Draw order. "wesnoth": display.cpp order (verified against renders). "layer": plain layer sort.
 DRAW_ORDER = _opt("DRAW_ORDER", "wesnoth")
 # Pick variants (grass2, pine-small2, ...) with Wesnoth's own position noise (builder.cpp
@@ -493,6 +500,126 @@ WESNOTH_LICENCES = {
         ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "d29168a464a7f3ad2c9ac24a6d90c1b7"),
     "water/waves-convex-A01.png":
         ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "3dac898262edbcd86b6131f96e880838"),
+    "water/ocean02.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "274b755498cda8bde9f9d270f5ce8f59"),
+    "water/ocean03.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "06794f6bc1bd399bd8d10381286bbca2"),
+    "water/ocean04.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "655acf1b9cd374979e8514ab3c91f725"),
+    "water/ocean05.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "a7eb8e7e5d54b72bd9a9f273044eb46b"),
+    "water/ocean06.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "7d8fb864c1d84d1ef16a6c967bce30f6"),
+    "water/ocean07.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "461ce66cea7dc6ea313098aae09b77b1"),
+    "water/ocean08.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "dbe93ebe58d584ab67f5ea60f912b8f8"),
+    "water/ocean09.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "d1908780cc9f4d208b420830ff43fd4e"),
+    "water/ocean10.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "1ba9092331055440dd9f0d1a4bbf0d25"),
+    "water/ocean11.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "53e8d9838455efb17ae6dee37fa9d44d"),
+    "water/ocean12.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "39a32d5a6f30915c20d1a7619d22e02f"),
+    "water/ocean13.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "5f4c2fda34359ebe9babe139f27af55e"),
+    "water/ocean14.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "7f66fa7f48f7c43a7c38e00033e450ea"),
+    "water/ocean15.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "fff8414f04f60c137d46d7ef08d00649"),
+    "water/ocean16.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "6a998a84ef4b5a7ebfeeda2797ba77f0"),
+    "water/ocean17.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "5901393e6c015655f88629ed4bb82fa6"),
+    "water/ocean18.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "9a1d565d5b3bba0cd43c5fbdde22e36e"),
+    "water/ocean19.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "622ce53832973ec7b9e5d6f72f012fe2"),
+    "water/ocean20.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "9a6546f6acfde24a79b0ffb0f335056d"),
+    "water/ocean21.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "bbc2c7bf78906825cbf114c39bb1eb20"),
+    "water/water02.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "646772d2d724e9eeba401388993c4663"),
+    "water/water03.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "d7f0546b6636860d3842b227610a739e"),
+    "water/water04.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "afcd119290264961ce27ecf585fedc89"),
+    "water/water05.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "d0fa042427deef27bfeb9965326b4247"),
+    "water/water06.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "25d77a7f1d2a83df1cb9ace561cd5bb1"),
+    "water/water07.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "96854ebc644845d58865995a3b6b3546"),
+    "water/water08.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "e209d2842155540152a6430399aab904"),
+    "water/water09.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "032cdeeb75fa3072294558be7a61e921"),
+    "water/water10.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "dc7e3e3ac1e6bf7097b8cbc00e751c69"),
+    "water/water11.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "937d30bd19727eaf1a709fd2449f1d29"),
+    "water/water12.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "2be89e3d8b1538da62d7db2ab6be8dda"),
+    "water/water13.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "fcce18843a17920bce76f7451edaa533"),
+    "water/water14.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "ce5fa61bb1f019ecec290506419baafa"),
+    "water/water15.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "e56b9e9e02de5d7f60060972a2ac5819"),
+    "water/water16.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "517f7837e4fdda0742d916a81efcb2d7"),
+    "water/water17.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "f5c29442a7ee025487bbf7d512d2ee10"),
+    "water/waves-concave-A02.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "693443a0912c31297b316b43b74c13c7"),
+    "water/waves-concave-A03.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "1f69139285c2b3877a4cea7e85f8b8b0"),
+    "water/waves-concave-A04.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "cd7b19072d2e1616ba787a4839267c6e"),
+    "water/waves-concave-A05.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "ba2b4ddf54467ee69dd039ed83aebc5b"),
+    "water/waves-concave-A06.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "ba47b50a800f52e0dd6b526e47483ebb"),
+    "water/waves-concave-A07.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "86f106b5d570d978b44e8696ae21915e"),
+    "water/waves-concave-A08.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "d3e79dbbd59fb7e188db5417381c0831"),
+    "water/waves-concave-A09.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "6aa83735521fd928f300ef6c41838f25"),
+    "water/waves-concave-A10.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "2ea86a6eb4d0e4a93139186de4500bec"),
+    "water/waves-concave-A11.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "8a9ab42b3dc35208aa31ed012b7427db"),
+    "water/waves-concave-A12.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "8d6527fbf121b4107819658eeea053f5"),
+    "water/waves-concave-A13.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "cbb4440b4bec70efbbe0b8624fc28480"),
+    "water/waves-convex-A02.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "874ac44a4ac1aca03332785bd0508d45"),
+    "water/waves-convex-A03.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "4d9d6a9a8d00fdfabf9a12641e7769a1"),
+    "water/waves-convex-A04.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "2f525163ac521f84676daf01fb24ad98"),
+    "water/waves-convex-A05.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "57a6367ef994bb2050e2d12de45ff47e"),
+    "water/waves-convex-A06.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "676c43c6209cf4a4b2b30e9ffab77741"),
+    "water/waves-convex-A07.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "5805469c1dc4e792f8f2c3169acabe42"),
+    "water/waves-convex-A08.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "77722629558cccff373b10dd672377e6"),
+    "water/waves-convex-A09.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "a45b8a4f682d01d93b6dd39fe667065c"),
+    "water/waves-convex-A10.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "c9dad2168377d47859c9fcb2a491eb57"),
+    "water/waves-convex-A11.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "4318c5dc7c3def4d3dee81f01458261d"),
+    "water/waves-convex-A12.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "7868122ce2f341baeaedd3460b4f8aa7"),
+    "water/waves-convex-A13.png":
+        ("GNU GPL v2+", "Lari Nieminen(zookeeper)", "42f5276d4110cf9a6ff9d3836a72599a"),
 }
 # The map a BAKE_OUT run bakes when no map is named
 DEFAULT_MAP = "tarnholm"
@@ -1162,7 +1289,7 @@ def add_water():
             if base.startswith("Wo"):
                 rel = "water/ocean%02d.png" % WATER_FRAME   # terrain-graphics.cfg:705
             else:
-                rel = "water/water%02d.png" % WATER_FRAME   # terrain-graphics.cfg:706
+                rel = "water/water%02d.png" % SHALLOW_FRAME   # terrain-graphics.cfg:706
             add_tile_item(-999, water_crop(sheet(rel), x, y), (x, y), "water %s (%d,%d)" % (base, x, y))
             if base in ("Wwg", "Wog", "Wwrg"):
                 add_tile_item(-502, load("water/overlay-gray.png"), (x, y), "gray overlay")
@@ -1176,7 +1303,7 @@ def add_water_transitions():
     """terrain-graphics.cfg:1015-1016, drawn at -550 and -551 (below the coast): deep ocean
     blends onto the shallow water beside it, and shallow water onto the deep ocean."""
     apply_water_transition("ocean-onto-shallow", "Wo*", "!,Wo*,!,W*,Sm", -550, "water/ocean%02d.png" % WATER_FRAME)
-    apply_water_transition("shallow-onto-ocean", "Ww*", "!,Ww*,!,W*,Sm", -551, "water/water%02d.png" % WATER_FRAME)
+    apply_water_transition("shallow-onto-ocean", "Ww*", "!,Ww*,!,W*,Sm", -551, "water/water%02d.png" % SHALLOW_FRAME)
 
 
 def add_reefs():

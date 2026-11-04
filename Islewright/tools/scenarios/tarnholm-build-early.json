@@ -1,0 +1,13 @@
+{
+  "map": "tarnholm",
+  "turnsTaken": 1,
+  "rolls": 1,
+  "dice": [
+    "Brick",
+    "Lumber",
+    "Wool",
+    "Grain",
+    "Ore",
+    "Lumber"
+  ]
+}

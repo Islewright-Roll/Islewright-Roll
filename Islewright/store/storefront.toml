@@ -1,0 +1,243 @@
+# The App Store and Google Play listing, also shown on the app's website:
+# https://daybrite.dev/docs/how-to/app-store-submissions#prepare-the-listing
+# `day store stage` writes what each store expects, and `day lint` checks the stores' limits.
+#
+# The translations were drafted for this release and should be read by a native speaker of
+# each language before the first submission.
+
+[storefront.submission-info]
+# contact-email = "" # where a store reviewer writes back; left unset in the public repository
+review-notes = """
+Islewright: Roll is a single player dice game with no account, no network use and no permissions.
+Tap Roll, tap dice to keep them, roll again up to three times, then tap a highlighted spot on
+the board to build. A tutorial runs on the first game and can be shown again from Settings.
+"""
+
+[storefront.metadata]
+name = "Islewright: Roll" # ≤30, the App Store name and Play title
+subtitle = "A solitaire dice island game"
+short = "Roll dice, then build roads, villages, castles and traders on a small island."
+description = """
+Roll the dice, keep the ones you want, and spend what they show to build roads, villages, \
+castles and traders across a small island.
+
+Each turn you get three rolls. Tap dice to keep them, roll the rest, then build whatever your \
+resources pay for. Roads open up sites for villages and castles. Two gold stand in for any one \
+resource, and traders bank a resource for a later turn.
+
+Two islands, each with its own game in progress:
+• Tarnholm: fifteen turns around a lake. Score as much as you can before the King's ship \
+reaches the pier.
+• Dunholm: a race to ten points in as few turns as you can.
+
+A short tutorial teaches the rules in your first game, and your top scores are kept for each \
+island.
+
+Islewright: Roll is free, with no ads, no in-app purchases, no tracking and no account. It works \
+offline and asks for no permissions. It is open source under the GNU GPL, and its island art \
+comes from The Battle for Wesnoth.
+"""
+keywords = ["dice", "solitaire", "board game", "island", "strategy", "puzzle", "offline", "pixel art"] # App Store only; ≤100 characters joined
+release-notes = """
+Islewright: Roll's first release on the App Fair: both islands, the tutorial and top scores, now on \
+iPhone and Android.
+"""
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md" # the App Store requires one
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+
+# The screenshots each listing shows, by the `screenshot:` step names in
+# dayscript/walkthrough.yaml: the island, a roll with dice kept, a first build, and the rules.
+[storefront.ios-uikit.apple-app-store.screenshots]
+iphone = ["island", "dice", "building", "rules"]
+ipad = ["island", "dice", "building", "rules"]
+
+[storefront.android-material.google-play-store.screenshots]
+phone = ["island", "dice", "building", "rules"]
+tablet = ["island", "dice", "building", "rules"]
+
+[storefront.metadata.fr]
+name = "Islewright: Roll"
+subtitle = "Jeu de dés solitaire insulaire"
+short = "Lancez les dés et bâtissez routes, villages, châteaux et marchands sur une île."
+description = """
+Lancez les dés, gardez ceux que vous voulez et dépensez ce qu'ils montrent pour bâtir routes, \
+villages, châteaux et marchands sur une petite île.
+
+À chaque tour, vous avez trois lancers. Touchez les dés pour les garder, relancez les autres, \
+puis bâtissez ce que vos ressources permettent. Les routes ouvrent des emplacements pour les \
+villages et les châteaux. Deux pièces d'or remplacent n'importe quelle ressource, et les \
+marchands mettent une ressource de côté pour un tour suivant.
+
+Deux îles, chacune avec sa propre partie en cours :
+• Tarnholm : quinze tours autour d'un lac. Marquez le plus de points possible avant que le \
+navire du roi n'atteigne la jetée.
+• Dunholm : une course à dix points en aussi peu de tours que possible.
+
+Un court tutoriel explique les règles pendant votre première partie, et vos meilleurs scores \
+sont conservés pour chaque île.
+
+Islewright: Roll est gratuit, sans publicité, sans achats intégrés, sans pistage et sans compte. Il \
+fonctionne hors ligne et ne demande aucune autorisation. Il est libre, sous licence GNU GPL, \
+et les graphismes de l'île viennent de The Battle for Wesnoth.
+"""
+keywords = ["dés", "solitaire", "jeu de plateau", "île", "stratégie", "réflexion", "hors ligne"]
+release-notes = "Première version d'Islewright: Roll sur l'App Fair : les deux îles, le tutoriel et les meilleurs scores, désormais sur iPhone et Android."
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md"
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+
+[storefront.metadata.de]
+name = "Islewright: Roll"
+subtitle = "Solitär-Würfelspiel auf Inseln"
+short = "Würfeln, dann Straßen, Dörfer, Burgen und Händler auf einer kleinen Insel bauen."
+description = """
+Würfle, behalte die Würfel, die du willst, und gib aus, was sie zeigen, um Straßen, Dörfer, \
+Burgen und Händler auf einer kleinen Insel zu bauen.
+
+In jeder Runde hast du drei Würfe. Tippe Würfel an, um sie zu behalten, würfle den Rest neu \
+und baue dann, was deine Rohstoffe bezahlen. Straßen öffnen Bauplätze für Dörfer und Burgen. \
+Zwei Gold ersetzen einen beliebigen Rohstoff, und Händler legen einen Rohstoff für eine \
+spätere Runde zurück.
+
+Zwei Inseln, jede mit ihrem eigenen laufenden Spiel:
+• Tarnholm: fünfzehn Runden rund um einen See. Hol so viele Punkte wie möglich, bevor das \
+Schiff des Königs den Steg erreicht.
+• Dunholm: ein Wettlauf auf zehn Punkte in möglichst wenigen Runden.
+
+Ein kurzes Tutorial erklärt die Regeln in deinem ersten Spiel, und deine Bestwerte werden für \
+jede Insel gespeichert.
+
+Islewright: Roll ist kostenlos, ohne Werbung, ohne In-App-Käufe, ohne Tracking und ohne Konto. Es \
+funktioniert offline und braucht keine Berechtigungen. Es ist Open Source unter der GNU GPL, \
+und die Inselgrafik stammt aus The Battle for Wesnoth.
+"""
+keywords = ["Würfel", "Solitär", "Brettspiel", "Insel", "Strategie", "Denkspiel", "offline"]
+release-notes = "Die erste Version von Islewright: Roll im App Fair: beide Inseln, das Tutorial und die Bestwerte, jetzt auf iPhone und Android."
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md"
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+
+[storefront.metadata.es]
+name = "Islewright: Roll"
+subtitle = "Dados en solitario en una isla"
+short = "Tira los dados y construye caminos, aldeas, castillos y mercaderes en una isla."
+description = """
+Tira los dados, quédate con los que quieras y gasta lo que muestran para construir caminos, \
+aldeas, castillos y mercaderes en una pequeña isla.
+
+En cada turno tienes tres tiradas. Toca los dados para guardarlos, vuelve a tirar el resto y \
+construye lo que puedan pagar tus recursos. Los caminos abren sitios para aldeas y castillos. \
+Dos de oro valen por cualquier recurso, y los mercaderes guardan un recurso para un turno \
+posterior.
+
+Dos islas, cada una con su propia partida en curso:
+• Tarnholm: quince turnos alrededor de un lago. Consigue todos los puntos que puedas antes de \
+que el barco del rey llegue al muelle.
+• Dunholm: una carrera a diez puntos en el menor número de turnos.
+
+Un breve tutorial enseña las reglas en tu primera partida, y se guardan tus mejores \
+puntuaciones de cada isla.
+
+Islewright: Roll es gratis, sin anuncios, sin compras dentro de la app, sin rastreo y sin cuenta. \
+Funciona sin conexión y no pide ningún permiso. Es de código abierto bajo la GNU GPL, y el arte \
+de la isla procede de The Battle for Wesnoth.
+"""
+keywords = ["dados", "solitario", "juego de mesa", "isla", "estrategia", "puzle", "sin conexión"]
+release-notes = "La primera versión de Islewright: Roll en App Fair: las dos islas, el tutorial y las mejores puntuaciones, ahora en iPhone y Android."
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md"
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+
+[storefront.metadata.id]
+name = "Islewright: Roll"
+subtitle = "Main dadu soliter di pulau"
+short = "Lempar dadu, lalu bangun jalan, desa, kastel, dan pedagang di pulau kecil."
+description = """
+Lempar dadu, simpan yang kamu mau, lalu gunakan hasilnya untuk membangun jalan, desa, kastel, \
+dan pedagang di sebuah pulau kecil.
+
+Setiap giliran kamu mendapat tiga lemparan. Ketuk dadu untuk menyimpannya, lempar sisanya, \
+lalu bangun apa pun yang bisa dibayar sumber dayamu. Jalan membuka lahan untuk desa dan kastel. \
+Dua emas bisa menggantikan satu sumber daya apa saja, dan pedagang menyimpan satu sumber daya \
+untuk giliran berikutnya.
+
+Dua pulau, masing-masing dengan permainannya sendiri:
+• Tarnholm: lima belas giliran di sekitar danau. Raih skor sebanyak mungkin sebelum kapal raja \
+tiba di dermaga.
+• Dunholm: balapan menuju sepuluh poin dalam giliran sesedikit mungkin.
+
+Tutorial singkat mengajarkan aturannya di permainan pertamamu, dan skor tertinggimu disimpan \
+untuk setiap pulau.
+
+Islewright: Roll gratis, tanpa iklan, tanpa pembelian dalam aplikasi, tanpa pelacakan, dan tanpa \
+akun. Dapat dimainkan secara offline dan tidak meminta izin apa pun. Islewright: Roll adalah \
+perangkat lunak sumber terbuka di bawah GNU GPL, dan gambar pulaunya berasal dari The Battle \
+for Wesnoth.
+"""
+keywords = ["dadu", "soliter", "permainan papan", "pulau", "strategi", "teka-teki", "offline"]
+release-notes = "Rilis pertama Islewright: Roll di App Fair: kedua pulau, tutorial, dan skor tertinggi, kini di iPhone dan Android."
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md"
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+
+[storefront.metadata.it]
+name = "Islewright: Roll"
+subtitle = "Dadi in solitario su un'isola"
+short = "Tira i dadi e costruisci strade, villaggi, castelli e mercanti su un'isola."
+description = """
+Tira i dadi, tieni quelli che vuoi e spendi ciò che mostrano per costruire strade, villaggi, \
+castelli e mercanti su una piccola isola.
+
+A ogni turno hai tre lanci. Tocca i dadi per tenerli, rilancia gli altri, poi costruisci ciò \
+che le tue risorse possono pagare. Le strade aprono spazi per villaggi e castelli. Due ori \
+valgono una risorsa qualsiasi, e i mercanti mettono da parte una risorsa per un turno \
+successivo.
+
+Due isole, ognuna con la sua partita in corso:
+• Tarnholm: quindici turni intorno a un lago. Fai più punti che puoi prima che la nave del re \
+raggiunga il molo.
+• Dunholm: una corsa a dieci punti nel minor numero di turni.
+
+Un breve tutorial insegna le regole durante la tua prima partita, e i tuoi punteggi migliori \
+vengono conservati per ogni isola.
+
+Islewright: Roll è gratuito, senza pubblicità, senza acquisti in-app, senza tracciamento e senza \
+account. Funziona offline e non chiede alcun permesso. È open source con licenza GNU GPL, e la \
+grafica dell'isola viene da The Battle for Wesnoth.
+"""
+keywords = ["dadi", "solitario", "gioco da tavolo", "isola", "strategia", "rompicapo", "offline"]
+release-notes = "La prima versione di Islewright: Roll su App Fair: entrambe le isole, il tutorial e i punteggi migliori, ora su iPhone e Android."
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md"
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+
+[storefront.metadata.pt-BR]
+name = "Islewright: Roll"
+subtitle = "Jogo de dados solo numa ilha"
+short = "Role os dados e construa estradas, vilas, castelos e mercadores numa ilha."
+description = """
+Role os dados, guarde os que quiser e gaste o que eles mostram para construir estradas, vilas, \
+castelos e mercadores numa pequena ilha.
+
+A cada turno você tem três rolagens. Toque nos dados para guardá-los, role o resto e construa \
+o que seus recursos pagarem. As estradas abrem espaço para vilas e castelos. Dois ouros valem \
+por qualquer recurso, e os mercadores guardam um recurso para um turno seguinte.
+
+Duas ilhas, cada uma com sua própria partida em andamento:
+• Tarnholm: quinze turnos em volta de um lago. Faça o máximo de pontos antes que o navio do \
+rei chegue ao píer.
+• Dunholm: uma corrida até dez pontos no menor número de turnos.
+
+Um tutorial curto ensina as regras na sua primeira partida, e suas melhores pontuações ficam \
+guardadas para cada ilha.
+
+Islewright: Roll é grátis, sem anúncios, sem compras no app, sem rastreamento e sem conta. Funciona \
+offline e não pede nenhuma permissão. É de código aberto sob a GNU GPL, e a arte da ilha vem \
+de The Battle for Wesnoth.
+"""
+keywords = ["dados", "paciência", "jogo de tabuleiro", "ilha", "estratégia", "quebra-cabeça", "offline"]
+release-notes = "A primeira versão do Islewright: Roll na App Fair: as duas ilhas, o tutorial e as melhores pontuações, agora no iPhone e no Android."
+privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/Islewright/PRIVACY.md"
+support-url = "https://github.com/islewright-roll/islewright-roll/issues"
+marketing-url = "https://islewright-roll.github.io/islewright-roll/"

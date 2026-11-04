@@ -1,0 +1,62 @@
+[package]
+name = "islewright"
+version.workspace = true
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "A solitaire dice game: roll, then build roads, villages, castles and traders across a small island."
+repository = "https://github.com/islewright-roll/islewright-roll"
+publish = false
+
+[features]
+# `mock` keeps bare cargo and rust-analyzer compiling; `day build` overrides it with
+# `--no-default-features --features <backend>` (https://daybrite.dev/docs/reference/project-structure).
+default = ["mock"]
+appkit = ["day/appkit"]
+gtk = ["day/gtk"]
+qt = ["day/qt"]
+uikit = ["day/uikit"]
+material = ["day/material"]
+winui = ["day/winui"]
+arkui = ["day/arkui"]
+dom = ["day/dom"]
+mock = ["day/mock"]
+
+# Cargo defaults to rlib; the mobile pipeline requests staticlib/cdylib via `cargo rustc`.
+[lib]
+# A constant lib name: staged artifacts and the `dayapp::` import never move on a package rename.
+name = "dayapp"
+
+[dependencies]
+day = { package = "day-app", version = "0.6.3", features = ["model"] }
+day-piece-settings = { version = "0.6.3" }
+# Sound effects, haptics, and the accelerometer that tells which way a phone was turned.
+day-part-sound = "0.6.3"
+day-part-haptics = "0.6.3"
+day-part-sensors = "0.6.3"
+# The items are saved as JSON in the preferences (src/model.rs).
+serde = { version = "1", features = ["derive"] }
+# Decodes the art. Pure Rust, MIT or Apache-2.0.
+png = "0.18"
+# Already in the tree through png; used directly for the frame checksums, which dominate
+# encoding a frame.
+crc32fast = "1"
+simd-adler32 = "0.3"
+
+# The wall clock on the web: wasm32 has no working SystemTime, and Day's web toolkit reads the
+# page's Date.now() for it (src/clock.rs).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+day-toolkit-dom = "0.6.3"
+
+# What dialogs need of the window, which Day has no call for (src/ui/window.rs).
+[target.'cfg(target_os = "android")'.dependencies]
+day-bridge = "0.6.3"
+day-platform-android = "0.6.3"
+
+[build-dependencies]
+day-build = { version = "0.6.3" }
+
+
+[workspace]
+
+[workspace.package]
+version = "3.0.0"

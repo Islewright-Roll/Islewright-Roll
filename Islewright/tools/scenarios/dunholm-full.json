@@ -1,0 +1,53 @@
+{
+  "map": "dunholm",
+  "turnsTaken": 15,
+  "rolls": 1,
+  "playsheet": {
+    "roads": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "villages": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ],
+    "cities": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "traders": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  }
+}

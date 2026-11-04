@@ -1,0 +1,86 @@
+# Islewright's CI: every target the app declares, its walkthrough in every language it ships, and
+# on a version tag the packages for a GitHub release, through the workflow every Day app uses
+# (https://daybrite.dev/docs/how-to/github-actions). Nothing here builds the app itself; the shared
+# workflow installs the toolchains, builds, runs the dayscripts and packages each target.
+name: "Islewright"
+
+# A push or a pull request builds against day's main branch, so a change there that breaks this
+# app shows up before it is released. The nightly run and a version tag build against the newest
+# day release on crates.io: what someone who builds this app gets. A manual run builds against
+# the release too, unless `day-main` is ticked.
+on:
+  push:
+    branches: ["**"]
+    tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+  pull_request:
+  # Refreshes the website when the App Fair promotes an approved pre-release to Latest.
+  release:
+    types: [released]
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+    inputs:
+      day-main:
+        description: Build against day's main branch instead of the newest release
+        type: boolean
+        default: false
+
+# The repository's own jobs, should any be added here, run this checkout's code with a read-only
+# token. The write grants sit on the job that calls the shared workflow, whose release and Pages
+# jobs alone use them; its build legs, which run this code too, narrow their token to read-only
+# themselves.
+permissions:
+  contents: read
+
+jobs:
+  app:
+    uses: daybrite/actions/.github/workflows/dayapp.yml@v1
+    permissions:
+      contents: write # release assets on a tag build
+      pages: write    # web-dom → GitHub Pages (deploy-web)
+      id-token: write # deploy-pages OIDC token (deploy-web)
+    # Repository secrets reach the workflow's signing and store-upload jobs, and only those, once
+    # they exist (https://daybrite.dev/docs/how-to/app-store-submissions). None are needed to build.
+    secrets: inherit
+    with:
+      # Every target Day.toml declares (`[app] targets`), so `day project add-target` reaches CI
+      # on its own. To refine what CI builds, add or remove targets in Day.toml, or name the CI
+      # targets here instead:
+      #   targets: macos-appkit, windows-winui, linux-gtk, ios-uikit, android-material, web-dom
+      targets: all
+      # Which day to build against: `auto` picks day's main branch or the newest release by the
+      # event, as described at the top of this file, and installs the matching day CLI.
+      day-source: ${{ inputs.day-main && 'main' || 'auto' }}
+      # Every dayscript under dayscript/ (`scripts: auto`), on every target, in every locale the
+      # app ships (resource/locales/) and both appearances: a string that breaks only in one
+      # language, or a layout that breaks only in dark mode, breaks the build.
+      scripts: auto
+      locales: all
+      themes: light dark
+      # App Fair publication (https://appfair.org/docs/getting-started/#configure-publication):
+      # a tag build leaves a pre-release with the packages and store screenshots, which the App
+      # Fair Publisher promotes once the catalog submission is approved.
+      release-assets: true
+      release-mode: pre-release
+      # Phones are captured upright and tablets on their side, where the game lays the HUD and
+      # the dice out in columns beside the island.
+      android-devices: |
+        device=pixel, os=36, orientation=portrait, slug=phone
+        device=Nexus 7 2013, os=36, orientation=landscape, density=240, slug=tablet
+        device=medium_phone, os=24, optional=true
+      # The web build, served from this repository's GitHub Pages on a push to the default branch
+      # and on a version tag, with the project site website/site.toml describes around it. Set
+      # Settings → Pages → Source to "GitHub Actions" once, and allow `v*` tags under
+      # Environments → github-pages → Deployment branches and tags. Scaffolded as `false` when
+      # web-dom is not a target.
+      deploy-web: true
+
+  # The App Fair's own repository checks: license texts, SPDX notices on the Rust sources, and
+  # the published identity in Day-appfair.toml.
+  appfair-lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: appfair/appfair-apps/.github/actions/appfair-lint@main

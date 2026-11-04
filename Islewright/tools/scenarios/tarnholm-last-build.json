@@ -1,0 +1,52 @@
+{
+  "map": "tarnholm",
+  "turnsTaken": 14,
+  "rolls": 3,
+  "dice": [
+    "Brick",
+    "Lumber",
+    "Wool",
+    "Grain",
+    "Ore",
+    "Lumber"
+  ],
+  "playsheet": {
+    "roads": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ],
+    "villages": [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ],
+    "cities": [
+      true,
+      false,
+      false,
+      false
+    ],
+    "knights": 3,
+    "bankSpent": [
+      1
+    ]
+  }
+}
