@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the soundtrack files in resource/assets/sfx from the artist's original downloads.
+# Builds the soundtrack files in resource/assets/music from the artist's original downloads.
 # It does not download anything: put the originals in one directory and pass it in.
 #
 #   tools/encode_music.sh /path/to/originals
@@ -18,8 +18,8 @@
 
 # opus = Opus (libopus, VBR, stereo) in an Ogg container at OPUS_BITRATE, the chosen format;
 # vorbis = Ogg Vorbis at VORBIS_QUALITY; flac = FLAC, compression level 8 (lossless, much larger).
-# All three are written as music_<slug>.ogg (.flac for FLAC): Android's resource packaging
-# and MediaPlayer both take .ogg for Ogg Opus.
+# All three are written as music_<slug>.ogg (.flac for FLAC). Android and the web play Ogg Opus
+# and iOS does not, so the format is still to be settled with the music player (issue #4).
 FORMAT=opus
 OPUS_BITRATE=192k
 # libvorbis -q:a: 6 is about 192 kbps, 8 about 256, 9 about 320

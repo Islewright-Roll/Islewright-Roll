@@ -218,7 +218,7 @@ python3 -I tools/bake_font.py
 
 ## encode_music.sh
 
-Builds the soundtrack in `resource/assets/sfx/` (`music_<slug>.<ext>`) from the artist's
+Builds the soundtrack in `resource/assets/music/` (`music_<slug>.<ext>`) from the artist's
 original downloads. It does not download anything and the originals are never committed:
 put them in one directory and pass it in. See `tools/music-sources.txt` for where they come from.
 
@@ -230,9 +230,9 @@ A lossless original (FLAC or WAV) is encoded to the `FORMAT` set at the top of t
 at `OPUS_BITRATE` (192k, VBR, in an Ogg container, the chosen format), or Ogg Vorbis at
 `VORBIS_QUALITY`, or FLAC level 8. Title and artist tags are kept and cover art is dropped. A lossy
 original (MP3 and the like) is copied byte for byte, never re-encoded. To change the format, edit
-the variables and run it again; the script removes the older `music_<slug>.*` first. The app plays
-whatever `music_*` files are there, in any format `MediaPlayer` reads, so nothing else needs to
-change. It needs `ffmpeg` with libopus and libvorbis and prints each file's duration, size and the
+the variables and run it again; the script removes the older `music_<slug>.*` first. The app has
+no music player yet, and the format has to be one every platform's player reads (issue #4). It
+needs `ffmpeg` with libopus and libvorbis and prints each file's duration, size and the
 original's sha256.
 
 ## process_sfx.sh
