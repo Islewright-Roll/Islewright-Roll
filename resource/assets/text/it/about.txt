@@ -3,7 +3,7 @@ Islewright: Roll {{version}}
 Un gioco di dadi in solitario: tira i dadi, poi costruisci strade, villaggi, castelli e mercanti su una piccola isola.
 
 Open source con licenza GNU GPL v3:
-https://github.com/islewright-roll/islewright-roll
+https://github.com/Islewright-Roll/Islewright-Roll
 
 Il terreno e la nave del re provengono da The Battle for Wesnoth (https://www.wesnoth.org), usati con licenza GNU GPL v2 o successiva, opera di J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier e altri artisti di Wesnoth; la nave proviene dal progetto FreeCol. Caratteri: Press Start 2P, Ark Pixel e Micro 5 (solo i numeri), SIL Open Font License 1.1. Vedi CREDITS.md nel repository.
 

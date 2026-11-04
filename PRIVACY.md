@@ -45,4 +45,4 @@ Islewright: Roll is suitable for all ages and collects no data from anyone, chil
 
 If this policy changes, the new version will be published here with a new date, and the
 change will be visible in the repository's history. Questions or concerns are welcome as an
-issue at <https://github.com/islewright-roll/islewright-roll/issues>.
+issue at <https://github.com/Islewright-Roll/Islewright-Roll/issues>.
