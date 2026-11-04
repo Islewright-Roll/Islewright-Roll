@@ -6,8 +6,8 @@
 PRODUCT_NAME = Islewright
 DAY_APP_TITLE = Islewright: Roll
 PRODUCT_BUNDLE_IDENTIFIER = io.github.islewrightroll.islewright.dev
-MARKETING_VERSION = 3.0.1
-CURRENT_PROJECT_VERSION = 35
+MARKETING_VERSION = 3.0.2
+CURRENT_PROJECT_VERSION = 36
 
 // The oldest iOS the app runs on. `day build` raises it when a Day piece needs a newer one.
 IPHONEOS_DEPLOYMENT_TARGET = 15.0
