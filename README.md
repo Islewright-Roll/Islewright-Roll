@@ -9,6 +9,17 @@ Each turn you get up to three rolls of six dice. Keep the dice you want, then sp
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" alt="A race to 10 points on Dunholm" width="270">
 </p>
 
+## Ongoing work
+
+The next release is a port to Rust and [Day](https://daybrite.dev), for publication through the
+[App Fair](https://appfair.org) on iPhone and Android. The plan and its current state are in the
+[App Fair epic](https://github.com/islewright-roll/islewright-roll/issues/8). The port is very early
+and lives on the [`feature/day-port`](https://github.com/islewright-roll/islewright-roll/tree/feature/day-port)
+branch, in `Islewright/`. The Java app in this branch is the game that ships today.
+
+To help, pick an open item from the epic and work on a feature branch. Port work branches from
+`feature/day-port` and targets it; everything else targets `dev`.
+
 ## Project History
 
 It began as Resource Dice Game by Ridgeline Apps (2012), whose source is kept at the [original repository](https://code.google.com/archive/p/android-dice-game/). Its code comes from version 1.15 by Marcus Hoffmann (Bubu), who moved the project to Gradle and returned it to F-Droid in 2017 (https://git.bubu1.eu/Bubu/android-dice-game), with a German translation by tmaex. Hellmark preserved the Google Code archive and the F-Droid 1.15 release (https://github.com/Hellmark/android-dice-game).
@@ -42,3 +53,6 @@ PKCS12 keystore), `ANDROID_KEYSTORE_PASSWORD` and, optionally, `ANDROID_KEY_ALIA
 
     ANDROID_KEYSTORE=/path/to/key.p12 ANDROID_KEYSTORE_PASSWORD=... ./gradlew :app:assembleRelease
 
+## Legal notice
+
+Islewright is not affiliated with or endorsed by Catan GmbH. CATAN® is a registered trademark of Catan GmbH.
