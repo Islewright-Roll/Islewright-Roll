@@ -3,7 +3,7 @@ Islewright: Roll {{version}}
 Un jeu de dés en solitaire : lancez les dés, puis bâtissez routes, villages, châteaux et marchands sur une petite île.
 
 Logiciel libre sous licence GNU GPL v3 :
-https://github.com/islewright-roll/islewright-roll
+https://github.com/Islewright-Roll/Islewright-Roll
 
 Le terrain et le navire du roi proviennent de The Battle for Wesnoth (https://www.wesnoth.org), utilisés sous licence GNU GPL v2 ou ultérieure, par J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier et d'autres artistes de Wesnoth ; le navire provient du projet FreeCol. Polices : Press Start 2P, Ark Pixel et Micro 5 (chiffres uniquement), SIL Open Font License 1.1. Voir CREDITS.md dans le dépôt.
 

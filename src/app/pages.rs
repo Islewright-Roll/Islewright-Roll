@@ -1119,7 +1119,7 @@ mod tests {
             let about = about_source(locale);
             assert!(about.contains("{{version}}"), "{locale}");
             assert!(
-                about.contains("https://github.com/islewright-roll/islewright-roll"),
+                about.contains("https://github.com/Islewright-Roll/Islewright-Roll"),
                 "{locale}"
             );
         }

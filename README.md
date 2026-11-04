@@ -14,11 +14,11 @@ See [PRIVACY.md](PRIVACY.md).
 
 ## Where things stand
 
-The latest release is [2.0.0](https://github.com/islewright-roll/islewright-roll/releases/tag/v2.0.0),
+The latest release is [2.0.0](https://github.com/Islewright-Roll/Islewright-Roll/releases/tag/v2.0.0),
 the Java app for Android; its code is on the `prod` branch. The `dev` branch holds its successor,
 this Rust rewrite, which is being prepared for publication through the [App Fair](https://appfair.org).
 The plan and its current state are in the
-[App Fair epic](https://github.com/islewright-roll/islewright-roll/issues/8).
+[App Fair epic](https://github.com/Islewright-Roll/Islewright-Roll/issues/8).
 
 To help, pick an open item from the epic, work on a feature branch, and open your pull request
 against `dev`.
