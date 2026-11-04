@@ -246,6 +246,12 @@ fn start_import(changed: Signal<u64>) {
 /// How tall a score row is, with its rule: 8 above it, 6 below, and the rule.
 const SCORE_ROW_ABOVE: i32 = 8;
 const SCORE_ROW_BELOW: i32 = 6;
+/// The same, and the gap over the backup note, when the page is too short for the full spacing:
+/// a tablet held sideways, where large text makes each row tall.
+const SCORE_ROW_ABOVE_TIGHT: i32 = 0;
+const SCORE_ROW_BELOW_TIGHT: i32 = 1;
+const SCORES_NOTE_GAP: i32 = 20;
+const SCORES_NOTE_GAP_TIGHT: i32 = 6;
 
 /// Top Scores: a radio button per island, opening on the one in play, then its five rows and the
 /// backup buttons, all set in the middle of the page (high_scores.xml).
@@ -278,14 +284,7 @@ pub fn scores(m: &Metrics, width: i32, height: i32) -> W {
         .collect();
     let radios = widget::hstack(m, radios, 0);
     let row_h = kit().body.height() * m.t;
-    let list_h = 1 + 5 * (SCORE_ROW_ABOVE + row_h + SCORE_ROW_BELOW + 1);
-    let m2 = *m;
-    let list = switch(
-        move || (shown.get(), changed.get()),
-        move |(map_id, _)| score_rows(&m2, map_id, list_w, row_h).piece,
-    )
-    .frame(m.pt(list_w), m.pt(list_h));
-    let list = W::new(list, list_w, list_h);
+    let list_h = |above: i32, below: i32| 1 + 5 * (above + row_h + below + 1);
 
     let note = widget::text(
         m,
@@ -309,9 +308,31 @@ pub fn scores(m: &Metrics, width: i32, height: i32) -> W {
     .build(m, move || start_import(changed));
     let buttons = widget::hstack(m, vec![export, import], 4);
 
+    // The full spacing where it fits, else the tight one; the page scrolls if even that is
+    // too tall (ui::page::Fill::Exact).
+    let fixed = radios.h + 4 + note.h + 8 + buttons.h;
+    let roomy = fixed + list_h(SCORE_ROW_ABOVE, SCORE_ROW_BELOW) + SCORES_NOTE_GAP <= height;
+    let (above, below, note_gap) = if roomy {
+        (SCORE_ROW_ABOVE, SCORE_ROW_BELOW, SCORES_NOTE_GAP)
+    } else {
+        (
+            SCORE_ROW_ABOVE_TIGHT,
+            SCORE_ROW_BELOW_TIGHT,
+            SCORES_NOTE_GAP_TIGHT,
+        )
+    };
+    let list_h = list_h(above, below);
+    let m2 = *m;
+    let list = switch(
+        move || (shown.get(), changed.get()),
+        move |(map_id, _)| score_rows(&m2, map_id, list_w, row_h, above, below).piece,
+    )
+    .frame(m.pt(list_w), m.pt(list_h));
+    let list = W::new(list, list_w, list_h);
+
     let radios = widget::inset(m, radios, inset);
     let list = widget::inset(m, list, inset);
-    let used = radios.h + 4 + list.h + 20 + note.h + 8 + buttons.h;
+    let used = fixed + list.h + note_gap;
     let spare = (height - used).max(0);
     // The two spacers of high_scores.xml share the window's device pixels, so half of what is
     // left of a whole art pixel lands above the list
@@ -323,7 +344,7 @@ pub fn scores(m: &Metrics, width: i32, height: i32) -> W {
             radios,
             widget::gap(m, width, 4),
             list,
-            widget::gap(m, width, 20),
+            widget::gap(m, width, note_gap),
             note,
             widget::gap(m, width, 8),
             buttons,
@@ -339,7 +360,7 @@ pub fn scores(m: &Metrics, width: i32, height: i32) -> W {
 }
 
 /// The rule the first row hangs from, and a map's five rows, "-" beyond its stored scores.
-fn score_rows(m: &Metrics, map_id: &str, width: i32, row_h: i32) -> W {
+fn score_rows(m: &Metrics, map_id: &str, width: i32, row_h: i32, above: i32, below: i32) -> W {
     let locale = day::locale().get_untracked();
     let store: HighScoresAndSettings = super::store::load_scores();
     let map = MapDef::by_id(Some(map_id));
@@ -379,13 +400,13 @@ fn score_rows(m: &Metrics, map_id: &str, width: i32, row_h: i32) -> W {
             ],
             &spoken,
         );
-        items.push(widget::gap(m, width, SCORE_ROW_ABOVE));
+        items.push(widget::gap(m, width, above));
         items.push(widget::vstack(
             m,
             vec![widget::gap(m, width, row_h - cell.h), cell],
             0,
         ));
-        items.push(widget::gap(m, width, SCORE_ROW_BELOW));
+        items.push(widget::gap(m, width, below));
         items.push(widget::rule(m, width));
     }
     widget::vstack(m, items, 0)

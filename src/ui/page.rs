@@ -63,7 +63,8 @@ pub fn content_width(m: &Metrics) -> i32 {
 pub enum Fill {
     /// Scrolls, showing the thumb or not, 8 art pixels clear of the button.
     Scroll { thumb: bool },
-    /// Takes exactly the room there is, right down to the button.
+    /// Takes exactly the room there is, right down to the button, and scrolls, with the thumb,
+    /// only when the content is taller than that (Top Scores on a tablet held sideways).
     Exact,
 }
 
@@ -121,7 +122,14 @@ pub fn page(
             let h = room - 8;
             scroller(m, center(body(cw, h)), inner, h, thumb)
         }
-        Fill::Exact => center(body(cw, room)),
+        Fill::Exact => {
+            let content = body(cw, room);
+            if content.h > room {
+                scroller(m, center(content), inner, room - 8, true)
+            } else {
+                center(content)
+            }
+        }
     };
 
     // On a phone the panel runs on under the navigation bar: its bottom edge never shows
