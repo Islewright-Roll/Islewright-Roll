@@ -676,8 +676,8 @@ fn put_box(img: &mut Image, t: i32, x: i32, y: i32, draw: impl FnOnce(&mut Image
     img.sprite(&b.upscale(t as u32), x, y, 255);
 }
 
-/// The role a check box takes: a switch, except on the web (see `check`).
-const CHECK_ROLE: Role = if cfg!(target_arch = "wasm32") {
+/// The role a check box takes: a switch, except on the web and iOS (see `check`).
+const CHECK_ROLE: Role = if cfg!(any(target_arch = "wasm32", target_os = "ios")) {
     Role::Button
 } else {
     Role::Toggle
@@ -699,7 +699,9 @@ pub fn row_width(m: &Metrics, label: &str) -> i32 {
 
 /// A check box bound to `get` and `set`: a switch to screen readers, with On or Off as its value.
 /// On the web it is a button with that value instead: the browser shim gives Enter and Space to
-/// buttons only, and a switch there could not be toggled from the keyboard.
+/// buttons only, and a switch there could not be toggled from the keyboard. On iOS it is a button
+/// too, because UIKit has no switch trait for a drawn control: VoiceOver hears a button with that
+/// value either way, and declaring it as one keeps the accessibility audit truthful.
 pub fn check(
     m: &Metrics,
     id: ElementId,
