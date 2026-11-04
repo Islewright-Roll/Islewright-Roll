@@ -81,3 +81,26 @@ flow:
   # A button shows pressed for a moment before it acts
   - pause: { secs: 0.6 }
   - wait_for: { id: board }
+
+  # Leave the app as a fresh install leaves it, because some devices keep its data between the
+  # runs for each locale and theme: the next run would otherwise resume this game, a turn
+  # further on and with the tutorial spent, so its screenshots would differ and its first roll
+  # key would end the turn instead. Restart the game, then Show tutorial in Settings.
+  - focus: { id: board }
+  - key: { id: board, key: "m" }
+  - wait_for: { id: "dialog_button:restart" }
+  - tap: { id: "dialog_button:restart" }
+  - wait_for: { id: "dialog_button:yes" }
+  - tap: { id: "dialog_button:yes" }
+  - pause: { secs: 0.6 }
+  - assert_missing: { id: dialog_title }
+  - focus: { id: board }
+  - key: { id: board, key: "m" }
+  - wait_for: { id: "dialog_button:settings" }
+  - tap: { id: "dialog_button:settings" }
+  - wait_for: { id: settings_tutorial }
+  - scroll_to: { id: settings_tutorial }
+  - tap: { id: settings_tutorial }
+  - pause: { secs: 0.6 }
+  - assert_missing: { id: dialog_title }
+  - wait_for: { id: board }
