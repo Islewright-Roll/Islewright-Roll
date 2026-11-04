@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the sound effects in app/src/main/res/raw (sfx_<id>.ogg or .wav) from the original
+# Builds the sound effects in resource/assets/sfx (sfx_<id>.wav) from the original
 # files. It does not download anything: put the originals in one directory and pass it in.
 #
 #   tools/process_sfx.sh /path/to/originals [/path/to/audition-dir]

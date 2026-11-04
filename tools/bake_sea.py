@@ -8,7 +8,7 @@ Run from the repository root:
 
 For each step 1..LOOP_STEPS this runs tools/bake_board.py with BAKE_LOOP_FRAME set (the deep
 ocean, the shallow water and the beach waves each at their own frame for that step; see
-LOOP_FRAME there), then packs the boards into Islewright/resource/assets/art/sea_<ID>.png:
+LOOP_FRAME there), then packs the boards into resource/assets/art/sea_<ID>.png:
 504 wide and 504 * LOOP_STEPS tall, row y of step s at row y * LOOP_STEPS + (s - 1). Laid out
 that way, PNG's Up filter predicts each row from the same row one step earlier, and the water
 changes little from step to step, so the file is about two thirds the size of the boards apart.
@@ -26,7 +26,7 @@ from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-ART = os.path.join(ROOT, "Islewright", "resource", "assets", "art")
+ART = os.path.join(ROOT, "resource", "assets", "art")
 WORK = os.path.join(ROOT, "build", "sea")
 LOOP_STEPS = 21
 MAPS = ["tarnholm", "dunholm"]

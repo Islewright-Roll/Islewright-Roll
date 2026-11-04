@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the soundtrack files in app/src/main/res/raw from the artist's original downloads.
+# Builds the soundtrack files in resource/assets/sfx from the artist's original downloads.
 # It does not download anything: put the originals in one directory and pass it in.
 #
 #   tools/encode_music.sh /path/to/originals
@@ -33,7 +33,7 @@ if [ $# -ne 1 ] || [ ! -d "$1" ]; then
 fi
 SRC=$1
 HERE=$(cd "$(dirname "$0")" && pwd)
-OUT="$HERE/../app/src/main/res/raw"
+OUT="$HERE/../resource/assets/music"
 mkdir -p "$OUT"
 
 # slug|text to find in the normalised file name (lowercase, apostrophes dropped, other

@@ -1,18 +1,5 @@
 # tools
 
-## bake_sea.py
-
-Bakes the moving sea: runs `bake_board.py` once for each of the 21 steps of the water's loop
-(`BAKE_LOOP_FRAME`: Wesnoth's deep ocean frame for frame, its shallow water and beach waves each
-at the frame their own loops would be on) and packs each island's 21 boards into
-`Islewright/resource/assets/art/sea_<ID>.png`, row by row so PNG's Up filter compresses each
-step against the one before. Step 1 must equal the still board. It also adds every frame it
-read to `wesnoth-sources.txt`. `--frames DIR` packs boards already baked there.
-
-```
-python3 -I tools/bake_sea.py [tarnholm|dunholm] [--frames DIR]
-```
-
 ## bake_board.py
 
 Bakes the island boards (504x504) out of terrain tiles from Battle for Wesnoth, blending
@@ -34,7 +21,7 @@ modifies it.
 
 Outputs, for each map ID:
 
-* `app/src/main/res/drawable-nodpi/board_<ID>.png`: the board.
+* `resource/assets/art/board_<ID>.png`: the board.
 * `tools/preview_board_<ID>.png`: the board at 3x with nearest neighbour scaling, for review. Not
   tracked (see `.gitignore`).
 * `tools/board_geometry_<ID>.txt`: the board size, hex size and column step, the centre and origin of
@@ -117,7 +104,7 @@ never touches the shipped board.
 | `SEA_CODE`, `SHALLOW_CODE`, `LAKE_CODE`, `SHALLOW_RING` | `Wo`, `Ww`, `Wwr`, on | Owner's request: deep sea, a ring of ordinary shallow water, a reef lake. Set `BAKE_SHALLOW_RING=0` and `BAKE_LAKE=Ww`, `BAKE_SEA=Ww` for the old look. |
 | `MOUNTAIN_SPRITE` | `mountains/basic-castle-ne.png` | Owner's request. Wesnoth draws this variant for a mountain with a castle to its north east; it has no pixel across the hex's NE edge, where the game draws its start road and the desert begins. `mountains/basic.png` is the alternative (it reaches about 11 px past that edge). `wesnoth` (or empty): Wesnoth's own variant choice, which the reference comparison needs. |
 | `MOUNTAIN_NE_DRY` | on | Owner's request: repaint the mountain's green on the sides facing desert (NE; on Dunholm SE as well). Every green pixel (hue `MOUNTAIN_DRY_HUE_MIN`..`MAX` = 55..170 degrees, saturation at least `MOUNTAIN_DRY_SAT_MIN` = 18%) of the sprite and of the hills base under it takes Wesnoth's own dry colour at the same place (`mountains/dry-castle-ne.png`, `hills/dry*.png`), with a strength that is 1 at the shared edge and 0 at the hex centre line (times `MOUNTAIN_DRY_REACH` = 140%, capped), thresholded through an 8x8 Bayer matrix: pixel art, no blending, no resampling, alpha untouched. Rock and snow are not green and stay. Used together with Wesnoth's own dry blend (`mountains/blend-from-dry`, `hills/dry`), which looks better with it than without. |
-| `DOCK` | on | Owner's request: the dock is terrain, not a piece. It is authored in the script (no Wesnoth file), in hard alpha and six fixed colours (`DOCK_COLOURS`): a deck 8 px wide (board columns 212 to 219, rows 136 to 179) of cross planks in two alternating tones with a seam between them and a dark edge down both sides and across both ends at one width to its landward end, which lies over the start road's round end; and four 2 px piles (`DOCK_POSTS`), two pairs mirrored about the deck, a seaward pair (top row 134) and a midway pair (top row 154, the farthest landward row at which all four piles stand in water on both boards, see below). Each pile has `DOCK_ABOVE` = 7 rows out of the water, then a waterline row (the pile 90% over the water), then its rows under the water, a different number for each pile (`DOCK_DEPTH`: 8 seaward west, 7 seaward east, 5 midway west, 4 midway east, deeper to seaward and to the west), falling evenly from 75 to 30 percent of the pile's colour over the board's own water pixel (`dock_fade`), the last two fifths of them on a chequer of the pixels where x + y is even, so it goes down into the water and breaks up. Those pixels under the water are computed at bake time against the board as composited (`dock_sink`), and are in the board only, so the board stays fully opaque. The dock is composited after everything else, running straight up the screen from the vertex where the start road meets the sea (216, 180). It is baked into the board (everything that samples the board sees it) and its above water art alone is also written as `app/src/main/res/drawable-nodpi/dock.png` (RGBA, the art's own 12 x 46 box, alpha 0 or 255 only, the same pixels as the board has there, one file for both boards; the bake refuses to go on if two maps ever differ), which the game draws over both road passes and under the King's ship, so the deck lies over the road and not under it. The bake fails if any pixel of the dock's above water art lies over a mountain sprite or inside a land hex that is not desert, if the board under any pixel of a pile, above or below the water, is dry land or in a land hex (`check_dock_posts`; the murky shallows count as water, the clear blue test is only logged), or if the pairs are not mirrored or leave fewer than `DOCK_PAIR_GAP` = 4 clear rows between them (4 now). The midway row: the desert's beach and hex edge close in on the east side further south (the desert's hex reaches the pile's columns from about row 165), so with piles 13 rows long and the seaward pair fixed the lowest midway top row at which both the west and the east pile stand in water on both boards is 154. The geometry files gain `dock_foot`, `dock_box`, `dock_sprite` (the top left of `dock.png` on the board, mirrored as `Voyage.DOCK_SPRITE`), `dock_mooring` (where the King's ship puts its bowsprit) and `dock_spans` (each run of the above water art's columns per row), which the app's tests read. Not a Wesnoth rule: `BAKE_DOCK=0` for the reference comparison. `DOCK_COLOURS`, `DOCK_DECK_X`, `DOCK_DECK_Y`, `DOCK_PLANK`, `DOCK_POSTS`, `DOCK_ABOVE`, `DOCK_DEPTH` and `DOCK_MOORING_FROM_FOOT` are beside it in the script. |
+| `DOCK` | on | Owner's request: the dock is terrain, not a piece. It is authored in the script (no Wesnoth file), in hard alpha and six fixed colours (`DOCK_COLOURS`): a deck 8 px wide (board columns 212 to 219, rows 136 to 179) of cross planks in two alternating tones with a seam between them and a dark edge down both sides and across both ends at one width to its landward end, which lies over the start road's round end; and four 2 px piles (`DOCK_POSTS`), two pairs mirrored about the deck, a seaward pair (top row 134) and a midway pair (top row 154, the farthest landward row at which all four piles stand in water on both boards, see below). Each pile has `DOCK_ABOVE` = 7 rows out of the water, then a waterline row (the pile 90% over the water), then its rows under the water, a different number for each pile (`DOCK_DEPTH`: 8 seaward west, 7 seaward east, 5 midway west, 4 midway east, deeper to seaward and to the west), falling evenly from 75 to 30 percent of the pile's colour over the board's own water pixel (`dock_fade`), the last two fifths of them on a chequer of the pixels where x + y is even, so it goes down into the water and breaks up. Those pixels under the water are computed at bake time against the board as composited (`dock_sink`), and are in the board only, so the board stays fully opaque. The dock is composited after everything else, running straight up the screen from the vertex where the start road meets the sea (216, 180). It is baked into the board (everything that samples the board sees it) and its above water art alone is also written as `resource/assets/art/dock.png` (RGBA, the art's own 12 x 46 box, alpha 0 or 255 only, the same pixels as the board has there, one file for both boards; the bake refuses to go on if two maps ever differ), which the game draws over both road passes and under the King's ship, so the deck lies over the road and not under it. The bake fails if any pixel of the dock's above water art lies over a mountain sprite or inside a land hex that is not desert, if the board under any pixel of a pile, above or below the water, is dry land or in a land hex (`check_dock_posts`; the murky shallows count as water, the clear blue test is only logged), or if the pairs are not mirrored or leave fewer than `DOCK_PAIR_GAP` = 4 clear rows between them (4 now). The midway row: the desert's beach and hex edge close in on the east side further south (the desert's hex reaches the pile's columns from about row 165), so with piles 13 rows long and the seaward pair fixed the lowest midway top row at which both the west and the east pile stand in water on both boards is 154. The geometry files gain `dock_foot`, `dock_box`, `dock_sprite` (the top left of `dock.png` on the board, mirrored as `voyage::DOCK_SPRITE`), `dock_mooring` (where the King's ship puts its bowsprit) and `dock_spans` (each run of the above water art's columns per row), which the app's tests read. Not a Wesnoth rule: `BAKE_DOCK=0` for the reference comparison. `DOCK_COLOURS`, `DOCK_DECK_X`, `DOCK_DECK_Y`, `DOCK_PLANK`, `DOCK_POSTS`, `DOCK_ABOVE`, `DOCK_DEPTH` and `DOCK_MOORING_FROM_FOOT` are beside it in the script. |
 | `THIN_BEACH` | on, per map in `MAPS` | A thin sandy shore all round the coast, see below. `BAKE_THIN_BEACH=1` or `0` overrides it for every map. |
 | `FOREST_FULL_SPRITE` | off | On: the large forest sprite always (Wesnoth uses the small one beside water). |
 | `FIELD_GRASS_VERGE` | off | On: a dry grass verge on the field's sea side. Not a Wesnoth rule. |
@@ -190,6 +177,19 @@ deeper than 22 px inside its edge (`LAND_MARGIN`; the earth bank of the field is
 strong in the first 10, which is why the check is not at 6 px). The log lists how many pixels still
 differ deeper than 6 and 14 px: those are the removed bank. `BAKE_BEACH_LAND_CHECK=0` skips it.
 
+
+## bake_sea.py
+
+Bakes the moving sea: runs `bake_board.py` once for each of the 21 steps of the water's loop
+(`BAKE_LOOP_FRAME`: Wesnoth's deep ocean frame for frame, its shallow water and beach waves each
+at the frame their own loops would be on) and packs each island's 21 boards into
+`resource/assets/art/sea_<ID>.png`, row by row so PNG's Up filter compresses each step against
+the one before. Step 1 must equal the still board. It also adds every frame it read to
+`wesnoth-sources.txt`. `--frames DIR` packs boards already baked there.
+
+```
+python3 -I tools/bake_sea.py [tarnholm|dunholm] [--frames DIR]
+```
 ## make_ui.py
 
 Draws every piece of interface art that is not Wesnoth terrain: the 9-slice button in its
@@ -218,7 +218,7 @@ python3 -I tools/bake_font.py
 
 ## encode_music.sh
 
-Builds the soundtrack in `app/src/main/res/raw/` (`music_<slug>.<ext>`) from the artist's
+Builds the soundtrack in `resource/assets/sfx/` (`music_<slug>.<ext>`) from the artist's
 original downloads. It does not download anything and the originals are never committed:
 put them in one directory and pass it in. See `tools/music-sources.txt` for where they come from.
 
@@ -237,7 +237,7 @@ original's sha256.
 
 ## process_sfx.sh
 
-Builds the sixteen sound effects in `app/src/main/res/raw/` (`sfx_<moment>.ogg` or `.wav`) from the
+Builds the sixteen sound effects in `resource/assets/sfx/` (`sfx_<moment>.wav`, 16-bit mono 44.1 kHz, the format Day plays everywhere) from the
 original files. It does not download anything. Which source plays which moment, the per-moment
 loudness offsets, and where every original came from (URL, author, licence, sha256) are in
 `tools/sfx-sources.txt`; a swap is a one-line change there. Wesnoth's sounds are read from the

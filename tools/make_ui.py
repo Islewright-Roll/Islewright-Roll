@@ -9,7 +9,7 @@ Everything here is drawn at 1:1 art pixels, no antialiasing, in tiny fixed
 palettes. The app scales the whole art bitmap by an integer factor with
 nearest neighbour, so these sprites sit beside Wesnoth's 72 px terrain.
 
-Outputs go to app/src/main/res/drawable-nodpi/. Side files:
+Outputs go to resource/assets/art/, and the launcher icon's layers to tools/icon/. Side files:
   tools/pieces.txt              anchors for the cropped Wesnoth pieces and the road sprites
   tools/wesnoth-sources-ui.txt  Wesnoth commit plus every Wesnoth file read
   tools/preview_ui.png          contact sheet (untracked, never git add)
@@ -24,7 +24,7 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "app/src/main/res/drawable-nodpi")
+OUT = os.path.join(ROOT, "resource/assets/art")
 WESNOTH = os.environ.get("WESNOTH_DIR", os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "wesnoth"))
 IMG = os.path.join(WESNOTH, "data/core/images")
 
@@ -123,17 +123,16 @@ def make_buttons():
         put(name, nine_from_corners(BTN_TL, BTN_TR, BTN_BL, BTN_BR, legend))
 
 
-# O dark outline, K dark brown, B brass line, S parchment shade, P parchment,
-# W stud gleam, A stud brass.
-PAN_TL = ["..OOOO", ".ODDDD", "ODBBBB", "ODBWAS", "ODBAKP", "ODBSPP"]
-PAN_TR = ["OOOO..", "DDDDO.", "BBBBDO", "SWABDO", "PAKBDO", "PPPBDO"]
-PAN_BL = ["ODBSPP", "ODBWAP", "ODBAKP", "ODBBBB", ".ODDDD", "..OOOO"]
-PAN_BR = ["PPPBDO", "PWABDO", "PAKBDO", "BBBBDO", "DDDDO.", "OOOO.."]
+# O dark outline, D dark brown, B brass line, S parchment shade, P parchment. The brass line
+# turns each inner corner a pixel in, with no stud, so a panel reads as one rounded rectangle.
+PAN_TL = ["..OOOO", ".ODDDD", "ODBBBB", "ODBBSS", "ODBSPP", "ODBSPP"]
+PAN_TR = ["OOOO..", "DDDDO.", "BBBBDO", "SSBBDO", "PPPBDO", "PPPBDO"]
+PAN_BL = ["ODBSPP", "ODBSPP", "ODBBPP", "ODBBBB", ".ODDDD", "..OOOO"]
+PAN_BR = ["PPPBDO", "PPPBDO", "PPBBDO", "BBBBDO", "DDDDO.", "OOOO.."]
 
 
 def make_panel():
-    legend = dict(O=OUTLINE, D=BEVEL_DARK, B=BEVEL_LIGHT, S="D8C494", P="F0E0B8",
-                  W=TEXT, A=FACE, K=BEVEL_DARK)
+    legend = dict(O=OUTLINE, D=BEVEL_DARK, B=BEVEL_LIGHT, S="D8C494", P="F0E0B8")
     im = nine_from_corners(PAN_TL, PAN_TR, PAN_BL, PAN_BR, legend)
     # the generic builder takes the centre from the TL corner's last pixel (P): good.
     put("ui_panel.png", im)
@@ -167,7 +166,7 @@ DARK = dict(
 
 def make_dark_panel():
     legend = dict(O=DARK["outline"], D=DARK["rim"], B=DARK["brass"], S=DARK["shade"],
-                  P=DARK["face"], W=DARK["gleam"], A=DARK["brass"], K=DARK["stud_dark"])
+                  P=DARK["face"])
     put("ui_panel_dark.png", nine_from_corners(PAN_TL, PAN_TR, PAN_BL, PAN_BR, legend))
 
 
@@ -1430,7 +1429,7 @@ def make_launcher(S):
 # neighbour. The foreground is a flat topped hexagon medallion 67 px point to point: a little
 # inside the circle a round launcher mask cuts (72 px across), so the sea shows as one unbroken
 # ring around it, with the island scene in it. The background is the
-# deep sea. icon.png and market_icon.png are cut from the same design.
+# deep sea. The app's icon, resource/icons/icon.png, redraws it larger.
 
 ICON_SEA_DEEP = "0D3947"
 ICON_BG = dict(a=ICON_SEA_DEEP, b="12475A", c="1B5A70")
@@ -1773,17 +1772,6 @@ def make_icons():
     bg = icon_background(108)
     put("icon_foreground.png", fg.resize((432, 432), Image.NEAREST), limited=20)
     put("icon_background.png", bg.resize((432, 432), Image.NEAREST), limited="opaque")
-    hexbox = fg.crop((54 - 36, 54 - 32, 54 + 36, 54 + 32))
-    z = 2
-    legacy = Image.new("RGBA", (192, 192), (0, 0, 0, 0))
-    big = hexbox.resize((hexbox.width * z, hexbox.height * z), Image.NEAREST)
-    legacy.alpha_composite(big, ((192 - big.width) // 2, (192 - big.height) // 2))
-    put("ic_launcher.png", legacy, limited=20)
-    n = 96
-    store = icon_background(n)
-    store.alpha_composite(hexbox, ((n - hexbox.width) // 2, (n - hexbox.height) // 2))
-    store = store.resize((n * 6, n * 6), Image.NEAREST).crop((32, 32, 544, 544))
-    put("market_icon.png", store, limited="opaque23")
 
 
 # ---------------------------------------------------------------- authored village and city
@@ -2316,14 +2304,12 @@ def extract_pieces():
         "edge; the rest of the ship is clear of the dock and its piles."
         % (ship.width, ship.height, solid[0], solid[2] - 1, solid[1], solid[3] - 1,
            solid[2] - solid[0], solid[3] - solid[1], SHIP_MOOR_CONTACT[0], SHIP_MOOR_CONTACT[1]))
-    notes.append("icon_foreground.png and icon_background.png: 432x432, the adaptive icon layers drawn on a "
+    notes.append("tools/icon/icon_foreground.png and tools/icon/icon_background.png: 432x432, the adaptive icon layers drawn on a "
                  "108x108 art pixel canvas at exactly 4x nearest neighbour. The background is opaque deep "
                  "sea (0D3947) with a few quiet ticks. The foreground is transparent outside a flat topped "
                  "hexagon medallion 67 art px (268 px) point to point, centred, just inside the 72 dp circle, "
                  "with a 1.7 px dark outline, a 2 px lighter rim and an island scene of seven terrain hexes in perspective (mountain, desert, hills, farmland, lake, pasture, forest) with the castle, 20 opaque colours. "
-                 "ic_launcher.png (written to res/mipmap-xxxhdpi): 192x192, transparent, the same medallion at 3x (192 x 168 hexagon box), the "
-                 "legacy launcher icon. store/market_icon.png: 512x512, opaque, the medallion at 6x on the "
-                 "sea. res/mipmap-anydpi-v26/ic_launcher.xml joins the two layers.")
+                 "The app's own icon, resource/icons/icon.png, is a larger redrawing of this medallion.")
     notes.append("track_*.png: HUD turn tracker sprites, fixed colours: track_water.png 14x13 "
                  "(tiles horizontally, seamless), track_buoy.png 5x7 (a turn still to come: a buoy in team magenta F49AC1 and EC008C, so it takes the player colour through the recolour, with a fixed dark outline), track_flag.png 13x13 "
                  "(post on the left edge, clear ivory field at sprite x 1..11, y 1..7, 11x7, "
@@ -2348,6 +2334,9 @@ def check_licences():
 def count_colours(im):
     return len(set(p[:3] for p in im.getdata() if p[3] > 0))
 
+
+# The launcher icon's layers, written to tools/icon/ rather than the app's assets.
+ICON_FILES = ("icon_foreground.png", "icon_background.png")
 
 OBSOLETE = ["track_tick.png", "piece_dock.png", "glyph_city_12.png", "glyph_knight_12.png", "piece_city.png", "piece_knight.png",
             "qmark.png"]
@@ -2390,12 +2379,9 @@ def write_outputs():
             assert n <= 8, "%s has %d opaque colours (max 8)" % (name, n)
             for p in im.getdata():
                 assert p[3] in (0, 255), "%s has partial alpha" % name
-        # The store listing icon is not an app resource, so it stays out of the APK.
-        if name == "market_icon.png":
-            dest = os.path.join(ROOT, "store")
-        elif name == "ic_launcher.png":
-            # The legacy launcher icon; Android 8 and later use the adaptive layers instead.
-            dest = os.path.join(ROOT, "app/src/main/res/mipmap-xxxhdpi")
+        # The launcher icon design is not art the game draws, so it stays out of the app's assets.
+        if name in ICON_FILES:
+            dest = os.path.join(ROOT, "tools", "icon")
         else:
             dest = OUT
         os.makedirs(dest, exist_ok=True)
@@ -2873,20 +2859,12 @@ def icon_masks(fg, bg):
 
 
 def preview_icon(sheet, d, y, pad, font):
-    """Old (commit a0ce51d) and new launcher icon at 4x, masked to a circle and a rounded square,
-    then the same at 54 px by nearest neighbour and by a smooth filter."""
+    """The launcher icon at 4x, masked to a circle and a rounded square, then the same at 54 px by
+    nearest neighbour and by a smooth filter."""
     white = (255, 255, 255, 255)
-    d.text((pad, y), "launcher icon, old then new, at 4x masked to a circle and a rounded square (central 72 dp), "
+    d.text((pad, y), "launcher icon at 4x masked to a circle and a rounded square (central 72 dp), "
            "then at 54 px nearest and smooth", fill=white, font=font)
     y += 18
-
-    def old_layer(name):
-        try:
-            raw = subprocess.check_output(["git", "-C", ROOT, "show",
-                                           "a0ce51d:app/src/main/res/drawable-nodpi/" + name])
-        except (OSError, subprocess.CalledProcessError):
-            return None
-        return Image.open(io.BytesIO(raw)).convert("RGBA")
 
     def cut(comp, kind, size):
         im = comp.resize((size, size), Image.NEAREST if kind[1] else Image.LANCZOS)
@@ -2902,15 +2880,9 @@ def preview_icon(sheet, d, y, pad, font):
         out.paste(im, (0, 0), m)
         return out
 
-    sets = []
-    ofg = old_layer("icon_foreground.png")
-    if ofg is not None:
-        ob = outputs["icon_background.png"][0].copy()
-        ob.alpha_composite(ofg)
-        sets.append(ob)
     nb = outputs["icon_background.png"][0].copy()
     nb.alpha_composite(outputs["icon_foreground.png"][0])
-    sets.append(nb)
+    sets = [nb]
     x = pad
     for comp in sets:
         for kind in (("circle", True), ("rounded", True)):
@@ -3027,7 +2999,7 @@ def preview_extra(sheet, d, y, W, pad, font):
     y += dm.height * 4 + 20
     # adaptive icon
     d.text((pad, y), "adaptive icon as a launcher shows it (central 72 dp, 1x, 2x and 54 px): circle, squircle, "
-           "rounded square on a mid grey home screen; at the right the old icon.png and the new layers",
+           "rounded square on a mid grey home screen; at the right the icon the layers replaced",
            fill=white, font=font)
     y += 18
     fg, bg = outputs["icon_foreground.png"][0], outputs["icon_background.png"][0]
@@ -3040,10 +3012,6 @@ def preview_extra(sheet, d, y, W, pad, font):
         sheet.alpha_composite(row[2], (x + 226, y + 130))
     old_icon = make_launcher(48).resize((192, 192), Image.NEAREST)
     sheet.alpha_composite(old_icon, (pad + 1230, y + 10))
-    legacy = outputs["ic_launcher.png"][0]
-    gb = Image.new("RGBA", legacy.size, (96, 96, 104, 255))
-    gb.alpha_composite(legacy)
-    sheet.alpha_composite(gb, (pad + 1230, y + 214))
     return y + 2 * 216 + 70
 
 
@@ -3058,9 +3026,6 @@ def preview():
     for n in names:
         im = outputs[n][0]
         z = Z
-        if n in ("ic_launcher.png", "market_icon.png"):
-            im = im.resize((96, 96), Image.NEAREST)
-            z = 2
         w, h = im.width * z, im.height * z
         cw = max(w, 130)
         if x + cw > W - pad:

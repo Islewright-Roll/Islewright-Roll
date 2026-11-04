@@ -17,7 +17,7 @@ Environment:
 
 Outputs:
   per map ID:
-    app/src/main/res/drawable-nodpi/board_<ID>.png   the board, 504x504, native pixels
+    resource/assets/art/board_<ID>.png   the board, 504x504, native pixels
     tools/preview_board_<ID>.png                     3x nearest neighbour preview
     tools/board_geometry_<ID>.txt                    hex centres and sizes, one item per line
     tools/reference/<ID>.map                         the same island as a real Wesnoth map
@@ -264,7 +264,7 @@ WESNOTH = os.environ.get("WESNOTH_DIR") or (PACKAGE if os.path.isdir(PACKAGE) el
 TERRAIN = os.path.join(WESNOTH, "data", "core", "images", "terrain")
 
 OUT_ALT = os.environ.get("BAKE_OUT")
-DRAWABLE = os.path.join(REPO, "app", "src", "main", "res", "drawable-nodpi")
+DRAWABLE = os.path.join(REPO, "resource", "assets", "art")
 OUT_SOURCES = os.path.join(HERE, "wesnoth-sources.txt")
 
 PACKAGE_TAG = "1.16.11"

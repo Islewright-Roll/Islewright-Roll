@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the sound effects in app/src/main/res/raw (sfx_<id>.ogg or .wav) from the sources named
+"""Builds the sound effects in resource/assets/sfx (sfx_<id>.wav) from the sources named
 in tools/sfx-sources.txt. Run it through tools/process_sfx.sh; see that file for usage.
 
 For every sound, chosen and alternate alike:
@@ -48,7 +48,7 @@ REFERENCE_KEYS = ("wes_button", "wes_slider", "wes_hatchet", "wes_warhammer", "w
 MASTER_DB = -4.0            # the whole set sits this much under the Wesnoth reference
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-RAW = os.path.join(HERE, "..", "app", "src", "main", "res", "raw")
+RAW = os.path.join(HERE, "..", "resource", "assets", "sfx")
 TABLE = os.path.join(HERE, "sfx-sources.txt")
 
 
@@ -311,7 +311,9 @@ def main():
             pcm = to_pcm16(y)
             dur = len(pcm) / SR
             if role == "chosen":
-                ext = "wav" if dur <= WAV_MAX_S else "ogg"
+                # Day's sound part plays WAV only (16-bit mono 44.1 kHz plays everywhere as it
+                # is), so every clip ships as WAV now, however long it is.
+                ext = "wav"
                 dest = os.path.join(RAW, "sfx_%s.%s" % (m["id"], ext))
                 final_path = dest
             else:
@@ -363,7 +365,7 @@ def main():
         write_index(audition, moments, sources)
 
 
-# The sprite shown beside each moment on the audition page: a file in drawable-nodpi
+# The sprite shown beside each moment on the audition page: a file in resource/assets/art
 INDEX_SPRITES = {
     "click": "ui_button_normal.png", "die": "die_face_held.png", "roll": "die_face.png", "roll_b": "die_face.png",
     "road": "road_h.png", "village": "piece_village.png", "castle": "piece_castle.png",
@@ -383,7 +385,7 @@ def data_uri(path, mime):
 def write_index(audition, moments, sources):
     """One self-contained page: every sound and sprite is embedded, so it plays wherever it is
     opened (a browser, a preview pane) with no files beside it."""
-    art = os.path.join(HERE, "..", "app", "src", "main", "res", "drawable-nodpi")
+    art = os.path.join(HERE, "..", "resource", "assets", "art")
 
     def desc(key):
         s = sources[key]
