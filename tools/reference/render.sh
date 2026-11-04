@@ -47,7 +47,7 @@ if [ ! -f "$map_file" ]; then
     exit 2
 fi
 if [ -z "$bake" ]; then
-    bake="$repo/app/src/main/res/drawable-nodpi/board_$map_id.png"
+    bake="$repo/resource/assets/art/board_$map_id.png"
 fi
 
 if ! command -v "$bin" >/dev/null 2>&1; then

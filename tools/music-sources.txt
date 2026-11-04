@@ -1,4 +1,4 @@
-Sources of the soundtrack (not shipped yet; see tools/encode_music.sh).
+Sources of the soundtrack (see CREDITS.md and tools/encode_music.sh).
 
 Artist: Vindsvept (https://vindsvept.se).
 Licence: Creative Commons Attribution 4.0 International, https://creativecommons.org/licenses/by/4.0/
@@ -44,7 +44,7 @@ the_old_way | The Old Way | https://vindsvept.bandcamp.com/track/the-old-way | 2
 All ten are on the album https://vindsvept.bandcamp.com/album/the-youtube-collection
 (The Youtube Collection, released 2016 and updated continuously).
 
-# Credit paragraph for app/src/main/res/raw/about.txt. It was held back because no audio
+# Credit paragraph for resource/assets/text/en/about.txt. It was held back because no audio
 # ships yet: paste it in, as its own paragraph above the final legal paragraph, in the same
 # commit that adds the encoded tracks.
 Music by Vindsvept (https://vindsvept.se), used under the Creative Commons Attribution 4.0 licence (https://creativecommons.org/licenses/by/4.0/): Deep Sleep of the Elven King, Deeper into the Woods, Wanderlust, Lady of the Lake, What Lies Beyond, Into the Mind’s Eye (part one), Breath of Life, To the Skies, Winter’s Night and The Old Way. The tracks were re-encoded from the artist’s originals to Opus for this app.

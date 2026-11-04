@@ -11,7 +11,7 @@
 # Fields are separated by "|". Blank lines and lines starting "#" are ignored.
 
 [moments]
-# NN | id (file is app/src/main/res/raw/sfx_<id>.ogg or .wav) | chosen source | alternate source | offset dB | intent
+# NN | id (file is resource/assets/sfx/sfx_<id>.wav) | chosen source | alternate source | offset dB | intent
 # The offset is added to the reference loudness: it is the per-moment intent. 0 = same loudness as the Wesnoth median.
 01|click|wes_button|wes_checkbox|-10|Wesnoth's button click; a sharp transient, so the peak ceiling keeps it about as loud as the old tick
 02|die|wes_slider|wes_receive|-8|a soft low tock; quieter than the click, and far lower in pitch

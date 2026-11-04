@@ -1,6 +1,6 @@
 # Credits
 
-Islewright: Roll is free software under the GNU GPL version 3 or later (see `LICENSE.md`).
+Islewright: Roll is free software under the GNU GPL version 3 or later (see `COPYING`).
 
 ## Code
 
@@ -12,11 +12,10 @@ Islewright: Roll is free software under the GNU GPL version 3 or later (see `LIC
 * tmaex: the German translation, whose menu and button strings are still in use.
 * Hellmark: preserved the Google Code archive and the F-Droid 1.15 release.
   <https://github.com/Hellmark/android-dice-game>
-* The Android Open Source Project: parts of `About.java` and `Rules.java` come from its Photostream
-  sample, under the Apache License 2.0.
-* Islewright Team: everything since version 1.15.
+* Islewright Team: everything since version 1.15, including the rewrite in Rust on Day that
+  replaced the Java app after 2.0.
 
-# Art and sound
+# Art and font credits
 
 ## Terrain and the King's ship: The Battle for Wesnoth
 
@@ -36,7 +35,7 @@ Creative Commons BY-SA 4.0, and since 30 July 2017 takes new art under CC BY-SA 
 in its `copyrights.csv` until August 2024, and since then in the `Copyright` tag of the
 image itself. All 112 files used here (the 111 terrain images and the ship) are recorded as
 GNU GPL v2+. None is CC BY-SA 4.0, and the newest was added in December 2016. They are used
-under the GNU GPL version 3, which is the licence of this app (see `LICENSE.md`).
+under the GNU GPL version 3, which is the licence of this app (see `COPYING`).
 
 Authors, as recorded by Wesnoth for these files: J.W. Bjerk (Eleazar), Lari Nieminen
 (zookeeper), Richard Kettering (Jetrel), Hogne Håskjold (freim) and Philippe Plantier
@@ -74,6 +73,37 @@ version 3 like the rest of the app. The scripts that produce them are in `tools/
   (`tools/fonts/Micro5-OFL.txt`). Numerals only: the small numbers on the turn strip's flags.
 
 Download locations and checksums are in `tools/fonts/SOURCES.txt`.
+
+## Music
+
+Not shipped yet: the tracks below are chosen and their licence is confirmed, but the audio is
+added only once the originals have been bought from the artist. Until then the game has no music.
+
+The soundtrack is ten tracks by [Vindsvept](https://vindsvept.se), released under the
+Creative Commons Attribution 4.0 International licence
+(<https://creativecommons.org/licenses/by/4.0/>). The artist states this at
+<https://vindsvept.se/licensing/>: all of his original music, on Bandcamp, YouTube or any other
+platform, is available under CC BY 4.0, including commercial use. Each track page on Bandcamp
+also carries the licence.
+
+* Deep Sleep of the Elven King
+* Deeper into the Woods
+* Wanderlust
+* Lady of the Lake
+* What Lies Beyond
+* Into the Mind's Eye (part one)
+* Breath of Life
+* To the Skies
+* Winter's Night
+* The Old Way
+
+Changes: the tracks were re-encoded from the artist's originals to Opus (192 kbps, Ogg container) for this app
+(`tools/encode_music.sh`). If the shipped files become the originals themselves, this line changes to say so.
+
+The page for each track, the file it came from and its checksum are in
+`tools/music-sources.txt`. The artist asks game developers to tell him the product title
+before release so that videos of the game are not flagged by his content ID system
+(<https://vindsvept.se/for-video-game-developers/>).
 
 ## Sound effects
 
