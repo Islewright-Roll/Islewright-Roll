@@ -5,20 +5,14 @@
 name: "Islewright"
 
 # Release only: verification runs on a developer's machine before a push, never here. A version
-# tag builds against the newest Day release on crates.io (what someone who builds this app gets)
-# and leaves a pre-release with the packages for the App Fair; a release promoted to Latest
-# refreshes the website. A manual run builds against the release too, unless `day-main` is ticked.
+# tag leaves a pre-release with the packages for the App Fair; a release promoted to Latest
+# refreshes the website. A manual run builds the same way without releasing.
 on:
   push:
     tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
   release:
     types: [released]
   workflow_dispatch:
-    inputs:
-      day-main:
-        description: Build against day's main branch instead of the newest release
-        type: boolean
-        default: false
 
 # The repository's own jobs, should any be added here, run this checkout's code with a read-only
 # token. The write grants sit on the job that calls the shared workflow, whose release and Pages
@@ -43,9 +37,12 @@ jobs:
       # targets here instead:
       #   targets: macos-appkit, windows-winui, linux-gtk, ios-uikit, android-material, web-dom
       targets: all
-      # Which day to build against: the newest release, or day's main branch on a manual run
-      # that asks for it, and the matching day CLI.
-      day-source: ${{ inputs.day-main && 'main' || 'auto' }}
+      # Which Day to build with: exactly what Cargo.toml and Cargo.lock say. The game takes Day
+      # from its fork at a pinned commit (Cargo.toml's [patch.crates-io]) until a Day release
+      # carries its changes, and the CLI is built from that same commit. Move all three together.
+      day-deps: locked
+      day-git: https://github.com/Islewright-Roll/day.git
+      day-version: 29a5992716263f3b950c62782f7b59bf0151bc45
       # Every dayscript under dayscript/ (`scripts: auto`), on every target, in every locale the
       # app ships (resource/locales/) and both appearances: a string that breaks only in one
       # language, or a layout that breaks only in dark mode, breaks the build.

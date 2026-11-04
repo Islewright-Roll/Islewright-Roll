@@ -3,5 +3,5 @@
 # Keep `id` stable after the first publication. The version comes from the release tag; raise
 # `build` before each tag, because the stores refuse a repeated or lower build number.
 [app]
-id = "org.appfair.app.Islewright"
+id = "org.appfair.app.IslewrightRoll"
 build = 34
