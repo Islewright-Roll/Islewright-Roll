@@ -8,7 +8,7 @@ schema = 1
 id = "io.github.islewrightroll.islewright.dev"
 title = "Islewright: Roll"
 artifact = "islewright-roll"
-build = 34
+build = 35
 targets = ["ios-uikit", "android-material", "web-dom"]
 
 # The window's size and minimum size in points, for every platform with resizable windows.
