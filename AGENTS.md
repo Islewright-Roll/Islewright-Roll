@@ -44,7 +44,7 @@ change there first.
 - `tools/`: the scripts that generate the art, fonts and sounds from their sources; see
   `tools/README.md` and `CREDITS.md`. `tools/scenarios/` holds game states for the tests and for a
   debug build to open in.
-- `Day-appfair.toml`: the App Fair identity (`org.appfair.app.Islewright`); `Day.toml`'s own id is
+- `Day-appfair.toml`: the App Fair identity (`org.appfair.app.IslewrightRoll`); `Day.toml`'s own id is
   for development builds.
 
 ## Conventions

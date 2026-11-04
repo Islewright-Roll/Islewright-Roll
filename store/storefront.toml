@@ -42,9 +42,9 @@ release-notes = """
 Islewright: Roll's first release on the App Fair: both islands, the tutorial and top scores, now on \
 iPhone and Android.
 """
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md" # the App Store requires one
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md" # the App Store requires one
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"
 
 # The screenshots each listing shows, by the `screenshot:` step names in
 # dayscript/walkthrough.yaml: the island, a roll with dice kept, a first build, and the rules.
@@ -83,9 +83,9 @@ et les graphismes de l'île viennent de The Battle for Wesnoth.
 """
 keywords = ["dés", "solitaire", "jeu de plateau", "île", "stratégie", "réflexion", "hors ligne"]
 release-notes = "Première version d'Islewright: Roll sur l'App Fair : les deux îles, le tutoriel et les meilleurs scores, désormais sur iPhone et Android."
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md"
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md"
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"
 
 [storefront.metadata.de]
 name = "Islewright: Roll"
@@ -114,9 +114,9 @@ und die Inselgrafik stammt aus The Battle for Wesnoth.
 """
 keywords = ["Würfel", "Solitär", "Brettspiel", "Insel", "Strategie", "Denkspiel", "offline"]
 release-notes = "Die erste Version von Islewright: Roll im App Fair: beide Inseln, das Tutorial und die Bestwerte, jetzt auf iPhone und Android."
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md"
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md"
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"
 
 [storefront.metadata.es]
 name = "Islewright: Roll"
@@ -145,9 +145,9 @@ de la isla procede de The Battle for Wesnoth.
 """
 keywords = ["dados", "solitario", "juego de mesa", "isla", "estrategia", "puzle", "sin conexión"]
 release-notes = "La primera versión de Islewright: Roll en App Fair: las dos islas, el tutorial y las mejores puntuaciones, ahora en iPhone y Android."
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md"
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md"
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"
 
 [storefront.metadata.id]
 name = "Islewright: Roll"
@@ -177,9 +177,9 @@ for Wesnoth.
 """
 keywords = ["dadu", "soliter", "permainan papan", "pulau", "strategi", "teka-teki", "offline"]
 release-notes = "Rilis pertama Islewright: Roll di App Fair: kedua pulau, tutorial, dan skor tertinggi, kini di iPhone dan Android."
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md"
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md"
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"
 
 [storefront.metadata.it]
 name = "Islewright: Roll"
@@ -208,9 +208,9 @@ grafica dell'isola viene da The Battle for Wesnoth.
 """
 keywords = ["dadi", "solitario", "gioco da tavolo", "isola", "strategia", "rompicapo", "offline"]
 release-notes = "La prima versione di Islewright: Roll su App Fair: entrambe le isole, il tutorial e i punteggi migliori, ora su iPhone e Android."
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md"
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md"
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"
 
 [storefront.metadata.pt-BR]
 name = "Islewright: Roll"
@@ -238,6 +238,6 @@ de The Battle for Wesnoth.
 """
 keywords = ["dados", "paciência", "jogo de tabuleiro", "ilha", "estratégia", "quebra-cabeça", "offline"]
 release-notes = "A primeira versão do Islewright: Roll na App Fair: as duas ilhas, o tutorial e as melhores pontuações, agora no iPhone e no Android."
-privacy-url = "https://github.com/islewright-roll/islewright-roll/blob/dev/PRIVACY.md"
-support-url = "https://github.com/islewright-roll/islewright-roll/issues"
-marketing-url = "https://islewright-roll.github.io/islewright-roll/"
+privacy-url = "https://github.com/Islewright-Roll/Islewright-Roll/blob/dev/PRIVACY.md"
+support-url = "https://github.com/Islewright-Roll/Islewright-Roll/issues"
+marketing-url = "https://islewright-roll.github.io/Islewright-Roll/"

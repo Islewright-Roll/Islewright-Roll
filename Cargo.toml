@@ -56,6 +56,54 @@ day-platform-android = "0.6.3"
 day-build = { version = "0.6.3" }
 
 
+# Day 0.6.3 plus the changes this game needs that are not in a Day release yet: pixel art drawn
+# without smoothing, every finger reported on its own, a sound clip restarted, and the Menu key.
+# They are on the `islewright` branch of the game's public fork of Day, pinned here by commit so
+# every build, the App Fair's included, compiles the same source; .github/workflows/ci.yml builds
+# the day CLI from the same commit, so move the two together. Drop this table once a Day release
+# carries the changes. A local `day patch --local` checkout still takes precedence over it.
+[patch.crates-io]
+day-app = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-async = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-bridge = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-build = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-core = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-fonts = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-geometry = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-localization = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-localization-ui = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-macros = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-mock = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-model = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-part-clipboard = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-part-haptics = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-part-preferences = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-part-sensors = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-part-sound = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-piece-settings = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-piece-swiftui = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-piece-text-editor = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-pieces = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-platform-android = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-platform-linux = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-platform-macos = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-platform-windows = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-reactive = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-script = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-script-protocol = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-spec = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolchain = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-appkit = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-arkui = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-dom = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-gtk = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-material = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-qt = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-qt-sys = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-uikit = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-winui = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+day-toolkit-xaml-sys = { git = "https://github.com/Islewright-Roll/day", rev = "29a5992716263f3b950c62782f7b59bf0151bc45" }
+
 [workspace]
 
 [workspace.package]

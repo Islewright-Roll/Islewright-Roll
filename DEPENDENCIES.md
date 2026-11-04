@@ -40,31 +40,31 @@ All of them are free software under licenses that meet the Debian Free Software 
 | combine v4.6.9 | MIT | Android | https://github.com/Marwes/combine |
 | core_maths v0.1.1 | MIT | Android, iOS, web | https://github.com/robertbastian/core_maths |
 | crc32fast v1.5.3 | MIT OR Apache-2.0 | Android, iOS, web | https://github.com/srijs/rust-crc32fast |
-| day-app v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-async v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-bridge v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-core v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-fonts v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-geometry v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-localization v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-localization-ui v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-macros v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-model v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-part-clipboard v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-part-haptics v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-part-preferences v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-part-sensors v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-part-sound v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-piece-settings v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-pieces v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-platform-android v0.6.3 | MPL-2.0 | Android | https://github.com/daybrite/day |
-| day-reactive v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-script v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-script-protocol v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-spec v0.6.3 | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
-| day-toolkit-dom v0.6.3 | MPL-2.0 | web | https://github.com/daybrite/day |
-| day-toolkit-material v0.6.3 | MPL-2.0 | Android | https://github.com/daybrite/day |
-| day-toolkit-uikit v0.6.3 | MPL-2.0 | iOS | https://github.com/daybrite/day |
+| day-app v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-async v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-bridge v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-core v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-fonts v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-geometry v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-localization v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-localization-ui v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-macros v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-model v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-part-clipboard v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-part-haptics v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-part-preferences v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-part-sensors v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-part-sound v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-piece-settings v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-pieces v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-platform-android v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android | https://github.com/daybrite/day |
+| day-reactive v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-script v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-script-protocol v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-spec v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android, iOS, web | https://github.com/daybrite/day |
+| day-toolkit-dom v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | web | https://github.com/daybrite/day |
+| day-toolkit-material v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | Android | https://github.com/daybrite/day |
+| day-toolkit-uikit v0.6.3 (https://github.com/Islewright-Roll/day?rev=29a5992716263f3b950c62782f7b59bf0151bc45#29a59927) | MPL-2.0 | iOS | https://github.com/daybrite/day |
 | dispatch2 v0.3.1 | Zlib OR Apache-2.0 OR MIT | iOS | https://github.com/madsmtm/objc2 |
 | displaydoc v0.2.7 | MIT OR Apache-2.0 | Android, iOS, web | https://github.com/yaahc/displaydoc |
 | either v1.19.0 | MIT OR Apache-2.0 | Android, iOS, web | https://github.com/rayon-rs/either |
