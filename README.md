@@ -94,7 +94,7 @@ then rewrote it in Rust.
 ## Credits and license
 
 Islewright: Roll is free software under the GNU General Public License, version 3 or later; see
-[COPYING](COPYING).
+[LICENSE.md](LICENSE.md).
 
 The island terrain, the King's ship and some sound effects come from The Battle for Wesnoth
 under the GNU GPL; the fonts are under the SIL Open Font License; other sounds are CC0 or

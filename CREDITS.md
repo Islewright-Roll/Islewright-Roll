@@ -1,6 +1,6 @@
 # Credits
 
-Islewright: Roll is free software under the GNU GPL version 3 or later (see `COPYING`).
+Islewright: Roll is free software under the GNU GPL version 3 or later (see `LICENSE.md`).
 
 ## Code
 
@@ -35,7 +35,7 @@ Creative Commons BY-SA 4.0, and since 30 July 2017 takes new art under CC BY-SA 
 in its `copyrights.csv` until August 2024, and since then in the `Copyright` tag of the
 image itself. All 112 files used here (the 111 terrain images and the ship) are recorded as
 GNU GPL v2+. None is CC BY-SA 4.0, and the newest was added in December 2016. They are used
-under the GNU GPL version 3, which is the licence of this app (see `COPYING`).
+under the GNU GPL version 3, which is the licence of this app (see `LICENSE.md`).
 
 Authors, as recorded by Wesnoth for these files: J.W. Bjerk (Eleazar), Lari Nieminen
 (zookeeper), Richard Kettering (Jetrel), Hogne Håskjold (freim) and Philippe Plantier
