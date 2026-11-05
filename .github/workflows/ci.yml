@@ -42,7 +42,7 @@ jobs:
       # carries its changes, and the CLI is built from that same commit. Move all three together.
       day-deps: locked
       day-git: https://github.com/Islewright-Roll/day.git
-      day-version: 29a5992716263f3b950c62782f7b59bf0151bc45
+      day-version: 27190907f66960ea2ebfc500783e09d7762d2eae
       # Every dayscript under dayscript/ (`scripts: auto`), on every target, in every locale the
       # app ships (resource/locales/) and both appearances: a string that breaks only in one
       # language, or a layout that breaks only in dark mode, breaks the build.

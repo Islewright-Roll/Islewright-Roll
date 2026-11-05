@@ -40,6 +40,12 @@
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<true/>
 	</dict>
+	<key>DayWindowBackground</key>
+	<string>#22180D</string>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<false/>
 	<key>DayWindowMinHeight</key>
 	<string>$(DAY_WINDOW_MIN_HEIGHT)</string>
 	<key>DayWindowMinWidth</key>
