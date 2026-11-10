@@ -250,6 +250,9 @@ pub fn coastal_end(hex: &[[i32; 2]], road_ends: &[Pt]) -> Result<Pt, String> {
 pub const STRIP_MARGIN: i32 = 3;
 pub const STRIP_LEAD: i32 = 2;
 pub const MAX_PITCH: i32 = 14;
+/// The widest the portrait strip spreads its cells where a wider top bar gives it room: the
+/// flags stand apart with water between them, the buoys and the pier further off.
+pub const WIDE_PITCH: i32 = 16;
 /// Where the ship lies once the turns are over, from the pier's left edge: in harbour, its
 /// stern behind the pier.
 pub const PIER_SHIP_IN: i32 = 4;
@@ -313,8 +316,13 @@ pub struct Strip {
 
 impl Strip {
     pub fn new(turns: i32, flags: bool, hud_width: i32) -> Strip {
+        Strip::spread(turns, flags, hud_width, MAX_PITCH)
+    }
+
+    /// As `new`, its cells as wide as `max_pitch` where the room allows.
+    pub fn spread(turns: i32, flags: bool, hud_width: i32, max_pitch: i32) -> Strip {
         let room = hud_width - 2 * STRIP_MARGIN;
-        let mut p = MAX_PITCH;
+        let mut p = max_pitch;
         while p > 1 && Strip::measure(turns, flags, p).width > room {
             p -= 1;
         }
@@ -348,10 +356,15 @@ impl Strip {
     /// the latest of them in a window of FLAG_WINDOW cells; a race with a cap has no per-turn
     /// scores to show, so its strip is the narrow kind.
     pub fn for_map(map: &MapDef, hud_width: i32) -> Strip {
+        Strip::for_map_spread(map, hud_width, MAX_PITCH)
+    }
+
+    /// As `for_map`, its cells as wide as `max_pitch` where the room allows.
+    pub fn for_map_spread(map: &MapDef, hud_width: i32, max_pitch: i32) -> Strip {
         if map.turn_cap == 0 {
-            return Strip::new(FLAG_WINDOW, true, hud_width);
+            return Strip::spread(FLAG_WINDOW, true, hud_width, max_pitch);
         }
-        Strip::new(map.turn_cap, map.target_score == 0, hud_width)
+        Strip::spread(map.turn_cap, map.target_score == 0, hud_width, max_pitch)
     }
 
     /// Left edge of cell i's flag, or of its buoy's room.

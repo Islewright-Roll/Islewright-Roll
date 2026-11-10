@@ -68,10 +68,8 @@ const FONT_TOP_ROW: i32 = 1;
 // Micro 5's digits are rows 3 to 7 of its line box
 const NUMERAL_ROW: i32 = 3;
 const NUMERAL_H: i32 = 5;
-const RECIPE_H: i32 = 14;
+const RECIPE_H: i32 = layout::RECIPE_H;
 const RECIPE_ROW: i32 = RECIPE_H + 1;
-const RECIPE_GAP: i32 = 4;
-const RECIPE_INSET_X: i32 = 3;
 const RECIPE_INSET_Y: i32 = 3;
 const BUOY_DROP: i32 = 4;
 /// A race's sign: its height, and the space inside it either side of its label.
@@ -350,15 +348,6 @@ fn in_family(c: Option<usize>, family: usize) -> bool {
     c.is_some_and(|c| OFFER_FAMILY[c] == family)
 }
 
-/// A recipe plate's strip of icons, and the whole plate.
-fn legend_strip_width(n: usize) -> i32 {
-    n as i32 * 13 + 1
-}
-
-fn recipe_width(n: usize) -> i32 {
-    RECIPE_H + 1 + legend_strip_width(n) + 1
-}
-
 /// The costs tray's recipes in reading order: what each builds and what it costs.
 const RECIPES: [(Kind, &[DiceValue]); 4] = [
     (Kind::Road, game::RESOURCES_ROAD),
@@ -379,17 +368,18 @@ fn recipe_rect(l: &Layout, kind: Kind) -> Rect {
             layout::KEY_ROW_H,
         );
     }
-    let left = l.costs.x + RECIPE_INSET_X;
+    let sp = &l.spread;
+    let left = l.costs.x + sp.recipe_inset;
     let top = l.costs.y + RECIPE_INSET_Y;
     let (x, y) = if i % 2 == 0 {
         (left, top + (i as i32 / 2) * RECIPE_ROW)
     } else {
         (
-            left + recipe_width(recipes_before(i)) + RECIPE_GAP,
+            left + sp.recipe_w(recipes_before(i) as i32) + sp.recipe_gap,
             top + RECIPE_ROW * (i as i32 / 2),
         )
     };
-    Rect::new(x, y, recipe_width(RECIPES[i].1.len()), RECIPE_H)
+    Rect::new(x, y, sp.recipe_w(RECIPES[i].1.len() as i32), RECIPE_H)
 }
 
 /// How many resources the recipe left of the nth one (in two rows of two) shows.
@@ -1133,7 +1123,7 @@ impl Scene {
                 Kind::Village => &t.glyph_village,
                 Kind::Knight => &a.glyph_trader,
             };
-            self.draw_recipe(frame, at.x, at.y, glyph, cost);
+            self.draw_recipe(frame, at, &l.spread, glyph, cost);
         }
     }
 
@@ -1155,22 +1145,27 @@ impl Scene {
         }
     }
 
-    fn draw_recipe(&self, frame: &mut Image, x: i32, y: i32, glyph: &Image, cost: &[DiceValue]) {
-        frame.plate(x, y, recipe_width(cost.len()), RECIPE_H, WOOD);
+    /// A recipe of the portrait key: the glyph on its tile, then a dark strip with an icon in
+    /// each cell, the strip showing between them as the top bar's spread allows.
+    fn draw_recipe(
+        &self,
+        frame: &mut Image,
+        at: Rect,
+        sp: &layout::Spread,
+        glyph: &Image,
+        cost: &[DiceValue],
+    ) {
+        let (x, y) = (at.x, at.y);
+        frame.plate(x, y, at.w, RECIPE_H, WOOD);
         frame.plate(x, y, RECIPE_H, RECIPE_H, LEGEND_TILE);
         frame.sprite(glyph, x + 1, y + 1, 255);
         let strip_x = x + RECIPE_H + 1;
-        frame.fill_argb(
-            strip_x,
-            y + 1,
-            legend_strip_width(cost.len()),
-            RECIPE_H - 2,
-            INK,
-        );
+        let n = cost.len() as i32;
+        frame.fill_argb(strip_x, y + 1, sp.icon_strip_w(n), RECIPE_H - 2, INK);
         for (i, &v) in cost.iter().enumerate() {
             frame.sprite(
                 self.assets.icon12(v),
-                strip_x + 1 + 13 * i as i32,
+                strip_x + sp.icon_gap() + sp.icon_pitch * i as i32,
                 // The brick's ink sits low in its cell (it is drawn to stand on a cart bed)
                 y + if v == DiceValue::Brick { 0 } else { 1 },
                 255,
@@ -1575,7 +1570,7 @@ impl Scene {
             }
             self.mini_die_face(
                 frame,
-                l.slot_x(n as i32),
+                l.slot_x(n as i32, count),
                 l.slot_y(n as i32),
                 game.bank_resource(slot),
             );
@@ -1704,7 +1699,8 @@ impl Scene {
             let from = l.island_to_ui(on_cart.x, on_cart.y);
             let place = h.place.unwrap_or(0);
             let drop = mini_icon_drop(v);
-            let to = Pt::new(l.slot_x(place) + 2, l.slot_y(place) + 2 + drop);
+            let count = game.banked_slots().len() as i32;
+            let to = Pt::new(l.slot_x(place, count) + 2, l.slot_y(place) + 2 + drop);
             let at = hire_anim::icon_at(from, to, elapsed);
             let strength = hire_anim::glow(elapsed);
             if strength > 0.0 {
@@ -1732,7 +1728,11 @@ impl Scene {
                 continue;
             };
             let target = self.piece_rect(game, l, p);
-            let from = Pt::new(l.slot_x(e.place), l.slot_y(e.place));
+            // Where it sat among those banked then: the ones still there and those this build
+            // spent with it
+            let with = self.spends.iter().filter(|(_, s)| s == start).count();
+            let count = (game.banked_slots().len() + with) as i32;
+            let from = Pt::new(l.slot_x(e.place, count), l.slot_y(e.place));
             let to = Pt::new(
                 target.x + (target.w - MINI_DIE) / 2,
                 target.y + (target.h - MINI_DIE) / 2,
@@ -1801,15 +1801,14 @@ impl Scene {
                 if count <= 0 {
                     return None;
                 }
-                let pitch = MINI_DIE + MINI_GAP;
-                let rows = (count + l.mini_per_row - 1) / l.mini_per_row;
-                let in_row = l.mini_per_row.min(count);
-                Some(Rect::new(
-                    l.mini_x,
-                    l.slot_y(0).min(l.slot_y(count - 1)),
-                    in_row * pitch - MINI_GAP,
-                    rows * pitch - MINI_GAP,
-                ))
+                // Every mini die there, wherever the tab or tray stands them
+                let (mut x0, mut y0, mut x1, mut y1) = (i32::MAX, i32::MAX, i32::MIN, i32::MIN);
+                for n in 0..count {
+                    let (x, y) = (l.slot_x(n, count), l.slot_y(n));
+                    (x0, y0) = (x0.min(x), y0.min(y));
+                    (x1, y1) = (x1.max(x + MINI_DIE), y1.max(y + MINI_DIE));
+                }
+                Some(Rect::new(x0, y0, x1 - x0, y1 - y0))
             }
         }
     }
@@ -1995,14 +1994,13 @@ impl Scene {
 
     /// The bank slot of the mini die drawn at (x, y), with a pixel of slack round each.
     pub fn mini_slot_at(&self, game: &Game, l: &Layout, x: i32, y: i32) -> Option<usize> {
-        game.banked_slots()
-            .into_iter()
-            .enumerate()
-            .find_map(|(n, slot)| {
-                let (left, top) = (l.slot_x(n as i32), l.slot_y(n as i32));
-                (x >= left - 1 && x < left + MINI_DIE + 1 && y >= top - 1 && y < top + MINI_DIE + 1)
-                    .then_some(slot)
-            })
+        let slots = game.banked_slots();
+        let count = slots.len() as i32;
+        slots.into_iter().enumerate().find_map(|(n, slot)| {
+            let (left, top) = (l.slot_x(n as i32, count), l.slot_y(n as i32));
+            (x >= left - 1 && x < left + MINI_DIE + 1 && y >= top - 1 && y < top + MINI_DIE + 1)
+                .then_some(slot)
+        })
     }
 
     /// Whether a mini die may be picked up now (classic mode, after a roll, not over, landed).
@@ -2172,11 +2170,13 @@ fn draw_menu(frame: &mut Image, r: Rect, down: bool) {
     frame.fill_argb(x + w - 2, y + 2, 1, h - 5, MENU_DARK);
     let bars = 2 * MENU_BAR_PITCH + MENU_BAR_H;
     let bar_y = y + (h - bars) / 2 + down as i32;
+    // The bars keep to about half the face as a wider button spreads them
+    let bar_w = MENU_BAR_W + (w - layout::MENU_W).max(0) / 2;
     for i in 0..3 {
         frame.fill_argb(
-            x + (w - MENU_BAR_W) / 2,
+            x + (w - bar_w) / 2,
             bar_y + i * MENU_BAR_PITCH,
-            MENU_BAR_W,
+            bar_w,
             MENU_BAR_H,
             IVORY,
         );

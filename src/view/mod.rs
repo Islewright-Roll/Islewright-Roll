@@ -1324,7 +1324,19 @@ mod tests {
                         .unwrap_or(d)
                 };
                 let (w, h) = (size("CAPTURE_W", 1080), size("CAPTURE_H", 2400));
-                let l = Layout::new(w, h, Insets::default(), g.map, side);
+                // CAPTURE_INSETS=top,bottom: a device's system bars, in device pixels
+                let insets = std::env::var("CAPTURE_INSETS")
+                    .ok()
+                    .and_then(|v| {
+                        let (t, b) = v.split_once(',')?;
+                        Some(Insets {
+                            top: t.parse().ok()?,
+                            bottom: b.parse().ok()?,
+                            ..Insets::default()
+                        })
+                    })
+                    .unwrap_or_default();
+                let l = Layout::new(w, h, insets, g.map, side);
                 let words = strings(&g);
                 let f = scene.render(&mut g, &l, &mut ui, &mut t, &words, 60_000);
                 let ship = if moored { "ship" } else { "none" };
