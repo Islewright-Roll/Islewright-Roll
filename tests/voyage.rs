@@ -409,130 +409,152 @@ fn shown(screen: [i32; 4]) -> [i32; 4] {
     ]
 }
 
+/// The angle below level of the line from one place to another, in degrees.
+fn angle(from: Pt, to: Pt) -> f64 {
+    ((to.y - from.y) as f64)
+        .atan2((to.x - from.x) as f64)
+        .to_degrees()
+}
+
+fn length(from: Pt, to: Pt) -> f64 {
+    (((to.x - from.x).pow(2) + (to.y - from.y).pow(2)) as f64).sqrt()
+}
+
 #[test]
-fn the_stops_follow_what_the_screen_shows_but_never_stray_far() {
+fn the_stops_lie_on_the_ships_heading_and_follow_what_the_screen_shows() {
     let moor = voyage::DOCK_MOORING;
     let moored = voyage::ship_origin(Stage::Moored, moor, 144);
     assert_eq!(
         Pt::new(moor.x - art::SHIP_CONTACT_X, moor.y - art::SHIP_CONTACT_Y),
         moored
     );
-    // Room to the left: the far stop hangs half off the screen's edge, level with the mooring
-    let roomy = moored.x - 2 * voyage::MIN_STEP - 4 + voyage::FAR_OUT_X;
-    assert_eq!(
-        Pt::new(roomy - voyage::FAR_OUT_X, moored.y),
-        voyage::ship_origin(Stage::Far, moor, roomy)
+    let (least, most) = (
+        (voyage::SAIL_STEPS * voyage::MIN_STEP) as f64,
+        (voyage::SAIL_STEPS * voyage::MAX_STEP) as f64,
     );
-    // Less room: it starts higher instead, and still sails two full steps
-    let far = voyage::ship_origin(Stage::Far, moor, 150);
-    assert_eq!(150 - voyage::FAR_OUT_X, far.x);
-    assert!(far.y < moored.y);
-    let (dx, dy) = (moored.x - far.x, moored.y - far.y);
-    assert!(dx * dx + dy * dy >= 4 * voyage::MIN_STEP * voyage::MIN_STEP);
-    // A screen that shows the whole board: the far stop is two full steps out, no more
-    assert_eq!(
-        Pt::new(moored.x - 2 * voyage::MAX_STEP, moored.y),
-        voyage::ship_origin(Stage::Far, moor, -200)
-    );
-    // A screen that shows no sea to the left at all: straight down from above
-    assert_eq!(moored.x, voyage::ship_origin(Stage::Far, moor, 400).x);
+    for visible_left in [-200, 0, 100, 120, 144, 150, 400] {
+        let far = voyage::ship_origin(Stage::Far, moor, visible_left);
+        let mid = voyage::ship_origin(Stage::Mid, moor, visible_left);
+        // Up and to the left of the dock, on the heading's line, the middle stop halfway
+        for (from, what) in [(far, "far"), (mid, "mid")] {
+            let a = angle(from, moored);
+            assert!(
+                (a - voyage::HEADING_DEG).abs() < 2.0,
+                "{visible_left} {what} {a}"
+            );
+        }
+        let way = length(far, moored);
+        assert!(
+            (length(mid, moored) - way / 2.0).abs() <= 1.0,
+            "{visible_left}"
+        );
+        // Two steps, never shorter than the least nor longer than the most
+        assert!(
+            way >= least - 1.0 && way <= most + 1.0,
+            "{visible_left} {way}"
+        );
+        // Half off the screen's left edge where those allow it
+        let half_off = visible_left - voyage::FAR_OUT_X;
+        if way > least + 1.0 && way < most - 1.0 {
+            assert!((far.x - half_off).abs() <= 1, "{visible_left} {far}");
+        }
+    }
+    // Room to the left: two full steps out, no more
+    let roomy = voyage::ship_origin(Stage::Far, moor, -200);
+    assert!((length(roomy, moored) - most).abs() <= 1.0);
     // Done is moored: the flag is the dock's, the ship does not move
     assert_eq!(moored, voyage::ship_origin(Stage::Done, moor, 144));
-}
-
-/// On both screens the ship sails in level (the old test also measured how much of its sprite
-/// shows, which needs the PNG).
-#[test]
-fn the_far_stop_on_each_screen_is_level_with_the_dock() {
-    let boards = [Pt::new(-144, -23), Pt::new(-132, -52)];
-    for (i, screen) in SCREENS.iter().enumerate() {
-        let s = shown(*screen);
-        let origin = voyage::board_origin(screen[0], TOP_H, screen[1] - BOTTOM_H - screen[3]);
-        assert_eq!(boards[i], origin);
-        let far = voyage::ship_origin(Stage::Far, voyage::DOCK_MOORING, s[0]);
-        assert_eq!(
-            voyage::ship_origin(Stage::Moored, voyage::DOCK_MOORING, s[0]).y,
-            far.y
-        );
-    }
 }
 
 // ---------------------------------------------------------------- sailing
 
 #[test]
 fn only_the_next_stage_is_a_sail_and_nothing_else_is_anything_but_a_jump() {
-    assert_eq!(
-        voyage::SAIL_IN_MS,
-        voyage::sail_ms(Some(Stage::None), Stage::Far)
-    );
-    assert_eq!(
-        voyage::SAIL_STEP_MS,
-        voyage::sail_ms(Some(Stage::Far), Stage::Mid)
-    );
-    assert_eq!(
-        voyage::SAIL_STEP_MS,
-        voyage::sail_ms(Some(Stage::Mid), Stage::Moored)
-    );
+    assert!(voyage::is_sail(Some(Stage::None), Stage::Far));
+    assert!(voyage::is_sail(Some(Stage::Far), Stage::Mid));
+    assert!(voyage::is_sail(Some(Stage::Mid), Stage::Moored));
     // The first frame, no change, the flag going up, undoing, and skipping a stage all snap
-    assert_eq!(0, voyage::sail_ms(None, Stage::Far));
-    assert_eq!(0, voyage::sail_ms(Some(Stage::Mid), Stage::Mid));
-    assert_eq!(0, voyage::sail_ms(Some(Stage::Moored), Stage::Done));
-    assert_eq!(0, voyage::sail_ms(Some(Stage::Mid), Stage::Far));
-    assert_eq!(0, voyage::sail_ms(Some(Stage::Far), Stage::Moored));
-    assert_eq!(0, voyage::sail_ms(Some(Stage::None), Stage::Mid));
-    assert_eq!(0, voyage::sail_ms(Some(Stage::Moored), Stage::None));
+    assert!(!voyage::is_sail(None, Stage::Far));
+    assert!(!voyage::is_sail(Some(Stage::Mid), Stage::Mid));
+    assert!(!voyage::is_sail(Some(Stage::Moored), Stage::Done));
+    assert!(!voyage::is_sail(Some(Stage::Mid), Stage::Far));
+    assert!(!voyage::is_sail(Some(Stage::Far), Stage::Moored));
+    assert!(!voyage::is_sail(Some(Stage::None), Stage::Mid));
+    assert!(!voyage::is_sail(Some(Stage::Moored), Stage::None));
 }
 
-/// The ship sails in from wholly off the left edge of the screen, level with the far stop.
+/// The ship sails in on the line it follows to the dock, from where the whole of it is beyond
+/// the screen's left edge or its top, whichever the line meets first.
 #[test]
-fn a_ship_sailing_in_starts_wholly_off_the_screens_left_edge_level_with_the_far_stop() {
-    for _map in MapDef::all() {
-        for screen in SCREENS {
-            let s = shown(screen);
-            let start = voyage::sail_start(Stage::None, voyage::DOCK_MOORING, s[0]);
-            let far = voyage::ship_origin(Stage::Far, voyage::DOCK_MOORING, s[0]);
-            assert_eq!(far.y, start.y);
-            assert_eq!(s[0], start.x + art::SHIP_W);
-            assert!(start.x < far.x);
-        }
+fn a_ship_sailing_in_starts_off_the_screen_on_its_heading() {
+    let moor = voyage::DOCK_MOORING;
+    // The two phone screens' board edges, then the iPads' and a desktop window's, and more
+    let phones = SCREENS.map(|screen| {
+        let s = shown(screen);
+        (s[0], s[1])
+    });
+    let others = [(78, 103), (105, 118), (67, 120), (-200, -150), (60, 0)];
+    for (left, top) in phones.into_iter().chain(others) {
+        let start = voyage::sail_start(Stage::None, moor, left, top);
+        let far = voyage::ship_origin(Stage::Far, moor, left);
+        let a = angle(start, far);
+        assert!((a - voyage::HEADING_DEG).abs() < 2.0, "{left},{top} {a}");
+        let off_left = start.x + art::SHIP_W <= left;
+        let off_top = start.y + art::SHIP_H <= top;
+        assert!(off_left || off_top, "{left},{top} {start}");
+        // And no further out than that: a pixel or two back along the line it shows
+        let nearer = Pt::new(start.x + 4, start.y + 2);
+        assert!(nearer.x + art::SHIP_W > left && nearer.y + art::SHIP_H > top);
     }
     // Between stops it starts from the stop it was at
-    let mid = voyage::ship_origin(Stage::Mid, voyage::DOCK_MOORING, 144);
-    assert_eq!(
-        mid,
-        voyage::sail_start(Stage::Mid, voyage::DOCK_MOORING, 144)
-    );
+    let mid = voyage::ship_origin(Stage::Mid, moor, 144);
+    assert_eq!(mid, voyage::sail_start(Stage::Mid, moor, 144, 24));
 }
 
 #[test]
-fn the_sail_runs_from_start_to_end_eased_and_on_whole_pixels() {
-    let (from, to) = (Pt::new(100, 50), Pt::new(140, 63));
-    assert_eq!(from, voyage::sail_at(from, to, 0, 650));
-    assert_eq!(from, voyage::sail_at(from, to, -5, 650));
-    assert_eq!(to, voyage::sail_at(from, to, 650, 650));
-    assert_eq!(to, voyage::sail_at(from, to, 9999, 650));
-    assert_eq!(
-        to,
-        voyage::sail_at(from, to, 0, 0),
-        "no duration is no sail"
+fn the_ship_sails_at_one_speed_and_slows_only_into_its_stop() {
+    let (from, to) = (Pt::new(-200, -80), Pt::new(114, 71));
+    let ms = voyage::sail_ms(from, to);
+    let way = length(from, to);
+    let ease = voyage::SAIL_EASE as f64;
+    let speed = voyage::SAIL_SPEED as f64 / 1000.0;
+    assert_eq!(ms, ((way + ease) / speed).round() as i32);
+    assert_eq!(from, voyage::sail_at(from, to, 0));
+    assert_eq!(from, voyage::sail_at(from, to, -5));
+    assert_eq!(to, voyage::sail_at(from, to, ms));
+    assert_eq!(to, voyage::sail_at(from, to, ms + 9999));
+    // Full speed from the first moment: a second in, SAIL_SPEED pixels along
+    let one = voyage::sail_at(from, to, 1000);
+    assert!(
+        (length(from, one) - voyage::SAIL_SPEED as f64).abs() <= 1.5,
+        "{one}"
     );
-    // Halfway is the halfway point exactly (smoothstep(0.5) is 0.5)
-    assert_eq!(Pt::new(120, 57), voyage::sail_at(from, to, 325, 650));
-    // Slow at the start and at the end, quick in the middle
-    let early = voyage::sail_at(from, to, 65, 650);
-    let late = voyage::sail_at(from, to, 585, 650);
-    assert!(early.x - from.x < 4 * 40 / 10 / 2, "early {early}");
-    assert!(to.x - late.x < 4 * 40 / 10 / 2, "late {late}");
-    // Never goes backwards, never overshoots
-    let (mut last_x, mut last_y) = (from.x, from.y);
-    for ms in (0..=650).step_by(10) {
-        let at = voyage::sail_at(from, to, ms, 650);
-        assert!(at.x >= last_x && at.x <= to.x && at.y >= last_y && at.y <= to.y);
-        last_x = at.x;
-        last_y = at.y;
+    // A longer way is a longer sail, at the same speed
+    let short = Pt::new(60, 40);
+    assert!(voyage::sail_ms(short, to) < ms);
+    // Never back, never past, slower over the last stretch than the first
+    let mut last = 0.0;
+    let mut first_step = 0.0;
+    let mut final_step = 0.0;
+    for t in (0..=ms).step_by(100) {
+        let gone = length(from, voyage::sail_at(from, to, t));
+        assert!(gone + 1.0 >= last && gone <= way + 0.5, "{t}");
+        if t == 100 {
+            first_step = gone;
+        }
+        if t + 100 > ms {
+            final_step = gone - last;
+        }
+        last = gone;
     }
-    // Sailing left works the same way
-    assert_eq!(Pt::new(120, 57), voyage::sail_at(to, from, 325, 650));
+    assert!(final_step < first_step, "{final_step} {first_step}");
+    // A step between stops takes about as long as the old one did
+    let mid = voyage::ship_origin(Stage::Mid, voyage::DOCK_MOORING, 144);
+    let far = voyage::ship_origin(Stage::Far, voyage::DOCK_MOORING, 144);
+    assert!((800..=1300).contains(&voyage::sail_ms(far, mid)));
+    // No way at all is no sail
+    assert_eq!(0, voyage::sail_ms(to, to));
+    assert_eq!(to, voyage::sail_at(to, to, 10));
 }
 
 /// The land sits in the middle of the water between the bars, the King's ship left out of it,

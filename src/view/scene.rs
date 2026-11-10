@@ -239,10 +239,12 @@ struct Hire {
     place: Option<i32>,
 }
 
-/// The ship's sail on the board: the stage drawn last frame, and the sail under way.
+/// The ship's sail on the board: the stage drawn last frame and where the ship was drawn, and
+/// the sail under way.
 #[derive(Clone, Copy, Debug, Default)]
 struct Sail {
     shown: Option<Stage>,
+    at: Pt,
     from: Pt,
     start: u64,
     ms: i32,
@@ -870,25 +872,41 @@ impl Scene {
         // The King's ship, sailing from stop to stop
         let done = game.is_game_done();
         let stage = voyage::stage_for(game.map, game.turns_taken, done, game.playsheet.score());
-        let mut at = voyage::ship_origin(stage, voyage::DOCK_MOORING, l.isle.visible_left());
+        let stop = voyage::ship_origin(stage, voyage::DOCK_MOORING, l.isle.visible_left());
         if self.sail.shown != Some(stage) {
-            self.sail.ms = voyage::sail_ms(self.sail.shown, stage);
-            self.sail.from = self.sail.shown.map_or(at, |from| {
-                voyage::sail_start(from, voyage::DOCK_MOORING, l.isle.visible_left())
-            });
-            self.sail.start = now;
+            let under_way = self.sail.ms > 0;
+            self.sail.ms = 0;
+            if let Some(from) = self.sail.shown
+                && voyage::is_sail(Some(from), stage)
+            {
+                // A turn played while it still sails: on from where it is, up the same line
+                self.sail.from = if under_way {
+                    self.sail.at
+                } else {
+                    voyage::sail_start(
+                        from,
+                        voyage::DOCK_MOORING,
+                        l.isle.visible_left(),
+                        l.isle.visible_top(),
+                    )
+                };
+                self.sail.ms = voyage::sail_ms(self.sail.from, stop);
+                self.sail.start = now;
+            }
             self.sail.shown = Some(stage);
         }
+        let mut at = stop;
         let mut sailing = false;
         if self.sail.ms > 0 {
             let elapsed = now.saturating_sub(self.sail.start) as i32;
             if elapsed < self.sail.ms {
-                at = voyage::sail_at(self.sail.from, at, elapsed, self.sail.ms);
+                at = voyage::sail_at(self.sail.from, stop, elapsed);
                 sailing = true;
             } else {
                 self.sail.ms = 0;
             }
         }
+        self.sail.at = at;
         if stage != Stage::None {
             // Its flag is team magenta, flying the player's colour as the strip's ship does
             layer.sprite(&tinted.king_ship, bx + at.x, by + at.y, 255);

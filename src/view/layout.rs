@@ -475,6 +475,11 @@ impl IslandView {
     pub fn visible_left(&self) -> i32 {
         -self.board_x
     }
+
+    /// The board row at the image's top edge: where the ship sailing in from above is hidden.
+    pub fn visible_top(&self) -> i32 {
+        -self.board_y
+    }
 }
 
 /// A point on the screen, as a tap or a drag gives it: the screen pixel (from the top left of

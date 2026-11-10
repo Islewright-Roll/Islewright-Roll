@@ -49,7 +49,7 @@ pub fn total(flies: bool) -> i32 {
     if flies { LENGTH.iter().sum() } else { FADE_MS }
 }
 
-/// Smoothstep, the easing of voyage::sail_at.
+/// Smoothstep.
 pub fn smooth(t: f32) -> f32 {
     t * t * (3.0 - 2.0 * t)
 }

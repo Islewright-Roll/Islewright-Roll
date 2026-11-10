@@ -45,10 +45,15 @@ impl Stage {
     }
 }
 
-/// The ship sails in from off the screen, and between its stops, in this many milliseconds.
-pub const SAIL_IN_MS: i32 = 1100;
-pub const SAIL_STEP_MS: i32 = 650;
-
+/// The ship's heading as its sprite draws it, bow down and to the right: this many degrees
+/// below level. Its stops lie on the line through the mooring at this angle, and it sails
+/// along that line, on every screen.
+pub const HEADING_DEG: f64 = 30.0;
+/// How fast the ship sails, in board pixels a second: in from off the screen and from stop to
+/// stop alike, so a screen with more sea to cross takes longer, not faster. Nothing waits on
+/// it: the player rolls while it sails. It slows to each stop over the last SAIL_EASE pixels.
+pub const SAIL_SPEED: i32 = 40;
+pub const SAIL_EASE: i32 = 16;
 /// At the far stop this much of the ship's sprite, half of it, lies beyond the left edge of
 /// what the screen shows of the board: the ship comes in bow first, the way it heads.
 pub const FAR_OUT_X: i32 = 30;
@@ -114,86 +119,104 @@ pub fn stage_for(map: &MapDef, turns_taken: i32, done: bool, score: i32) -> Stag
 }
 
 /// Board position of the ship sprite's top left for a stage. Moored (and done), its contact
-/// pixel is on the dock's mooring point. The two stops before that are evenly spaced on a
-/// straight line over open sea from the far stop to the mooring. The far stop is set by what
-/// the screen shows: visible_left is the board coordinate of the screen's left edge, and the
-/// far stop hangs half off it. Where the screen is wide enough for two good steps the ship
-/// sails in level; where it is not, it starts higher up instead, and comes down from under
-/// the top bar.
+/// pixel is on the dock's mooring point. The two stops before that are evenly spaced up the
+/// heading's line from the mooring. How far out the far stop is follows what the screen shows:
+/// visible_left is the board coordinate of the screen's left edge, and the far stop hangs half
+/// off it where two steps of at least MIN_STEP and at most MAX_STEP put it there.
 pub fn ship_origin(stage: Stage, mooring: Pt, visible_left: i32) -> Pt {
-    let moored_x = mooring.x - art::SHIP_CONTACT_X;
-    let moored_y = mooring.y - art::SHIP_CONTACT_Y;
+    let moored = Pt::new(
+        mooring.x - art::SHIP_CONTACT_X,
+        mooring.y - art::SHIP_CONTACT_Y,
+    );
     if stage >= Stage::Moored || stage == Stage::None {
-        return Pt::new(moored_x, moored_y);
+        return moored;
     }
-    let reach = SAIL_STEPS * MAX_STEP;
-    let across = moored_x - (moored_x - reach).max(moored_x.min(visible_left - FAR_OUT_X));
-    // The whole way is a little over two least steps, so each half still rounds to one
-    let way = SAIL_STEPS * MIN_STEP + 2;
-    let mut down = 0;
-    while down < reach && across * across + down * down < way * way {
-        down += 1;
-    }
+    let (across, _) = heading();
+    let to_edge = (moored.x - (visible_left - FAR_OUT_X)) as f64 / across;
+    let far = to_edge.clamp(
+        (SAIL_STEPS * MIN_STEP) as f64,
+        (SAIL_STEPS * MAX_STEP) as f64,
+    );
     let steps_out = Stage::Moored as i32 - stage as i32;
-    Pt::new(
-        moored_x - part(across, steps_out),
-        moored_y - part(down, steps_out),
-    )
+    up_the_line(moored, far * steps_out as f64 / SAIL_STEPS as f64)
 }
 
-/// steps_out halves of a distance, rounded to the nearest pixel.
-fn part(distance: i32, steps_out: i32) -> i32 {
-    (2 * distance * steps_out + SAIL_STEPS) / (2 * SAIL_STEPS)
+/// The heading as a step of one pixel along it: across and down.
+fn heading() -> (f64, f64) {
+    let r = HEADING_DEG.to_radians();
+    (r.cos(), r.sin())
+}
+
+/// The point `back` pixels from `p` up the heading's line, the way the ship came.
+fn up_the_line(p: Pt, back: f64) -> Pt {
+    let (across, down) = heading();
+    Pt::new(
+        p.x - java_round(back * across),
+        p.y - java_round(back * down),
+    )
 }
 
 // ---------------------------------------------------------------- the ship under sail
 
-/// How long the ship takes to sail from one stage to the next, or 0 when it is not a sail and
-/// the ship is just there: the stage before the first (from is None), going back (an undo, a
-/// new game), skipping a stage, or the flag going up. From none to the far stop it sails in
-/// from off the screen, which is further.
-pub fn sail_ms(from: Option<Stage>, to: Stage) -> i32 {
-    let Some(from) = from else {
-        return 0;
-    };
-    if to as i32 != from as i32 + 1 || to > Stage::Moored {
-        return 0;
-    }
-    if from == Stage::None {
-        SAIL_IN_MS
-    } else {
-        SAIL_STEP_MS
-    }
+/// Whether going from one stage to the next is a sail. Anything else, the ship is just there:
+/// the stage before the first (from is None), going back (an undo, a new game), skipping a
+/// stage, or the flag going up.
+pub fn is_sail(from: Option<Stage>, to: Stage) -> bool {
+    from.is_some_and(|from| to as i32 == from as i32 + 1 && to <= Stage::Moored)
 }
 
-/// Where a sail from this stage starts. From a stop, that stop. From none, the ship starts
-/// wholly off the left edge of what the screen shows (visible_left, as for ship_origin),
-/// level with the far stop: so it comes in on the line it has to follow, bow first.
-pub fn sail_start(from: Stage, mooring: Pt, visible_left: i32) -> Pt {
-    if from == Stage::None {
-        return Pt::new(
-            visible_left - art::SHIP_W,
-            ship_origin(Stage::Far, mooring, visible_left).y,
-        );
+/// Where a sail from this stage starts. From a stop, that stop. From none, up the heading's line
+/// from the far stop to where the whole ship is beyond the screen's left edge or its top
+/// (visible_left and visible_top, in board pixels), whichever it meets first: it comes in bow
+/// first, on the line it follows to the dock.
+pub fn sail_start(from: Stage, mooring: Pt, visible_left: i32, visible_top: i32) -> Pt {
+    let far = ship_origin(Stage::Far, mooring, visible_left);
+    if from != Stage::None {
+        return ship_origin(from, mooring, visible_left);
     }
-    ship_origin(from, mooring, visible_left)
+    let (across, down) = heading();
+    let by_left = (far.x + art::SHIP_W - visible_left) as f64 / across;
+    let by_top = (far.y + art::SHIP_H - visible_top) as f64 / down;
+    up_the_line(far, by_left.min(by_top).max(0.0).ceil() + 1.0)
 }
 
-/// Where the ship is elapsed_ms into a sail of duration_ms from one place to another: at the
-/// start before it, at the end after it, and between them eased in and out (smoothstep),
-/// rounded to a whole board pixel so it moves on the art grid.
-pub fn sail_at(from: Pt, to: Pt, elapsed_ms: i32, duration_ms: i32) -> Pt {
-    if duration_ms <= 0 || elapsed_ms >= duration_ms {
-        return to;
-    }
+/// How long a sail from one place to another takes, in milliseconds: SAIL_SPEED all the way,
+/// slowing to a stop over the last SAIL_EASE pixels, which takes twice as long as cruising them.
+pub fn sail_ms(from: Pt, to: Pt) -> i32 {
+    let (way, ease) = way_and_ease(from, to);
+    java_round((way + ease) * 1000.0 / SAIL_SPEED as f64)
+}
+
+fn way_and_ease(from: Pt, to: Pt) -> (f64, f64) {
+    let way = (((to.x - from.x).pow(2) + (to.y - from.y).pow(2)) as f64).sqrt();
+    (way, way.min(SAIL_EASE as f64))
+}
+
+/// Where the ship is elapsed_ms into a sail from one place to another (see `sail_ms`): at the
+/// start before it, at the end once it is over, rounded to a whole board pixel so it moves on
+/// the art grid.
+pub fn sail_at(from: Pt, to: Pt, elapsed_ms: i32) -> Pt {
     if elapsed_ms <= 0 {
         return from;
     }
-    let t = elapsed_ms as f64 / duration_ms as f64;
-    let eased = t * t * (3.0 - 2.0 * t);
+    if elapsed_ms >= sail_ms(from, to) {
+        return to;
+    }
+    let (way, ease) = way_and_ease(from, to);
+    let speed = SAIL_SPEED as f64 / 1000.0;
+    let t = elapsed_ms as f64;
+    let cruise = (way - ease) / speed;
+    let gone = if t < cruise {
+        speed * t
+    } else {
+        // Slowing evenly from full speed to none over the last `ease` pixels
+        let t = t - cruise;
+        way - ease + speed * t - speed * speed * t * t / (4.0 * ease)
+    };
+    let part = (gone / way).min(1.0);
     Pt::new(
-        from.x + java_round((to.x - from.x) as f64 * eased),
-        from.y + java_round((to.y - from.y) as f64 * eased),
+        from.x + java_round((to.x - from.x) as f64 * part),
+        from.y + java_round((to.y - from.y) as f64 * part),
     )
 }
 
