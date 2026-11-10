@@ -5,7 +5,7 @@ Um jogo de dados para um jogador: role os dados e construa estradas, vilas, cast
 Código aberto sob a GNU GPL v3:
 https://github.com/Islewright-Roll/Islewright-Roll
 
-O terreno e o navio do rei vêm de The Battle for Wesnoth (https://www.wesnoth.org), usados sob a GNU GPL v2 ou posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier e outros artistas de Wesnoth; o navio vem do projeto FreeCol. Fontes: Press Start 2P, Ark Pixel e Micro 5 (apenas os números), SIL Open Font License 1.1. Veja CREDITS.md no repositório.
+O terreno e o navio da Coroa vêm de The Battle for Wesnoth (https://www.wesnoth.org), usados sob a GNU GPL v2 ou posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier e outros artistas de Wesnoth; o navio vem do projeto FreeCol. Fontes: Press Start 2P, Ark Pixel e Micro 5 (apenas os números), SIL Open Font License 1.1. Veja CREDITS.md no repositório.
 
 Efeitos sonoros: de The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 ou posterior, de Lari Nieminen, J.W. Bjerk e Leonardo Magno Sampaio, e seu clique de botão de Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); de Kenney (https://kenney.nl), CC0; e uma fanfarra de MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Alguns foram cortados, filtrados ou tiveram o volume alterado.
 

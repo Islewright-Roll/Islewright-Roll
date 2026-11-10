@@ -202,7 +202,7 @@ mod tests {
         let font = body();
         assert_eq!(font.width("\u{2068}12\u{2069}"), font.width("12"));
         assert_eq!(font.width("\u{4E00}"), font.width("?"));
-        assert_eq!(font.width("King\u{2019}s"), font.width("King's"));
+        assert_eq!(font.width("Crown\u{2019}s"), font.width("Crown's"));
     }
 
     #[test]

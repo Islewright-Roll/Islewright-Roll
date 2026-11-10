@@ -4,7 +4,7 @@
 //!
 //! At the end of a game the order is: the sound of what ended it (the turn ending, or the
 //! build that reached a race's target), then 300 ms later the fanfare: the bigger one if
-//! the result is a new best for the island, else the short one. The King's ship docks a
+//! the result is a new best for the island, else the short one. The Crown's ship docks a
 //! turn earlier, at the turn end that starts the last turn, so its bell is not part of the
 //! ending.
 

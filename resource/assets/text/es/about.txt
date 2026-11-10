@@ -5,7 +5,7 @@ Un juego de dados en solitario: tira los dados y construye caminos, aldeas, cast
 Código abierto bajo la GNU GPL v3:
 https://github.com/Islewright-Roll/Islewright-Roll
 
-El terreno y el barco del rey proceden de The Battle for Wesnoth (https://www.wesnoth.org), usados bajo la GNU GPL v2 o posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier y otros artistas de Wesnoth; el barco procede del proyecto FreeCol. Fuentes: Press Start 2P, Ark Pixel y Micro 5 (solo los números), SIL Open Font License 1.1. Consulta CREDITS.md en el repositorio.
+El terreno y el barco de la Corona proceden de The Battle for Wesnoth (https://www.wesnoth.org), usados bajo la GNU GPL v2 o posterior, de J.W. Bjerk, Lari Nieminen, Richard Kettering, Hogne Håskjold, Philippe Plantier y otros artistas de Wesnoth; el barco procede del proyecto FreeCol. Fuentes: Press Start 2P, Ark Pixel y Micro 5 (solo los números), SIL Open Font License 1.1. Consulta CREDITS.md en el repositorio.
 
 Efectos de sonido: de The Battle for Wesnoth (https://www.wesnoth.org), GNU GPL v2 o posterior, de Lari Nieminen, J.W. Bjerk y Leonardo Magno Sampaio, y su clic de botón de Argentum Age, CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/); de Kenney (https://kenney.nl), CC0; y una fanfarria de MedicineStorm (https://opengameart.org/content/classic-fanfare-lick), CC0. Algunos están recortados, filtrados o con el volumen ajustado.
 

@@ -17,11 +17,11 @@ Islewright: Roll is free software under the GNU GPL version 3 or later (see `LIC
 
 # Art and font credits
 
-## Terrain and the King's ship: The Battle for Wesnoth
+## Terrain and the Crown's ship: The Battle for Wesnoth
 
 The island (mountain, dry hills, summer deciduous forest on leaf litter, pasture, farmland,
 desert and sea, and the transitions that blend them, and the sea's animation) is made from 171 terrain images from
-[The Battle for Wesnoth](https://www.wesnoth.org) 1.16.11, and the King's ship is one
+[The Battle for Wesnoth](https://www.wesnoth.org) 1.16.11, and the Crown's ship is one
 Wesnoth unit sprite. Source: <https://github.com/wesnoth/wesnoth>, tag `1.16.11`, commit
 `83d4b397f1de466c721e4e393b361c71fc4f5b6c`. The files were read from the Debian package
 `wesnoth-1.16-data` 1:1.16.11-1build3, which is that tag. The exact files, with the licence,
@@ -48,7 +48,7 @@ go down into the water, their submerged part tinted from the board's own water) 
 the board as terrain, in six fixed colours. Its above water art is also written as
 `dock.png`, which the game draws over the roads. It uses no Wesnoth file.
 
-The King's ship on the board (`piece_kingship.png`) is
+The Crown's ship on the board (`piece_crownship.png`) is
 `data/core/images/units/transport/transport-galleon.png` from the same 1.16.11 data. Wesnoth
 records its author as the FreeCol project and its licence as GNU GPL v2+. Wesnoth has since
 replaced this sprite (current Wesnoth has a different sprite under the same name, licensed
@@ -59,7 +59,7 @@ turns the magenta into the player's colour as it draws.
 
 Changes. The terrain tiles are composited at native resolution with the blending rules of
 Wesnoth's terrain graphics, ported to `tools/bake_board.py` (differences from a live Wesnoth
-map are in `tools/README.md`). The baked board images (`board_*.png`) and `piece_kingship.png`
+map are in `tools/README.md`). The baked board images (`board_*.png`) and `piece_crownship.png`
 are therefore adaptations of the Wesnoth files, and are distributed under the GNU GPL
 version 3 like the rest of the app. The scripts that produce them are in `tools/`.
 

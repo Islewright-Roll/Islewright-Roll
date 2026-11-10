@@ -80,7 +80,7 @@ fn a_race_won_early_leaves_the_ship_where_it_was() {
     assert_eq!(Stage::None, voyage::stage_for(map, 10, true, 11));
     // On turn 18 (turns_taken counts it): the far stop was 17 taken, 18th turn is 3 remaining
     assert_eq!(Stage::Far, voyage::stage_for(map, 18, true, 10));
-    // On the last turn: moored as it is for the whole last turn, but the King has not arrived,
+    // On the last turn: moored as it is for the whole last turn, but the Crown's ship has not arrived,
     // so there is no flag
     assert_eq!(Stage::Moored, voyage::stage_for(map, 20, true, 10));
 }
@@ -557,7 +557,7 @@ fn the_ship_sails_at_one_speed_and_slows_only_into_its_stop() {
     assert_eq!(to, voyage::sail_at(to, to, 10));
 }
 
-/// The land sits in the middle of the water between the bars, the King's ship left out of it,
+/// The land sits in the middle of the water between the bars, the Crown's ship left out of it,
 /// never with its top under the top bar, and never with the island's foot under the bottom bar.
 #[test]
 fn the_land_is_centred_between_the_bars() {

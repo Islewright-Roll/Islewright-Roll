@@ -1271,7 +1271,7 @@ mod tests {
         std::fs::write(format!("{dir}/played.png"), f.to_png(&l)).unwrap();
     }
 
-    /// Not a check: writes each island midgame and with the King's ship moored (a game played
+    /// Not a check: writes each island midgame and with the Crown's ship moored (a game played
     /// to its end) to $CAPTURE_DIR/harbour-<tag>-<island>-<ship|none>.png, with $CAPTURE_TAG
     /// telling one layout from another. Run as capture_bank_spend is.
     #[test]

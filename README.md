@@ -9,7 +9,7 @@ See [PRIVACY.md](PRIVACY.md).
 
 <p>
   <img src="docs/screenshots/phone-dunholm.png" alt="A fresh game on Dunholm, on a phone" height="420">
-  <img src="docs/screenshots/wide-tarnholm.png" alt="A finished game on Tarnholm, with the King's ship at the pier, in the wide layout" height="420">
+  <img src="docs/screenshots/wide-tarnholm.png" alt="A finished game on Tarnholm, with the Crown's ship at the pier, in the wide layout" height="420">
 </p>
 
 ## Where things stand
@@ -29,7 +29,7 @@ Each turn you get three rolls. Tap dice to keep them, roll the rest, then build 
 resources pay for. Roads open up sites for villages and castles; two gold stand in for any one
 resource; traders bank a resource for a later turn.
 
-- **Tarnholm**: fifteen turns around a lake. Score as much as you can before the King's ship
+- **Tarnholm**: fifteen turns around a lake. Score as much as you can before the Crown's ship
   reaches the pier.
 - **Dunholm**: a race to ten points in as few turns as you can.
 
@@ -96,7 +96,7 @@ then rewrote it in Rust.
 Islewright: Roll is free software under the GNU General Public License, version 3 or later; see
 [LICENSE.md](LICENSE.md).
 
-The island terrain, the King's ship and some sound effects come from The Battle for Wesnoth
+The island terrain, the Crown's ship and some sound effects come from The Battle for Wesnoth
 under the GNU GPL; the fonts are under the SIL Open Font License; other sounds are CC0 or
 CC BY-SA 4.0. [CREDITS.md](CREDITS.md) lists every source, author and license, and
 [DEPENDENCIES.md](DEPENDENCIES.md) every crate the app links.

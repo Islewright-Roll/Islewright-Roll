@@ -371,7 +371,7 @@ INDEX_SPRITES = {
     "road": "road_h.png", "village": "piece_village.png", "castle": "piece_castle.png",
     "trader": "piece_trader.png", "banked": "icon_any_16.png", "gold": "icon_gold_16.png",
     "turn_end": "track_flag.png", "empty_turn": "track_flag_empty.png",
-    "ship_appears": "piece_kingship.png", "ship_docks": "track_pier.png",
+    "ship_appears": "piece_crownship.png", "ship_docks": "track_pier.png",
     "game_over": "track_ship.png", "top_score": "glyph_castle_12.png", "bonus": "glyph_trader_12.png",
 }
 

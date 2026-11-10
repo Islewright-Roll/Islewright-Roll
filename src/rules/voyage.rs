@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-//! How the game shows the turn limit: the King's ship sails toward a pier. The pure numbers
+//! How the game shows the turn limit: the Crown's ship sails toward a pier. The pure numbers
 //! of that, apart from any drawing: which turn the ship has reached, where it is on the
 //! board, where the dock is, and how the HUD strip lays out its cells.
 //!
@@ -78,8 +78,8 @@ pub const ISLAND_FOOT: i32 = 366;
 // ---------------------------------------------------------------- where the ship is
 
 /// The cell the ship has reached. Not over: the turn being played. Over by running out of
-/// turns: the pier. Over by reaching a race's target: the turn it was reached in, so the King
-/// has not arrived yet. A map with no turn cap has no pier to count toward: the cell is just
+/// turns: the pier. Over by reaching a race's target: the turn it was reached in, so the
+/// Crown's ship has not arrived yet. A map with no turn cap has no pier to count toward: the cell is just
 /// the turn being played, or the last one taken once it is over.
 pub fn cell(turn_cap: i32, turns_taken: i32, done: bool, reached_target: bool) -> i32 {
     if turn_cap == 0 {
@@ -227,7 +227,7 @@ pub(crate) fn java_round(v: f64) -> i32 {
 
 /// Where the board's top left goes on the art canvas. Across, the board is centred. Down, the
 /// land, from the top of the dock's beach to the shore under the island, is centred between the
-/// top bar (ending at bar_bottom) and the bottom bar (starting at tray_top). The King's ship is
+/// top bar (ending at bar_bottom) and the bottom bar (starting at tray_top). The Crown's ship is
 /// left out of it: it shows only in a game's last turns, and the sea kept for it the rest of the
 /// time pushed the island low. A screen too short to show all the land keeps its top under the
 /// top bar and, before that, the island's lowest building above the bottom bar.

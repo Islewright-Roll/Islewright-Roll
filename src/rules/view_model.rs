@@ -301,7 +301,7 @@ impl Game {
     pub fn roll_label(&self) -> RollLabel {
         let last = self.turns_taken + 1 == self.map.turn_cap;
         if self.can_roll() {
-            // The turn is not named here: the King's ship in the top bar shows it
+            // The turn is not named here: the Crown's ship in the top bar shows it
             match self.rolls {
                 1 => RollLabel::SecondRoll,
                 2 => RollLabel::ThirdRoll,

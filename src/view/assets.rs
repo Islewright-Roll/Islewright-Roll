@@ -123,7 +123,7 @@ pub struct Assets {
     pub castle_mask: Mask,
     pub trader: Image,
     pub trader_mask: Mask,
-    pub king_ship: Image,
+    pub crown_ship: Image,
     pub dock: Image,
     pub track_water: Image,
     pub track_buoy: Image,
@@ -229,7 +229,7 @@ impl Assets {
             castle,
             trader_mask: Mask::of(&trader),
             trader,
-            king_ship: load(art!("piece_kingship")),
+            crown_ship: load(art!("piece_crownship")),
             dock: load(art!("dock")),
             track_water: load(art!("track_water")),
             track_buoy: load(art!("track_buoy")),
@@ -326,7 +326,7 @@ pub struct Tinted {
     /// The track's ship sailing right to left, for the rows of the landscape track run back.
     pub track_ship_back: Image,
     pub track_pier: Image,
-    pub king_ship: Image,
+    pub crown_ship: Image,
 }
 
 impl Tinted {
@@ -353,7 +353,7 @@ impl Tinted {
             track_ship: recolored(&a.track_ship, color),
             track_ship_back: recolored(&a.track_ship, color).mirrored(),
             track_pier: recolored(&a.track_pier, color),
-            king_ship: recolored(&a.king_ship, color),
+            crown_ship: recolored(&a.crown_ship, color),
         }
     }
 }

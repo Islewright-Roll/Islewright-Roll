@@ -2083,9 +2083,9 @@ def make_trader():
     return full.crop(bbox), anchor
 
 
-# ---------------------------------------------------------------- King's ship turn tracker
+# ---------------------------------------------------------------- Crown's ship turn tracker
 # The HUD's row of turn boxes becomes a strip of sea: a finished turn is a flag (with its score
-# on it) or a lowered red rag, the current turn is the King's ship and the turns to come are
+# on it) or a lowered red rag, the current turn is the Crown's ship and the turns to come are
 # small buoys in the player's colour, with a pier at the right-hand end where the ship arrives on the last turn.
 
 TRACK_WATER = dict(b="1E4C5C", e="143644", t="3C7A8C", u="2A6272")
@@ -2142,7 +2142,7 @@ TRACK_EMPTY_ROWS = ["K............",
                     "K...oo.......",
                     "K............",
                     "K............"]
-# the King's ship as the board shows it: a galleon under full white sail heading right, its flag
+# the Crown's ship as the board shows it: a galleon under full white sail heading right, its flag
 # at the masthead in team magenta (P the reference pink, Q its shade) so it flies the player's colour
 TRACK_SHIP = dict(o="2A1A0E", g="E6B422", P="F49AC1", Q="EC008C", w="F0E0B8", s="D8C494",
                   M="C8955A", d="5C3A1E")
@@ -2186,9 +2186,9 @@ def make_track():
     put("track_pier.png", art(TRACK_PIER_ROWS, TRACK_PIER, (14, 13)))
 
 
-# ---------------------------------------------------------------- the King's ship on the board
+# ---------------------------------------------------------------- the Crown's ship on the board
 
-KINGSHIP = "data/core/images/units/transport/transport-galleon.png"
+CROWNSHIP = "data/core/images/units/transport/transport-galleon.png"
 # The flag's shades, dark to light, in team magenta so the flag flies the player's colour
 # (F49AC1, the lightest, is the colour itself)
 FLAG_TEAM = ["690039", "8C0051", "B10069", "EC008C", "F49AC1"]
@@ -2200,13 +2200,13 @@ def is_team_colour(p):
     return p[0] > p[1] + 28 and p[2] > p[1] + 14 and p[0] > 100
 
 
-def make_kingship():
+def make_crownship():
     """Wesnoth 1.16's transport galleon exactly as shipped: its own soft alpha channel (the
     antialiased edges and the faint wake that is part of the sprite) is kept untouched, nothing is
     scaled, the crop is the bounding box of every pixel with alpha above 0, and no shadow is added
     (the wake is the water line). Only the team colour flag is redrawn, in team magenta shades
     (recoloured to the player's colour at draw time) with a gold fly; each pixel keeps its own alpha. Returns (image, crop box)."""
-    src = read_wesnoth_pkg(KINGSHIP).convert("RGBA")
+    src = read_wesnoth_pkg(CROWNSHIP).convert("RGBA")
     out = src.copy()
     sp, op = src.load(), out.load()
     team = []
@@ -2284,11 +2284,11 @@ def extract_pieces():
                      "and below; use alpha > 128 for a footprint."
                      % (name, im.width, im.height, what, anchor[0], anchor[1]))
         ANCHORS[name] = anchor
-    ship, sbbox = make_kingship()
-    put("piece_kingship.png", ship, limited="wesnoth")
+    ship, sbbox = make_crownship()
+    put("piece_crownship.png", ship, limited="wesnoth")
     solid = ship.getchannel("A").point(lambda v: 255 if v >= 128 else 0).getbbox()
     notes.append(
-        "piece_kingship.png: %dx%d, Wesnoth 1.16's transport galleon (units/transport/"
+        "piece_crownship.png: %dx%d, Wesnoth 1.16's transport galleon (units/transport/"
         "transport-galleon.png from the installed 1.16 data, GNU GPL v2+, recorded author FreeCol; "
         "NOT the redrawn sprite of the same name in newer Wesnoth) cropped to the bounding box of "
         "every pixel with alpha above 0, its own soft alpha channel kept exactly as shipped "
@@ -2425,7 +2425,7 @@ def dark_kit_notes():
 
 def write_side_files(notes):
     with open(os.path.join(ROOT, "tools/wesnoth-sources-ui.txt"), "w") as fh:
-        fh.write("# Wesnoth files read by tools/make_ui.py: only the ship below, for piece_kingship.png.\n")
+        fh.write("# Wesnoth files read by tools/make_ui.py: only the ship below, for piece_crownship.png.\n")
         fh.write("# Every other UI sprite, icon, building, trader and road is authored in the script\n")
         fh.write("# (the village, castle and trader are original pixel art).\n")
         fh.write("# Read from the installed 1.16 data directory: %s\n" % package_version())
@@ -2815,9 +2815,9 @@ DOCK_MOORING = (214, 152)        # dock_mooring in tools/board_geometry_*.txt (b
 
 
 def dock_mock():
-    """A piece of the baked board at 1:1 round the dock, with the King's ship moored at it."""
+    """A piece of the baked board at 1:1 round the dock, with the Crown's ship moored at it."""
     board = Image.open(os.path.join(OUT, "board_tarnholm.png")).convert("RGBA")
-    ship = outputs["piece_kingship.png"][0]
+    ship = outputs["piece_crownship.png"][0]
     board.alpha_composite(ship, (DOCK_MOORING[0] - SHIP_MOOR_CONTACT[0], DOCK_MOORING[1] - SHIP_MOOR_CONTACT[1]))
     return board.crop((120, 80, 290, 230))
 
@@ -2925,14 +2925,14 @@ def preview_candidates(sheet, d, y, pad, font):
 
 
 def preview_ship(sheet, d, y, pad, font):
-    """The King's ship at 4x, on the deep sea colour and on a piece of the board's open sea."""
+    """The Crown's ship at 4x, on the deep sea colour and on a piece of the board's open sea."""
     white = (255, 255, 255, 255)
-    d.text((pad, y), "King's ship at 4x (Wesnoth's own alpha, flag recoloured): on deep sea 0D3947, then on the "
+    d.text((pad, y), "Crown's ship at 4x (Wesnoth's own alpha, flag recoloured): on deep sea 0D3947, then on the "
            "board's open sea", fill=white, font=font)
     y += 18
     board = Image.open(os.path.join(OUT, "board_tarnholm.png")).convert("RGBA")
     sea = board.crop((20, 20, 20 + 80, 20 + 80))
-    new = outputs["piece_kingship.png"][0]
+    new = outputs["piece_crownship.png"][0]
     x = pad
     for bgc in (rgb("0D3947"), None):
         w, h = 80, 80
@@ -2966,8 +2966,8 @@ def preview_extra(sheet, d, y, W, pad, font):
                 sheet.alpha_composite(im.resize((im.width * 4, im.height * 4), Image.NEAREST), (x, y + 8))
                 x += size * 4 + 12 + (10 if i in (1, 3, 5) else 0)
             y += size * 4 + 24
-    # the King's ship tracker
-    d.text((pad, y + 6), "King's ship tracker at 4x on the HUD plate 2A1E14: 15 turns (flags 1 to 6 with sample scores, "
+    # the Crown's ship tracker
+    d.text((pad, y + 6), "Crown's ship tracker at 4x on the HUD plate 2A1E14: 15 turns (flags 1 to 6 with sample scores, "
            "turn 4 empty, ship on turn 7, buoys in the player colour, pier), then 20 turns at a 10 px pitch with no flags and a buoy every second turn",
            fill=white, font=font)
     y += 24
@@ -2984,13 +2984,13 @@ def preview_extra(sheet, d, y, W, pad, font):
         x += im.width * 8 + 20
     y += 13 * 8 + 24
     # dock and board ship
-    d.text((pad, y), "the baked dock and the King's ship moored at it, at 4x on the board; then the ship alone at 6x",
+    d.text((pad, y), "the baked dock and the Crown's ship moored at it, at 4x on the board; then the ship alone at 6x",
            fill=white, font=font)
     y += 18
     dm = dock_mock()
     sheet.alpha_composite(dm.resize((dm.width * 4, dm.height * 4), Image.NEAREST), (pad, y))
     x = pad + dm.width * 4 + 20
-    for n in ("piece_kingship.png",):
+    for n in ("piece_crownship.png",):
         im = outputs[n][0]
         bgp = Image.new("RGBA", im.size, rgb("0C3847"))
         bgp.alpha_composite(im)

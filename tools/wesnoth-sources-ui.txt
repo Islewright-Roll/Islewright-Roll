@@ -1,4 +1,4 @@
-# Wesnoth files read by tools/make_ui.py: only the ship below, for piece_kingship.png.
+# Wesnoth files read by tools/make_ui.py: only the ship below, for piece_crownship.png.
 # Every other UI sprite, icon, building, trader and road is authored in the script
 # (the village, castle and trader are original pixel art).
 # Read from the installed 1.16 data directory: wesnoth-1.16-data 1:1.16.11-1build3

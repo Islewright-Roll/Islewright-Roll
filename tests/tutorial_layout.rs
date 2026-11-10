@@ -17,7 +17,7 @@ const TEXTS: [&str; 10] = [
     "Highlighted spots can be built with your dice. Tap one.",
     "Changed your mind? This takes back your last build, until your next roll.",
     "When you are done building, tap here to end the turn.",
-    "The King's ship marks your turns. Score as much as you can before it reaches the pier.",
+    "The Crown's ship marks your turns. Score as much as you can before it reaches the pier.",
     "Two gold stand in for any one resource. A single gold can't be used on its own.",
     "Your trader banked this for you. It is spent by itself when a build needs it, on any turn.",
     "Das Schiff des Koenigs zaehlt deine Zuege. Erreiche 10 Punkte, bevor es den Anleger erreicht.",

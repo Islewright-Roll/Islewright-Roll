@@ -199,7 +199,7 @@ WHEAT_CODE = _opt("WHEAT", "Re^Gvs")
 # foot of the jetty and the jetty begins there.
 # The dock is drawn twice, to the same pixels. It is baked into the board, so that everything
 # that samples the board sees it; and its above water art alone is written as a sprite
-# (dock.png), which the game draws over the roads and under the King's ship, so that the deck
+# (dock.png), which the game draws over the roads and under the Crown's ship, so that the deck
 # lies over the road and not under it. The submerged steps exist only in the board: they are
 # derived from the water under them, and the sprite leaves them out, which draws the same pixels.
 # Not a Wesnoth rule, so it is off for the reference comparison (BAKE_DOCK=0). The same on both

@@ -869,7 +869,7 @@ impl Scene {
             255,
         );
 
-        // The King's ship, sailing from stop to stop
+        // The Crown's ship, sailing from stop to stop
         let done = game.is_game_done();
         let stage = voyage::stage_for(game.map, game.turns_taken, done, game.playsheet.score());
         let stop = voyage::ship_origin(stage, voyage::DOCK_MOORING, l.isle.visible_left());
@@ -909,7 +909,7 @@ impl Scene {
         self.sail.at = at;
         if stage != Stage::None {
             // Its flag is team magenta, flying the player's colour as the strip's ship does
-            layer.sprite(&tinted.king_ship, bx + at.x, by + at.y, 255);
+            layer.sprite(&tinted.crown_ship, bx + at.x, by + at.y, 255);
         }
 
         for (c, &color) in OFFER_COLORS.iter().enumerate() {
@@ -1309,7 +1309,7 @@ impl Scene {
         );
     }
 
-    /// The King's voyage: a band of sea per track row, with the flags of finished turns, the
+    /// The Crown's voyage: a band of sea per track row, with the flags of finished turns, the
     /// buoys of turns to come, the ship and the pier (GameView.drawVoyage).
     fn draw_voyage(&self, frame: &mut Image, game: &Game, l: &Layout) {
         let a = &self.assets;
